@@ -23,8 +23,8 @@ module.exports = {
    * @optional
    */
   description:
-    'CrowdStrike is the leader in next-generation endpoint protection, threat intelligence and incident response through cloud-based endpoint protection.',
-  entityTypes: ['md5', 'sha256', 'sha1', 'domain'],
+    'Displays information from relevant Crowdstrike Falcon detections by searching IoC and Processes for MD5 and SHA256 values',
+  entityTypes: ['md5', 'sha256'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -95,7 +95,7 @@ module.exports = {
       key: 'url',
       name: 'Crowdstrike API URL',
       description:
-        'The REST API URL for your Crowdstrike instance which should include the schema (i.e., http, https) and port if required',
+        'The REST API URL for your Crowdstrike instance which should include the schema (i.e., http, https) and port if required.',
       default: 'https://api.crowdstrike.com',
       type: 'text',
       userCanEdit: false,
@@ -119,29 +119,46 @@ module.exports = {
       userCanEdit: false,
       adminOnly: true
     },
-    // {
-    //   key: 'minimumSeverity',
-    //   name: 'Minimum Severity Level',
-    //   description: 'The minimum severity level required for indicators to be displayed (0-100)',
-    //   default: 75,
-    //   type: 'number',
-    //   userCanEdit: true,
-    //   adminOnly: false
-    // },
-    // {
-    //   key: 'minimumConfidence',
-    //   name: 'Minimum Confidence Level',
-    //   description: 'The minimum confidence level required for indicators to be displayed (0-100)',
-    //   default: 75,
-    //   type: 'number',
-    //   userCanEdit: true,
-    //   adminOnly: false
-    // },
+    {
+      key: 'minimumSeverity',
+      name: 'Minimum Severity',
+      description: 'The minimum severity level required for indicators to be displayed',
+      default: {
+        value: 'Medium',
+        display: 'Medium'
+      },
+      type: 'select',
+      options: [
+        {
+          value: 'Low',
+          display: 'Low'
+        },
+        {
+          value: 'Medium',
+          display: 'Medium'
+        },
+        {
+          value: 'High',
+          display: 'High'
+        },
+        {
+          value: 'Critical',
+          display: 'Critical'
+        }
+      ],
+      multiple: false,
+      userCanEdit: true,
+      adminOnly: false
+    },
     {
       key: 'detectionStatuses',
       name: 'Detection Statuses',
-      description: 'Select the detection statuses you would like to return results for',
+      description: 'Detection statuses you would like to return results for',
       default: [
+        {
+          value: 'new',
+          display: 'New'
+        },
         {
           value: 'in_progress',
           display: 'In Progress'

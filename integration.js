@@ -6,7 +6,12 @@ const request = require('request');
 const MAX_AUTH_RETRIES = 2;
 const INVALID_AUTH_HTTP_CODE = 401;
 const tokenCache = new Map();
-
+const SEVERITY_LEVELS = {
+  Critical: '"Critical"',
+  High: '"High","Critical"',
+  Medium: '"Medium","High","Critical"',
+  Low: '"Low","Medium","High","Critical"'
+};
 let Logger;
 let requestWithDefaults;
 let authenticatedRequest;
@@ -27,21 +32,18 @@ function _getQuery(entityObj, options) {
     return `"${statusObj.value}"`;
   });
 
-  // return {
-  //   limit: 10,
-  //   q: `"${entityObj.value.toLowerCase()}"`
-  // }
+  let severityLevels = SEVERITY_LEVELS[options.minimumSeverity.value];
 
   let type = 'sha256';
   if (entityObj.isMD5) {
     type = 'md5';
   }
-  let statusFilter = `+status:[${statuses.toString()}])`;
+  let filter = `+status:[${statuses.toString()}]+max_severity_displayname:[${severityLevels}]`;
 
   return {
     limit: 10,
     // ioc_value needs to be in double quotes, Crowdstrike requires that hashes are searched in lowercase
-    filter: `(behaviors.ioc_value:"${entityObj.value.toLowerCase()}"${statusFilter},(behaviors.${type}:"${entityObj.value.toLowerCase()}"${statusFilter})`
+    filter: `(behaviors.ioc_value:"${entityObj.value.toLowerCase()}"${filter}),(behaviors.${type}:"${entityObj.value.toLowerCase()}"${filter})`
   };
 }
 
@@ -288,12 +290,14 @@ function handleRestErrors(response, body) {
         '1',
         'Forbidden',
         {
-          body: body
+          body,
+          response
         }
       );
     case 404:
       return _createJsonErrorPayload('Object not found', null, '404', '1', 'Not Found', {
-        body: body
+        body,
+        response
       });
     case 400:
       return _createJsonErrorPayload(
@@ -303,12 +307,14 @@ function handleRestErrors(response, body) {
         '2',
         'Bad Request',
         {
-          body: body
+          body,
+          response
         }
       );
     case 409:
       return _createJsonErrorPayload('Conflicting PUT operation', null, '409', '3', 'Conflict', {
-        body: body
+        body,
+        response
       });
     case 503:
       return _createJsonErrorPayload(
@@ -318,7 +324,8 @@ function handleRestErrors(response, body) {
         '4',
         'Service Unavailable',
         {
-          body: body
+          body,
+          response
         }
       );
     case 500:
@@ -329,7 +336,8 @@ function handleRestErrors(response, body) {
         '5',
         'Internal error',
         {
-          body: body
+          body,
+          response
         }
       );
   }
@@ -341,7 +349,8 @@ function handleRestErrors(response, body) {
     '7',
     'Unexpected HTTP Error',
     {
-      body: body
+      body,
+      response
     }
   );
 }
