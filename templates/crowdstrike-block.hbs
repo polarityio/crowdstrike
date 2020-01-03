@@ -1,0 +1,72 @@
+<div>
+    Displaying {{details.detections.length}} of {{details.meta.totalResults}} results.
+</div>
+{{#each details.detections as |detection detectionIndex|}}
+    {{#if (gt detectionIndex 0)}}
+        <hr>
+    {{/if}}
+    <div class="p-title">
+        {{fa-icon "search" fixedWidth=true}} Detection&nbsp; <a href="{{detection.__url}}" class="p-link detection-title">View in Falcon {{fa-icon "external-link-square" fixedWidth=true class="external-link"}}</a>
+    </div>
+    {{#each detectionProperties as |prop|}}
+        <div>
+            <span class="p-key">{{humanize prop}}:</span>
+            <span class="p-value">{{get detection prop}}</span>
+        </div>
+    {{/each}}
+    {{!-- Device Information --}}
+    {{#if detection.device}}
+        <div class="p-title">{{fa-icon "laptop" fixedWidth=true}} Device Information
+            <span class="p-action" {{action "showAllDeviceInfo" detectionIndex}}>
+                {{#if detection.__showAllDeviceInfo}}
+                    &nbsp;(view compact {{fa-icon "caret-down"}})
+                {{else}}
+                    &nbsp;(view all {{fa-icon "caret-up"}})
+                {{/if}}
+            </span>
+        </div>
+        {{#if detection.__showAllDeviceInfo}}
+            {{object-to-table detection.device}}
+        {{else}}
+            {{#each compactDeviceProperties as |prop|}}
+                {{#if (get detection.device prop)}}
+                    <div>
+                        <span class="p-key">{{humanize prop}}:</span>
+                        <span class="p-value">{{get detection.device prop}}</span>
+                    </div>
+                {{/if}}
+            {{/each}}
+        {{/if}}
+    {{/if}}
+    {{!-- Behavior Information --}}
+    {{#if detection.behaviors}}
+        <div class="p-title">{{fa-icon "brain" fixedWidth=true}} Behavior Information
+            <span class="p-action" {{action "showAllBehaviorInfo" detectionIndex}}>
+                {{#if detection.__showAllBehaviorInfo}}
+                    &nbsp;(view compact {{fa-icon "caret-down"}})
+                {{else}}
+                    &nbsp;(view all {{fa-icon "caret-up"}})
+                {{/if}}
+            </span>
+        </div>
+        {{#if detection.__showAllBehaviorInfo}}
+            {{#each detection.behaviors as | behavior behaviorIndex|}}
+                <div class="p-title">Behavior ID: {{behavior.behavior_id}}</div>
+                {{object-to-table behavior}}
+            {{/each}}
+        {{else}}
+            {{#each detection.behaviors as | behavior behaviorIndex|}}
+                <div class="p-title">Behavior: {{behavior.behavior_id}}</div>
+                {{#each compactBehaviorProperties as |prop|}}
+                    {{#if (get behavior prop)}}
+                        <div>
+                            <span class="p-key">{{humanize prop}}:</span>
+                            <span class="p-value">{{get behavior prop}}</span>
+                        </div>
+                    {{/if}}
+                {{/each}}
+            {{/each}}
+        {{/if}}
+    {{/if}}
+{{/each}}
+
