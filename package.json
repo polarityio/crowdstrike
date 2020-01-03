@@ -1,0 +1,12 @@
+{
+  "main": "./integration.js",
+  "name": "crowdstrike",
+  "version": "3.1.0-beta",
+  "private": true,
+  "license": "MIT",
+  "author": "Polarity",
+  "dependencies": {
+    "async": "^3.1.0",
+    "request": "^2.88.0"
+  }
+}
