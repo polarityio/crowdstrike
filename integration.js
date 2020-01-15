@@ -395,10 +395,20 @@ function validateStringOption(errors, options, optionName, errMessage) {
   }
 }
 
+function validateTrailingSlash(errors, options, optionName, errMessage) {
+  if (typeof options[optionName].value === 'string' && options[optionName].value.trim().endsWith('/')) {
+    errors.push({
+      key: optionName,
+      message: errMessage
+    });
+  }
+}
+
 function validateOptions(options, callback) {
   let errors = [];
 
   validateStringOption(errors, options, 'url', 'You must provide the Crowdstrike API url.');
+  validateTrailingSlash(errors, options, 'url', 'The url cannot end with a forward slash ("/").');
   validateStringOption(errors, options, 'id', 'You must provide a Client ID.');
   validateStringOption(errors, options, 'secret', 'You must provide a Client Secret.');
 
