@@ -4,7 +4,7 @@ const async = require('async');
 const request = require('request');
 
 const MAX_AUTH_RETRIES = 2;
-const INVALID_AUTH_HTTP_CODE = 401;
+const INVALID_AUTH_HTTP_CODE = 403;
 const tokenCache = new Map();
 const SEVERITY_LEVELS = {
   Critical: '"Critical"',
@@ -282,9 +282,16 @@ function handleRestErrors(response, body) {
   switch (response.statusCode) {
     case 200:
       return;
+    case 201:
+      return;
+    case 401:
+      return _createJsonErrorPayload('Permission Denied', null, '401', '1', 'Unauthorized', {
+        body,
+        response
+      });
     case 403:
       return _createJsonErrorPayload(
-        'Forbidden - most commonly, user authentication failed',
+        'Authentication Token is Invalid or Expired',
         null,
         '403',
         '1',
@@ -311,23 +318,11 @@ function handleRestErrors(response, body) {
           response
         }
       );
-    case 409:
-      return _createJsonErrorPayload('Conflicting PUT operation', null, '409', '3', 'Conflict', {
+    case 429:
+      return _createJsonErrorPayload('Too Many Requests', null, '409', '3', 'Too Many Requests', {
         body,
         response
       });
-    case 503:
-      return _createJsonErrorPayload(
-        'Service unavailable - usually related to LDAP not being accessible',
-        null,
-        '503',
-        '4',
-        'Service Unavailable',
-        {
-          body,
-          response
-        }
-      );
     case 500:
       return _createJsonErrorPayload(
         'Internal Server error, please check your instance',
