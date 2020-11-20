@@ -14,7 +14,7 @@ Before using the Polarity Crowdstrike Integration you will need to create a Clie
 2. Go to `Support > API Client and Keys`.
 3. Click `Add New API Client`.
 4. A dialog will appear, enter the name of the integration (e.g. `Polarity`) and a description (optional).
-5. Polarity will need `Read` access to `Detections`. 
+5. Polarity will need `Read` and `Write` access to `Detections`. (Note, Polarity does write any data to Crowdstrike but due to the way the API is setup, write access is required for the search endpoints we use) 
 6. Click `Add`. Record the Client ID and Client Secret (Client secret will only be shown once for security purpose, so make sure to store it in a secure place).
 
 Use the Client ID and Client Secret that you recorded previously to fill out the integration options. You are now ready to use the Polarity integration with Crowdstrike!
