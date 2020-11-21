@@ -4,7 +4,10 @@ const async = require('async');
 const request = require('request');
 
 const MAX_AUTH_RETRIES = 2;
-const INVALID_AUTH_HTTP_CODE = 403;
+// Older versions of the Crowdstrike API would return a 403 if the bearer token was expired
+// newer versions now return a 401. We check for both just in case.
+const EXPIRED_BEARER_TOKEN_HTTP_CODE = 403;
+const INVALID_BEARER_TOKEN_HTTP_CODE = 401;
 const tokenCache = new Map();
 const SEVERITY_LEVELS = {
   Critical: '"Critical"',
@@ -226,7 +229,7 @@ function startup(logger) {
       });
     }
 
-    generateAccessToken(options, function(err, token) {
+    generateAccessToken(options, function (err, token) {
       if (err) {
         Logger.error({ err: err }, 'Error getting token');
         return cb({
@@ -242,7 +245,7 @@ function startup(logger) {
           return cb(err, resp, body);
         }
 
-        if (resp.statusCode === INVALID_AUTH_HTTP_CODE) {
+        if (resp.statusCode === EXPIRED_BEARER_TOKEN_HTTP_CODE || resp.statusCode === INVALID_BEARER_TOKEN_HTTP_CODE) {
           // Unable to authenticate so we attempt to get a new token
           invalidateToken(options);
           authenticatedRequest(options, requestOptions, cb, ++requestCounter);
@@ -290,17 +293,10 @@ function handleRestErrors(response, body) {
         response
       });
     case 403:
-      return _createJsonErrorPayload(
-        'Authentication Token is Invalid or Expired',
-        null,
-        '403',
-        '1',
-        'Forbidden',
-        {
-          body,
-          response
-        }
-      );
+      return _createJsonErrorPayload('Authentication Token is Invalid or Expired', null, '403', '1', 'Forbidden', {
+        body,
+        response
+      });
     case 404:
       return _createJsonErrorPayload('Object not found', null, '404', '1', 'Not Found', {
         body,
