@@ -30,10 +30,13 @@ let authenticatedRequest;
  * @private
  */
 function _getQuery(entityObj, options) {
-  let statuses = options.detectionStatuses.map((statusObj) => {
+  const statuses = options.detectionStatuses.reduce((accum, statusObj) => {
     // statuses need to be in double quotes
-    return `"${statusObj.value}"`;
-  });
+    if(statusObj && statusObj.value){
+      accum.push(`"${statusObj.value}"`);
+    }
+    return accum;
+  }, []);
 
   let severityLevels = SEVERITY_LEVELS[options.minimumSeverity.value];
 
@@ -41,6 +44,7 @@ function _getQuery(entityObj, options) {
   if (entityObj.isMD5) {
     type = 'md5';
   }
+
   let filter = `+status:[${statuses.toString()}]+max_severity_displayname:[${severityLevels}]`;
 
   return {
