@@ -32,7 +32,7 @@ let authenticatedRequest;
 function _getQuery(entityObj, options) {
   const statuses = options.detectionStatuses.reduce((accum, statusObj) => {
     // statuses need to be in double quotes
-    if(statusObj && statusObj.value){
+    if (statusObj && statusObj.value) {
       accum.push(`"${statusObj.value}"`);
     }
     return accum;
@@ -43,15 +43,23 @@ function _getQuery(entityObj, options) {
   let type = 'sha256';
   if (entityObj.isMD5) {
     type = 'md5';
+  } else if (entityObj.type === 'custom' && entityObj.types.indexOf('custom.exeFile') >= 0) {
+    type = 'filename';
   }
 
   let filter = `+status:[${statuses.toString()}]+max_severity_displayname:[${severityLevels}]`;
 
-  return {
-    limit: 10,
-    // ioc_value needs to be in double quotes, Crowdstrike requires that hashes are searched in lowercase
-    filter: `(behaviors.ioc_value:"${entityObj.value.toLowerCase()}"${filter}),(behaviors.${type}:"${entityObj.value.toLowerCase()}"${filter})`
-  };
+  if (entityObj.isIPv4) {
+    return {
+      limit: 10,
+      filter: `(device.external_ip:"${entityObj.value}"${filter}),(device.local_ip:"${entityObj.value}"${filter})`
+    };
+  } else {
+    return {
+      limit: 10,
+      filter: `(q:"${entityObj.value.toLowerCase()}"${filter}),(behaviors.${type}:"${entityObj.value.toLowerCase()}"${filter})`
+    };
+  }
 }
 
 function searchDetects(entity, options, cb) {

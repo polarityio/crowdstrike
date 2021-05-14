@@ -23,8 +23,15 @@ module.exports = {
    * @optional
    */
   description:
-    'Displays information from relevant Crowdstrike Falcon detections by searching IoC and Processes for MD5 and SHA256 values',
-  entityTypes: ['md5', 'sha256'],
+    'Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).',
+  entityTypes: ['md5', 'sha256', 'ipv4'],
+  customTypes: [
+      {
+          key: 'exeFile',
+          regex: /([A-Za-z0-9\-]\w+)+(\.exe|\.dll|\.dmg|\.doc|\.pdf|\.csv|\.exe)/
+      }
+  ],
+  defaultColor: 'light-purple',
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
