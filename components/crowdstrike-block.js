@@ -9,18 +9,11 @@ polarity.export = PolarityComponent.extend({
     'hostname',
     'machine_domain'
   ],
-  // init: function () {
-  //   this._super(...arguments);
-  //   if (block.data.details && block.data.details.devices) {
-
-  //     this.get('block.data.details.devices').forEach((result) => {
-  //       Ember.set(result, 'showCrowdstrikeIoc', false);
-  //       Ember.set(result, 'showCrowdstrike', true);
-  //     });
-  //   }
-  // },
   compactBehaviorProperties: ['scenario', 'objective', 'filename', 'tactic', 'technique', 'severity', 'confidence'],
   actions: {
+    changeTab: function (tabName) {
+      this.set('activeTab', tabName);
+    },
     showAllDeviceInfo: function (detectionIndex) {
       let detection = this.get('details.detections.' + detectionIndex);
       let __viewAllDeviceInfo = this.get('details.detections.' + detectionIndex + '.__showAllDeviceInfo');
@@ -38,14 +31,6 @@ polarity.export = PolarityComponent.extend({
       } else {
         Ember.set(detection, '__showAllBehaviorInfo', true);
       }
-    },
-    showCrowdstrike: function (index) {
-      this.set('block.data.details.' + index + '.showCrowdstrikeIoc', false);
-      this.set('block.data.details.' + index + '.showCrowdstrike', true);
-    },
-    showCrowdstrikeIoc: function (index) {
-      this.set('block.data.details.' + index + '.showCrowdstrikeIoc', true);
-      this.set('block.data.details.' + index + '.showCrowdstrike', false);
     }
   }
 });
