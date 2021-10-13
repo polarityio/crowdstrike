@@ -62,21 +62,73 @@ function _getQuery(entityObj, options) {
   }
 }
 
-function searchDetects(entity, options, cb) {
+function getIocIds(entity, options, cb) {
   let requestOptions = {
-    uri: `${options.url}/detects/queries/detects/v1`,
-    qs: _getQuery(entity, options),
+    uri: `${options.url}/indicators/queries/devices/v1`,
     method: 'GET'
   };
 
-  Logger.trace(requestOptions, 'searchDetects request options');
+  if (entity.isMD5) {
+    requestOptions.qs = { type: 'md5', value: entity.value };
+  } else if (entity.isSHA256) {
+    requestOptions.qs = { type: 'sha256', value: entity.value };
+  } else if (entity.isIPv4) {
+    requestOptions.qs = { type: 'ipv4', value: entity.value };
+  } else if (entity.isIPv6) {
+    requestOptions.qs = { type: 'ipv6', value: entity.value };
+  } else if (entity.isDomain) {
+    requestOptions.qs = { type: 'domain', value: entity.value };
+  } else {
+    return;
+  }
+
+  Logger.trace(requestOptions, 'searchIOCs request options');
 
   authenticatedRequest(options, requestOptions, (err, response, body) => {
     if (err) {
       return cb(err);
     }
 
-    Logger.trace(body, 'result of searchDetects');
+    Logger.trace(body, 'result of searchIOCs');
+
+    if (body.resources.length > 0) {
+      cb(null, {
+        entity: entity,
+        data: {
+          summary: [`${body.resources.length} devices`],
+          details: {
+            meta: {
+              totalResults: body.meta.pagination.total
+            },
+            resourceIds: body.resources
+          }
+        }
+      });
+    } else {
+      // Cache as a miss
+      cb(null, {
+        entity: entity,
+        data: null
+      });
+    }
+  });
+}
+
+function getDetectIds(entity, options, cb) {
+  let requestOptions = {
+    uri: `${options.url}/detects/queries/detects/v1`,
+    qs: _getQuery(entity, options),
+    method: 'GET'
+  };
+
+  Logger.trace(requestOptions, 'getDetectIds request options');
+
+  authenticatedRequest(options, requestOptions, (err, response, body) => {
+    if (err) {
+      return cb(err);
+    }
+
+    Logger.trace(body, 'result of getDetectIds');
 
     if (body.resources.length > 0) {
       cb(null, {
@@ -98,6 +150,54 @@ function searchDetects(entity, options, cb) {
         data: null
       });
     }
+  });
+}
+
+function getIds(entity, options, cb) {
+  async.parallel(
+    {
+      detectIds: (cb) => {
+        getDetectIds(entity, options, (err, detectIds) => {
+          cb(null, detectIds);
+        });
+      },
+      iocIds: (cb) => {
+        getIocIds(entity, options, (err, iocIds) => {
+          cb(null, iocIds);
+        });
+      }
+    },
+    (err, results) => {
+      if (err) return cb(null, err);
+      cb(null, results);
+    }
+  );
+}
+
+function getDevices(deviceIds, options, cb) {
+  let requestOptions = {
+    uri: `${options.url}/devices/entities/devices/v1`,
+    body: {
+      ids: deviceIds
+    },
+    json: true,
+    method: 'GET'
+  };
+
+  authenticatedRequest(options, requestOptions, (err, response, body) => {
+    if (err) {
+      Logger.debug({ err }, 'getDevices() return result');
+      return cb(err);
+    }
+
+    let devices = body.resources.map((resource) => {
+      resource.__url = `https://falcon.crowdstrike.com/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
+      return resource;
+    });
+
+    Logger.debug({ devices }, 'getDevices() return result');
+
+    cb(null, devices);
   });
 }
 
@@ -125,6 +225,65 @@ function getDetects(detectIds, options, cb) {
     Logger.debug({ detections: detects }, 'getDetects() return result');
 
     cb(null, detects);
+  });
+}
+
+function onDetails(lookupObject, options, cb) {
+  async.waterfall(
+    [
+      (cb) => {
+        if (
+          lookupObject &&
+          lookupObject.data &&
+          lookupObject.data.details &&
+          lookupObject.data.details.detectIds &&
+          lookupObject.data.details.detectIds.data !== null
+        ) {
+          getDetects(lookupObject.data.details.detectIds.data.details.resourceIds, options, (err, detects) => {
+            if (err) return cb(err);
+
+            lookupObject.data.details.detections = detectsMockData;
+
+          });
+        } else {
+          cb(null, lookupObject);
+        }
+      },
+      (lookupObject, cb) => {
+        Logger.trace({ LOOKUP: lookupObject });
+        getDevices(lookupObject.data.details.iocIds.data.details.resourceIds, options, (err, devices) => {
+          if (err) return cb(err);
+          
+          lookupObject.data.details.devices = devices;
+          lookupObject.data.details.detections = detectsMockData;
+
+          cb(null, lookupObject.data);
+        });
+      }
+    ],
+    (err, result) => {
+      if (err) cb(null, err);
+      Logger.trace({ DETAILS_RESULT: result });
+      cb(err, result);
+      return;
+    }
+  );
+}
+
+function doLookup(entities, options, cb) {
+  entities.forEach((entity) => {
+    getIds(entity, options, (err, result) => {
+      if (err) return cb(err);
+      cb(null, [
+        {
+          entity,
+          data: {
+            summary: [],
+            details: result
+          }
+        }
+      ]);
+    });
   });
 }
 
@@ -165,41 +324,6 @@ function generateAccessToken(options, cb) {
       }
     );
   }
-}
-
-function doLookup(entities, options, cb) {
-  const lookupResults = [];
-
-  async.each(
-    entities,
-    (entity, next) => {
-      searchDetects(entity, options, (err, result) => {
-        if (err) {
-          return next(err);
-        }
-
-        Logger.debug({ result }, 'Received Search Detect Result');
-        lookupResults.push(result);
-        next(null);
-      });
-    },
-    (err) => {
-      Logger.trace({ lookupResults: lookupResults }, 'Returning lookup results to client');
-      cb(err, lookupResults);
-    }
-  );
-}
-
-function onDetails(lookupObject, options, cb) {
-  getDetects(lookupObject.data.details.resourceIds, options, (err, detects) => {
-    if (err) {
-      return cb(err);
-    }
-
-    lookupObject.data.details.detections = detects;
-
-    cb(null, lookupObject.data);
-  });
 }
 
 function startup(logger) {
@@ -265,6 +389,7 @@ function startup(logger) {
         }
 
         let restError = handleRestErrors(resp);
+
         if (restError) {
           return cb(restError);
         }
@@ -310,10 +435,7 @@ function handleRestErrors(response, body) {
         response
       });
     case 404:
-      return _createJsonErrorPayload('Object not found', null, '404', '1', 'Not Found', {
-        body,
-        response
-      });
+      return;
     case 400:
       return _createJsonErrorPayload(
         'Invalid Search, please check search parameters',
@@ -418,12 +540,159 @@ function validateOptions(options, callback) {
   callback(null, errors);
 }
 
+const detectsMockData = {
+  adversary_ids: [0],
+  assigned_to_name: 'string',
+  assigned_to_uid: 'string',
+  behaviors: [
+    {
+      alleged_filetype: 'string',
+      behavior_id: 'string',
+      cmdline: 'string',
+      confidence: 0,
+      container_id: 'string',
+      control_graph_id: 'string',
+      description: 'string',
+      device_id: 'string',
+      display_name: 'string',
+      filename: 'string',
+      filepath: 'string',
+      ioc_description: 'string',
+      ioc_source: 'string',
+      ioc_type: 'string',
+      ioc_value: 'string',
+      md5: 'string',
+      objective: 'string',
+      parent_details: {
+        parent_cmdline: 'string',
+        parent_md5: 'string',
+        parent_process_graph_id: 'string',
+        parent_sha256: 'string'
+      },
+      pattern_disposition: 0,
+      pattern_disposition_details: {
+        blocking_unsupported_or_disabled: true,
+        bootup_safeguard_enabled: true,
+        critical_process_disabled: true,
+        detect: true,
+        fs_operation_blocked: true,
+        handle_operation_downgraded: true,
+        inddet_mask: true,
+        indicator: true,
+        kill_action_failed: true,
+        kill_parent: true,
+        kill_process: true,
+        kill_subprocess: true,
+        operation_blocked: true,
+        policy_disabled: true,
+        process_blocked: true,
+        quarantine_file: true,
+        quarantine_machine: true,
+        registry_operation_blocked: true,
+        rooting: true,
+        sensor_only: true,
+        suspend_parent: true,
+        suspend_process: true
+      },
+      rule_instance_id: 'string',
+      rule_instance_version: 0,
+      scenario: 'string',
+      severity: 0,
+      sha256: 'string',
+      tactic: 'string',
+      tactic_id: 'string',
+      technique: 'string',
+      technique_id: 'string',
+      template_instance_id: 'string',
+      timestamp: '2021-10-12T22:18:28.354Z',
+      triggering_process_graph_id: 'string',
+      user_id: 'string',
+      user_name: 'string'
+    }
+  ],
+  behaviors_processed: ['string'],
+  cid: 'string',
+  created_timestamp: '2021-10-12T22:18:28.354Z',
+  detection_id: 'string',
+  device: {
+    agent_load_flags: 'string',
+    agent_local_time: 'string',
+    agent_version: 'string',
+    bios_manufacturer: 'string',
+    bios_version: 'string',
+    cid: 'string',
+    config_id_base: 'string',
+    config_id_build: 'string',
+    config_id_platform: 'string',
+    device_id: 'string',
+    external_ip: 'string',
+    first_login_timestamp: 'string',
+    first_login_user: 'string',
+    first_seen: 'string',
+    groups: ['string'],
+    hostname: 'string',
+    instance_id: 'string',
+    last_login_timestamp: 'string',
+    last_login_user: 'string',
+    last_seen: 'string',
+    local_ip: 'string',
+    mac_address: 'string',
+    machine_domain: 'string',
+    major_version: 'string',
+    minor_version: 'string',
+    modified_timestamp: 'string',
+    notes: ['string'],
+    os_version: 'string',
+    ou: ['string'],
+    platform_id: 'string',
+    platform_name: 'string',
+    pod_id: 'string',
+    pod_labels: ['string'],
+    pod_name: 'string',
+    pod_namespace: 'string',
+    pod_service_account_name: 'string',
+    product_type: 'string',
+    product_type_desc: 'string',
+    release_group: 'string',
+    service_provider: 'string',
+    service_provider_account_id: 'string',
+    site_name: 'string',
+    status: 'string',
+    system_manufacturer: 'string',
+    system_product_name: 'string',
+    tags: ['string']
+  },
+  email_sent: true,
+  first_behavior: '2021-10-12T22:18:28.354Z',
+  hostinfo: {
+    active_directory_dn_display: ['string'],
+    domain: 'string'
+  },
+  last_behavior: '2021-10-12T22:18:28.354Z',
+  max_confidence: 0,
+  max_severity: 0,
+  max_severity_displayname: 'string',
+  overwatch_notes: 'string',
+  quarantined_files: [
+    {
+      id: 'string',
+      paths: 'string',
+      sha256: 'string',
+      state: 'string'
+    }
+  ],
+  seconds_to_resolved: 0,
+  seconds_to_triaged: 0,
+  show_in_ui: true,
+  status: 'string'
+};
+
 module.exports = {
   doLookup: doLookup,
   startup: startup,
   validateOptions: validateOptions,
   onDetails: onDetails,
   __generateAccessToken: generateAccessToken,
-  __searchDetects: searchDetects,
+  __getDetectIds: getDetectIds,
   __getDetects: getDetects
 };
