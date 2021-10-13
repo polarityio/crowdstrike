@@ -242,7 +242,7 @@ function onDetails(lookupObject, options, cb) {
           getDetects(lookupObject.data.details.detectIds.data.details.resourceIds, options, (err, detects) => {
             if (err) return cb(err);
 
-            lookupObject.data.details.detections = detectsMockData;
+            lookupObject.data.details.detections = detects;
           });
         } else {
           cb(null, lookupObject);
@@ -254,7 +254,6 @@ function onDetails(lookupObject, options, cb) {
             if (err) return cb(err);
 
             lookupObject.data.details.devices = devices;
-            lookupObject.data.details.detections = detectsMockData;
 
             cb(null, lookupObject.data);
           });
@@ -540,155 +539,6 @@ function validateOptions(options, callback) {
 
   callback(null, errors);
 }
-
-const detectsMockData = [
-  {
-    adversary_ids: [0],
-    assigned_to_name: 'string',
-    assigned_to_uid: 'string',
-    behaviors: [
-      {
-        alleged_filetype: 'string',
-        behavior_id: 'string',
-        cmdline: 'string',
-        confidence: 0,
-        container_id: 'string',
-        control_graph_id: 'string',
-        description: 'string',
-        device_id: 'string',
-        display_name: 'string',
-        filename: 'string',
-        filepath: 'string',
-        ioc_description: 'string',
-        ioc_source: 'string',
-        ioc_type: 'string',
-        ioc_value: 'string',
-        md5: 'string',
-        objective: 'string',
-        parent_details: {
-          parent_cmdline: 'string',
-          parent_md5: 'string',
-          parent_process_graph_id: 'string',
-          parent_sha256: 'string'
-        },
-        pattern_disposition: 0,
-        pattern_disposition_details: {
-          blocking_unsupported_or_disabled: true,
-          bootup_safeguard_enabled: true,
-          critical_process_disabled: true,
-          detect: true,
-          fs_operation_blocked: true,
-          handle_operation_downgraded: true,
-          inddet_mask: true,
-          indicator: true,
-          kill_action_failed: true,
-          kill_parent: true,
-          kill_process: true,
-          kill_subprocess: true,
-          operation_blocked: true,
-          policy_disabled: true,
-          process_blocked: true,
-          quarantine_file: true,
-          quarantine_machine: true,
-          registry_operation_blocked: true,
-          rooting: true,
-          sensor_only: true,
-          suspend_parent: true,
-          suspend_process: true
-        },
-        rule_instance_id: 'string',
-        rule_instance_version: 0,
-        scenario: 'string',
-        severity: 0,
-        sha256: 'string',
-        tactic: 'string',
-        tactic_id: 'string',
-        technique: 'string',
-        technique_id: 'string',
-        template_instance_id: 'string',
-        timestamp: '2021-10-12T22:18:28.354Z',
-        triggering_process_graph_id: 'string',
-        user_id: 'string',
-        user_name: 'string'
-      }
-    ],
-    behaviors_processed: ['string'],
-    cid: 'string',
-    created_timestamp: '2021-10-12T22:18:28.354Z',
-    detection_id: 'string',
-    device: {
-      agent_load_flags: 'string',
-      agent_local_time: 'string',
-      agent_version: 'string',
-      bios_manufacturer: 'string',
-      bios_version: 'string',
-      cid: 'string',
-      config_id_base: 'string',
-      config_id_build: 'string',
-      config_id_platform: 'string',
-      device_id: 'string',
-      external_ip: 'string',
-      first_login_timestamp: 'string',
-      first_login_user: 'string',
-      first_seen: 'string',
-      groups: ['string'],
-      hostname: 'string',
-      instance_id: 'string',
-      last_login_timestamp: 'string',
-      last_login_user: 'string',
-      last_seen: 'string',
-      local_ip: 'string',
-      mac_address: 'string',
-      machine_domain: 'string',
-      major_version: 'string',
-      minor_version: 'string',
-      modified_timestamp: 'string',
-      notes: ['string'],
-      os_version: 'string',
-      ou: ['string'],
-      platform_id: 'string',
-      platform_name: 'string',
-      pod_id: 'string',
-      pod_labels: ['string'],
-      pod_name: 'string',
-      pod_namespace: 'string',
-      pod_service_account_name: 'string',
-      product_type: 'string',
-      product_type_desc: 'string',
-      release_group: 'string',
-      service_provider: 'string',
-      service_provider_account_id: 'string',
-      site_name: 'string',
-      status: 'string',
-      system_manufacturer: 'string',
-      system_product_name: 'string',
-      tags: ['string']
-    },
-    email_sent: true,
-    first_behavior: '2021-10-12T22:18:28.354Z',
-    hostinfo: {
-      active_directory_dn_display: ['string'],
-      domain: 'string'
-    },
-    last_behavior: '2021-10-12T22:18:28.354Z',
-    max_confidence: 0,
-    max_severity: 0,
-    max_severity_displayname: 'string',
-    overwatch_notes: 'string',
-    quarantined_files: [
-      {
-        id: 'string',
-        paths: 'string',
-        sha256: 'string',
-        state: 'string'
-      }
-    ],
-    seconds_to_resolved: 0,
-    seconds_to_triaged: 0,
-    show_in_ui: true,
-    status: 'string'
-  }
-];
 
 module.exports = {
   doLookup: doLookup,
