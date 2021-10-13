@@ -26,10 +26,10 @@ module.exports = {
     'Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).',
   entityTypes: ['md5', 'sha256', 'ipv4'],
   customTypes: [
-      {
-          key: 'exeFile',
-          regex: /([A-Za-z0-9\-]\w+)+(\.exe|\.dll|\.dmg|\.doc|\.pdf|\.csv|\.exe)/
-      }
+    {
+      key: 'exeFile',
+      regex: /([A-Za-z0-9\-]\w+)+(\.exe|\.dll|\.dmg|\.doc|\.pdf|\.csv|\.exe)/
+    }
   ],
   defaultColor: 'light-purple',
   /**
@@ -123,6 +123,15 @@ module.exports = {
       description: 'The secret associated with the Client ID.',
       default: '',
       type: 'password',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'searchIoc',
+      name: 'Search Crowdstrike-IOC',
+      description: 'Ability to search Crowdstrike-IOC',
+      default: false,
+      type: 'boolean',
       userCanEdit: false,
       adminOnly: true
     },
