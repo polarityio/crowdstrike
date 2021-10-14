@@ -239,17 +239,29 @@ function onDetails(lookupObject, options, cb) {
           lookupObject.data.details.detectIds &&
           lookupObject.data.details.detectIds.data !== null
         ) {
-          getDetects(lookupObject.data.details.detectIds.data.details.resourceIds, options, (err, detects) => {
+          getDetects(lookupObject.data.details.detectIds.data.details.detectIds, options, (err, detects) => {
             if (err) return cb(err);
 
             lookupObject.data.details.detections = detects;
+
+            cb(null, lookupObject.data);
           });
         } else {
           cb(null, lookupObject);
         }
       },
       (lookupObject, cb) => {
-        if (options.searchIoc) {
+        if (
+          options.searchIoc &&
+          lookupObject &&
+          lookupObject.data &&
+          lookupObject.data.details &&
+          lookupObject.data.details.iocIds &&
+          lookupObject.data.details.iocIds.data &&
+          lookupObject.data.details.iocIds.data.details &&
+          lookupObject.data.details.iocIds.data.details.resourceIds &&
+          lookupObject.data.details.iocIds.data !== null
+        ) {
           getDevices(lookupObject.data.details.iocIds.data.details.resourceIds, options, (err, devices) => {
             if (err) return cb(err);
 
