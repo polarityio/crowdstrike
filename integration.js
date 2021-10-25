@@ -100,7 +100,7 @@ function getIocIds(entity, options, cb) {
             meta: {
               totalResults: body.meta.pagination.total
             },
-            resourceIds: body.resources
+            deviceIds: body.resources
           }
         }
       });
@@ -237,6 +237,9 @@ function onDetails(lookupObject, options, cb) {
           lookupObject.data &&
           lookupObject.data.details &&
           lookupObject.data.details.detectIds &&
+          lookupObject.data.details.detectIds.data &&
+          lookupObject.data.details.detectIds.data.details &&
+          lookupObject.data.details.detectIds.data.details.detectIds &&
           lookupObject.data.details.detectIds.data !== null
         ) {
           getDetects(lookupObject.data.details.detectIds.data.details.detectIds, options, (err, detects) => {
@@ -244,7 +247,7 @@ function onDetails(lookupObject, options, cb) {
 
             lookupObject.data.details.detections = detects;
 
-            cb(null, lookupObject.data);
+            cb(null, lookupObject);
           });
         } else {
           cb(null, lookupObject);
@@ -259,15 +262,15 @@ function onDetails(lookupObject, options, cb) {
           lookupObject.data.details.iocIds &&
           lookupObject.data.details.iocIds.data &&
           lookupObject.data.details.iocIds.data.details &&
-          lookupObject.data.details.iocIds.data.details.resourceIds &&
+          lookupObject.data.details.iocIds.data.details.deviceIds &&
           lookupObject.data.details.iocIds.data !== null
         ) {
-          getDevices(lookupObject.data.details.iocIds.data.details.resourceIds, options, (err, devices) => {
+          getDevices(lookupObject.data.details.iocIds.data.details.deviceIds, options, (err, devices) => {
             if (err) return cb(err);
 
             lookupObject.data.details.devices = devices;
 
-            cb(null, lookupObject.data);
+            cb(null, lookupObject);
           });
         } else {
           cb(null, lookupObject);
@@ -276,27 +279,38 @@ function onDetails(lookupObject, options, cb) {
     ],
     (err, result) => {
       if (err) cb(null, err);
-      cb(err, result);
-      return;
+      cb(err, result.data);
     }
   );
 }
 
 function doLookup(entities, options, cb) {
-  entities.forEach((entity) => {
-    getIds(entity, options, (err, result) => {
-      if (err) return cb(err);
-      cb(null, [
-        {
+  let lookupResults = [];
+  async.each(
+    entities,
+    (entity, next) => {
+      getIds(entity, options, (err, result) => {
+        if (err) {
+          return next(err);
+        }
+        Logger.debug({ result }, 'Received Search Detect Result');
+
+        lookupResults.push({
           entity,
           data: {
-            summary: [],
+            summary: [result.summary],
             details: result
           }
-        }
-      ]);
-    });
-  });
+        });
+
+        next(null);
+      });
+    },
+    (err) => {
+      Logger.trace({ lookupResults: lookupResults }, 'Returning lookup results to client');
+      cb(err, lookupResults);
+    }
+  );
 }
 
 function generateAccessToken(options, cb) {
