@@ -129,7 +129,7 @@ module.exports = {
     {
       key: 'searchIoc',
       name: 'Search Crowdstrike-IOC',
-      description: 'Ability to search Crowdstrike-IOC',
+      description: 'Ability to search using Crowdstrike-IOC',
       default: true,
       type: 'boolean',
       userCanEdit: false,
