@@ -1,6 +1,7 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   detectionProperties: ['status', 'max_confidence', 'max_severity', 'first_behavior', 'last_behavior'],
+  activeTab: 'crowdstrike',
   compactDeviceProperties: [
     'platform_name',
     'os_version',

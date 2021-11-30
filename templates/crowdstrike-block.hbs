@@ -1,22 +1,24 @@
 <ul class='nav nav-tabs'>
   <li class='nav-item'>
     <a
-      {{action 'changeTab' 'tab1'}}
-      class='nav-link {{if (or (eq activeTab 'tab1') (not activeTab)) 'active'}}'
+      {{action 'changeTab' 'crowdstrike'}}
+      class='nav-link {{if (or (eq activeTab 'crowdstrike') (not activeTab)) 'active'}}'
       href='#'
     >
       Crowdstrike
     </a>
   </li>
 
-  <li class='nav-item'>
-    <a {{action 'changeTab' 'tab2'}} class='nav-link {{if (eq activeTab 'tab2') 'active'}}' href='#'>
-      Crowdstrike IOC
-    </a>
-  </li>
+  {{#if block.userOptions.searchIoc}}
+    <li class='nav-item'>
+      <a {{action 'changeTab' 'crowdstrikeIoc'}} class='nav-link {{if (eq activeTab 'crowdstrikeIoc') 'active'}}' href='#'>
+        Crowdstrike IOC
+      </a>
+    </li>
+  {{/if}}
 </ul>
 
-{{#if (eq activeTab 'tab1')}}
+{{#if (eq activeTab 'crowdstrike')}}
   {{#if details.detections}}
     <div>
       Displaying
@@ -26,7 +28,7 @@
       results.
     </div>
   {{else}}
-    <div>
+    <div class="m-1">
       No Results.
     </div>
   {{/if}}
@@ -109,7 +111,7 @@
   {{/each}}
 {{/if}} 
 
-{{#if (eq activeTab 'tab2')}}
+{{#if (eq activeTab 'crowdstrikeIoc')}}
   {{#if details.devices}}
     <div>
       Displaying
@@ -180,7 +182,7 @@
       </div>
     {{/each}}
   {{else}}
-    <div>
+    <div class="m-1">
       No Results.
     </div>
   {{/if}}
