@@ -2,7 +2,7 @@
   <li class='nav-item'>
     <a
       {{action 'changeTab' 'crowdstrike'}}
-      class='nav-link {{if (or (eq activeTab 'crowdstrike') (not activeTab)) 'active'}}'
+      class='nav-link {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
       href='#'
     >
       Crowdstrike
@@ -11,7 +11,11 @@
 
   {{#if block.userOptions.searchIoc}}
     <li class='nav-item'>
-      <a {{action 'changeTab' 'crowdstrikeIoc'}} class='nav-link {{if (eq activeTab 'crowdstrikeIoc') 'active'}}' href='#'>
+      <a
+        {{action 'changeTab' 'crowdstrikeIoc'}}
+        class='nav-link {{if (eq activeTab "crowdstrikeIoc") "active"}}'
+        href='#'
+      >
         Crowdstrike IOC
       </a>
     </li>
@@ -28,7 +32,7 @@
       results.
     </div>
   {{else}}
-    <div class="m-1">
+    <div class='m-1'>
       No Results.
     </div>
   {{/if}}
@@ -109,7 +113,7 @@
       {{/if}}
     {{/if}}
   {{/each}}
-{{/if}} 
+{{/if}}
 
 {{#if (eq activeTab 'crowdstrikeIoc')}}
   {{#if details.devices}}
@@ -125,10 +129,10 @@
     </div>
     {{#each details.devices as |device|}}
       <div class='devices-container'>
-        {{#if device.hostman}}
+        {{#if device.hostname}}
           <div>
-            <span class='p-key'>Hostman:</span>
-            <span class='p-value'>{{device.hostman}}</span>
+            <span class='p-key'>hostname:</span>
+            <span class='p-value'>{{device.hostname}}</span>
           </div>
         {{/if}}
         {{#if device.product_type_desc}}
@@ -140,7 +144,7 @@
         {{#if device.system_manufacturer}}
           <div>
             <span class='p-key'>Sys. Manufacturer:</span>
-            <span class='p-value'>{{device.system_manufacture}}</span>
+            <span class='p-value'>{{device.system_manufacturer}}</span>
           </div>
         {{/if}}
         {{#if device.system_product_name}}
@@ -182,7 +186,7 @@
       </div>
     {{/each}}
   {{else}}
-    <div class="m-1">
+    <div class='m-1'>
       No Results.
     </div>
   {{/if}}

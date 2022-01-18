@@ -28,7 +28,7 @@ module.exports = {
   customTypes: [
     {
       key: 'exeFile',
-      regex: /([A-Za-z0-9\-]\w+)+(\.exe|\.dll|\.dmg|\.doc|\.pdf|\.csv|\.exe)/
+      regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|exe)/
     }
   ],
   defaultColor: 'light-purple',
@@ -129,7 +129,7 @@ module.exports = {
     {
       key: 'searchIoc',
       name: 'Search Crowdstrike-IOC',
-      description: 'Ability to search using Crowdstrike-IOC',
+      description: 'If enabled, the integration will additionally search the Crowdstrike IOC database',
       default: true,
       type: 'boolean',
       userCanEdit: false,

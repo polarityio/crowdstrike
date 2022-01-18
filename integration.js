@@ -232,16 +232,8 @@ function onDetails(lookupObject, options, cb) {
   async.waterfall(
     [
       (cb) => {
-        if (
-          lookupObject &&
-          lookupObject.data &&
-          lookupObject.data.details &&
-          lookupObject.data.details.detectIds &&
-          lookupObject.data.details.detectIds.data &&
-          lookupObject.data.details.detectIds.data.details &&
-          lookupObject.data.details.detectIds.data.details.detectIds &&
-          lookupObject.data.details.detectIds.data !== null
-        ) {
+        const detectIds = _.get(lookupObject, 'data.details.detectIds.data.details.detectIds', null);
+        if (detectIds !== null) {
           getDetects(lookupObject.data.details.detectIds.data.details.detectIds, options, (err, detects) => {
             if (err) return cb(err);
 
@@ -254,17 +246,8 @@ function onDetails(lookupObject, options, cb) {
         }
       },
       (lookupObject, cb) => {
-        if (
-          options.searchIoc &&
-          lookupObject &&
-          lookupObject.data &&
-          lookupObject.data.details &&
-          lookupObject.data.details.iocIds &&
-          lookupObject.data.details.iocIds.data &&
-          lookupObject.data.details.iocIds.data.details &&
-          lookupObject.data.details.iocIds.data.details.deviceIds &&
-          lookupObject.data.details.iocIds.data !== null
-        ) {
+        const deviceIds = _.get(lookupObject, 'data.details.iocIds.data.details.deviceIds', null);
+        if (deviceIds != null) {
           getDevices(lookupObject.data.details.iocIds.data.details.deviceIds, options, (err, devices) => {
             if (err) return cb(err);
 
