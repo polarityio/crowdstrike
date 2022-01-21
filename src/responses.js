@@ -16,7 +16,7 @@ const polarityResponse = (entity, response, Logger) => {
     ? [
         {
           entity,
-          data: response.length ? { summary: getSummary(response), details: response } : null
+          data: response.length ? { summary: getSummary(response), details: { detections: response } } : null
         }
       ]
     : emptyResponse(entity);

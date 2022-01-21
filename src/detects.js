@@ -55,6 +55,8 @@ const getDetects = async (requestWithDefaults, token, entity, options, Logger) =
       return resource;
     });
 
+    
+
     Logger.debug({ detections: foundDetects }, 'getDetects() return result');
 
     return foundDetects;
