@@ -26,10 +26,10 @@ module.exports = {
     'Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).',
   entityTypes: ['md5', 'sha256', 'ipv4'],
   customTypes: [
-    {
-      key: 'exeFile',
-      regex: /([A-Za-z0-9\-]\w+)+(\.exe|\.dll|\.dmg|\.doc|\.pdf|\.csv|\.exe)/
-    }
+      {
+          key: 'exeFile',
+          regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|exe)/
+      }
   ],
   defaultColor: 'light-purple',
   /**
