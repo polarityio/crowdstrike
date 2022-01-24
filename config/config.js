@@ -28,7 +28,7 @@ module.exports = {
   customTypes: [
       {
           key: 'exeFile',
-          regex: /([A-Za-z0-9\-]\w+)+(\.exe|\.dll|\.dmg|\.doc|\.pdf|\.csv|\.exe)/
+          regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|exe)/
       }
   ],
   defaultColor: 'light-purple',
