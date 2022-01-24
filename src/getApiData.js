@@ -1,15 +1,23 @@
 const generateAccessToken = require('./getToken');
 const { polarityResponse } = require('./responses');
-const { searchDetects, getDetects } = require('./detects');
+const { getDevices } = require('./devices');
+const { getDetects } = require('./detects');
 
 const getApiData = async (requestWithDefaults, entity, options, Logger) => {
+  let devices;
   try {
-    const results = await generateAccessToken(requestWithDefaults, options, Logger);
-    const token = results.body.access_token;
-    
+    const response = await generateAccessToken(requestWithDefaults, options, Logger);
+    const token = response.body.access_token;
+
     const detects = await getDetects(requestWithDefaults, token, entity, options, Logger);
 
-    return polarityResponse(entity, detects, Logger);
+    if (options.searchIoc) {
+      devices = await getDevices(requestWithDefaults, token, entity, options, Logger);
+    }
+
+    const apiData = { devices, detects };
+
+    return polarityResponse(entity, apiData, Logger);
   } catch (err) {
     throw err;
   }

@@ -5,6 +5,10 @@ const SEVERITY_LEVELS = {
   Low: '"Low","Medium","High","Critical"'
 };
 
+/* 
+  getDetects returns devices that were matched with returned id's from searchDetects(). 
+  It is possible that searchDetects returns a list of ids that do not have a matching device 
+*/
 const searchDetects = async (requestWithDefaults, token, entity, options, Logger) => {
   try {
     const requestOptions = {
@@ -17,7 +21,7 @@ const searchDetects = async (requestWithDefaults, token, entity, options, Logger
       json: true
     };
 
-    Logger.trace({ requestOptions }, 'searchDetects request options');
+    Logger.trace({ requestOptions }, 'searchDetects() request options');
 
     const response = await requestWithDefaults(requestOptions);
     Logger.trace({ response }, 'response in searchDetects()');
@@ -44,9 +48,9 @@ const getDetects = async (requestWithDefaults, token, entity, options, Logger) =
       },
       json: true
     };
+    Logger.trace({ requestOptions }, 'getDetects() request options');
 
     const response = await requestWithDefaults(requestOptions);
-
     Logger.trace({ response }, 'Response from detects');
 
     const foundDetects = response.body.resources.map((resource) => {
@@ -55,10 +59,7 @@ const getDetects = async (requestWithDefaults, token, entity, options, Logger) =
       return resource;
     });
 
-    
-
-    Logger.debug({ detections: foundDetects }, 'getDetects() return result');
-
+    Logger.debug({ foundDetects }, 'getDetects() return result');
     return foundDetects;
   } catch (err) {
     throw err;
