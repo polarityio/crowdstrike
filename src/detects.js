@@ -12,9 +12,9 @@ const SEVERITY_LEVELS = {
 const searchDetects = async (requestWithDefaults, token, entity, options, Logger) => {
   try {
     const requestOptions = {
+      method: 'GET',
       uri: `${options.url}/detects/queries/detects/v1`,
       qs: _getQuery(entity, options),
-      method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`
       },
@@ -24,7 +24,7 @@ const searchDetects = async (requestWithDefaults, token, entity, options, Logger
     Logger.trace({ requestOptions }, 'searchDetects() request options');
 
     const response = await requestWithDefaults(requestOptions);
-    Logger.trace({ response }, 'response in searchDetects()');
+    Logger.trace({ response }, 'Response containing detection ids');
 
     return response;
   } catch (err) {
@@ -32,35 +32,41 @@ const searchDetects = async (requestWithDefaults, token, entity, options, Logger
   }
 };
 
+// ONLY CALL THIS IF IDS ARE RETURNED
 const getDetects = async (requestWithDefaults, token, entity, options, Logger) => {
   try {
     const detectsResponse = await searchDetects(requestWithDefaults, token, entity, options, Logger);
     const detectIds = detectsResponse.body.resources;
 
-    const requestOptions = {
-      method: 'POST',
-      uri: `${options.url}/detects/entities/summaries/GET/v1`,
-      body: {
-        ids: detectIds
-      },
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      json: true
-    };
-    Logger.trace({ requestOptions }, 'getDetects() request options');
+    Logger.trace({ detectIds }, 'detections ids');
 
-    const response = await requestWithDefaults(requestOptions);
-    Logger.trace({ response }, 'Response from detects');
+    if (detectIds.length) {
+      //TEMPORARY CHECK
+      const requestOptions = {
+        method: 'POST',
+        uri: `${options.url}/detects/entities/summaries/GET/v1`,
+        body: {
+          ids: detectIds
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        json: true
+      };
+      Logger.trace({ requestOptions }, 'getDetects() request options');
 
-    const foundDetects = response.body.resources.map((resource) => {
-      let split = resource.detection_id.split(':');
-      resource.__url = `https://falcon.crowdstrike.com/activity/detections/detail/${split[1]}/${split[2]}`;
-      return resource;
-    });
+      const response = await requestWithDefaults(requestOptions);
+      Logger.trace({ response }, 'Response from detects');
 
-    Logger.debug({ foundDetects }, 'getDetects() return result');
-    return foundDetects;
+      const foundDetects = response.body.resources.map((resource) => {
+        let split = resource.detection_id.split(':');
+        resource.__url = `https://falcon.crowdstrike.com/activity/detections/detail/${split[1]}/${split[2]}`;
+        return resource;
+      });
+
+      Logger.debug({ foundDetects }, 'getDetects() return result');
+      return foundDetects;
+    }
   } catch (err) {
     throw err;
   }

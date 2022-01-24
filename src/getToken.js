@@ -6,14 +6,11 @@ const { polarityError } = require('./responses');
 // HANDLE THIS NOT GETTING A TOKEN LOGIC
 
 const generateAccessToken = async (requestWithDefaults, options, Logger) => {
-  Logger.trace({ IN_GEN: options });
   // let token = getTokenFromCache(options);
 
   // if (token) {
   //   return token;
   // }
-
-  Logger.trace({ ASDASDSA: 12312312313, requestWithDefaults });
 
   try {
     const response = await requestWithDefaults({

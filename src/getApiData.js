@@ -11,13 +11,17 @@ const getApiData = async (requestWithDefaults, entity, options, Logger) => {
 
     const detects = await getDetects(requestWithDefaults, token, entity, options, Logger);
 
-    if (options.searchIoc) {
-      devices = await getDevices(requestWithDefaults, token, entity, options, Logger);
-    }
+    Logger.trace({ detects }, 'Detects API data');
 
-    const apiData = { devices, detects };
+    // if (options.searchIoc) {
+    // devices = await getDevices(requestWithDefaults, token, entity, options, Logger);
 
-    return polarityResponse(entity, apiData, Logger);
+    Logger.trace({ devices }, 'Devices API data');
+    // }
+
+    // const apiData = { devices, detects };
+
+    // return polarityResponse(entity, apiData, Logger);
   } catch (err) {
     throw err;
   }

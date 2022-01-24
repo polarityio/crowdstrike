@@ -307,9 +307,7 @@ const doLookup = async (entities, options, callback) => {
       response = await getApiData(requestWithDefaults, entity, options, Logger);
     }
 
-    Logger.trace({ do_lookup_response: response });
-    Logger.trace({ requestWithDefaults });
-
+    Logger.trace({ response }, 'DoLookup Response');
     callback(null, response);
   } catch (err) {
     return callback(polarityError(err));
@@ -357,4 +355,3 @@ module.exports = {
   //   __getDetectIds: getDetectIds,
   //   __getDetects: getDetects
 };
-
