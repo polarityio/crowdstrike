@@ -10,16 +10,15 @@ const emptyResponse = (entity) => ({
   data: null
 });
 
-const polarityResponse = (entity, response, Logger) => {
-  Logger.trace({ detects: response });
-  return response.length
-    ? [
-        {
-          entity,
-          data: response.length ? { summary: getSummary(response), details: { detections: response } } : null
-        }
-      ]
-    : emptyResponse(entity);
+const polarityResponse = (entity, apiData, Logger) => {
+  Logger.trace({ RESSSI_API: apiData });
+  return {
+    entity,
+    data: {
+      summary: getSummary(apiData),
+      details: { detections: apiData.detections, devices: apiData.devices }
+    }
+  };
 };
 
 const retryablePolarityResponse = (entity) => ({
@@ -30,18 +29,18 @@ const retryablePolarityResponse = (entity) => ({
     details: {
       summaryTag: 'Lookup limit reached',
       errorMessage:
-        'A temporary FireEye HX API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
+        'A temporary Crowdstrike HX API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
     }
   }
 });
 
-const getSummary = (response) => {
-  // let tags = [];
-  // tags.push(`Alerts: ${response.alerts.entries.length}`);
-  // for (const alert of response.alerts.entries) {
-  //   tags.push(`IOC: ${alert.indicator.name}`);
-  // }
-  // return _.uniq(tags);
+const getSummary = (apiData) => {
+  let tags = [];
+  const { detections, devices } = apiData;
+
+  tags.push(`Detections: ${detections.length}`);
+  tags.push(`Devices: ${devices.length}`);
+  return tags;
 };
 
 module.exports = {

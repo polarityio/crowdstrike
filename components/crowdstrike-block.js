@@ -32,6 +32,12 @@ polarity.export = PolarityComponent.extend({
       } else {
         Ember.set(detection, '__showAllBehaviorInfo', true);
       }
+    },
+    connectHost: function (hostnames, index) {
+      this.sendIntegratingMessage({
+        action: 'connectHost',
+        data: { id: hostnames.id }
+      });
     }
   }
 });

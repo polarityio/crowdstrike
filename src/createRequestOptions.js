@@ -1,11 +1,16 @@
 const fs = require('fs');
 const request = require('postman-request');
 const config = require('../config/config');
+const generateAccessToken = require('./getToken');
 
 const _configFieldIsValid = (field) => typeof field === 'string' && field.length > 0;
 
 let Logger;
 let requestWithDefaults;
+
+const EXPIRED_BEARER_TOKEN_HTTP_CODE = 403;
+const INVALID_BEARER_TOKEN_HTTP_CODE = 401;
+const MAX_AUTH_RETRIES = 2;
 
 const setRequestWithDefaults = (Logger) => {
   const {
@@ -31,7 +36,7 @@ const setRequestWithDefaults = (Logger) => {
         if (err) return reject(err);
         const response = { ...res, body };
 
-        Logger.trace({ response }, 'Response');
+        Logger.trace({ response }, 'Response in requestWithDefaults');
 
         try {
           checkForStatusError(response, requestOptions);
@@ -47,10 +52,40 @@ const setRequestWithDefaults = (Logger) => {
   return requestWithDefaults;
 };
 
+const authenticatedRequest = async (requestWithDefaults, requestOptions, options, Logger) => {
+  // startup sets requestwith defaults,
+  // if (requestCount === MAX_AUTH_RETRIES) {
+  //   throw new Error(`Attempted to authenticate ${MAX_AUTH_RETRIES} times but failed authentication`);
+  // }
+
+  try {
+    const tokenResponse = await generateAccessToken(requestWithDefaults, options, Logger);
+    Logger.trace({ TOKEN: tokenResponse });
+    requestOptions.headers = { authorization: `Bearer ${tokenResponse}` };
+
+    const response = await requestWithDefaults(requestOptions);
+
+    if (
+      response.statusCode === EXPIRED_BEARER_TOKEN_HTTP_CODE ||
+      response.statusCode === INVALID_BEARER_TOKEN_HTTP_CODE
+    ) {
+      invalidateToken(options);
+      // requestCount++;
+      authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
+      return;
+    }
+
+    return response;
+  } catch (err) {
+    throw err;
+  }
+};
+
 const checkForStatusError = (response, requestOptions) => {
   const statusCode = response.statusCode;
 
-  if (![200, 201, 429, 500, 502, 504].includes(statusCode)) {
+  if (![200, 201, 404, 429, 500, 502, 504].includes(statusCode)) {
+    // possibly handle 404 differently
     const requestError = Error('Request Error');
     requestError.status = statusCode;
     requestError.description = JSON.stringify(response.body);
@@ -59,75 +94,26 @@ const checkForStatusError = (response, requestOptions) => {
   }
 };
 
-module.exports = setRequestWithDefaults;
+const getTokenFromCache = (options) => {
+  return tokenCache.get(_getTokenKey(options));
+};
 
-// let requestOptions = {};
+const setTokenInCache = (options, token) => {
+  tokenCache.set(_getTokenKey(options), token);
+};
 
-// if (typeof config.request.cert === 'string' && config.request.cert.length > 0) {
-//   requestOptions.cert = fs.readFileSync(config.request.cert);
-// }
+const invalidateToken = (options) => {
+  tokenCache.delete(_getTokenKey(options));
+};
 
-// if (typeof config.request.key === 'string' && config.request.key.length > 0) {
-//   requestOptions.key = fs.readFileSync(config.request.key);
-// }
+const _getTokenKey = (options) => {
+  return options.url + options.id + options.secret;
+};
 
-// if (typeof config.request.passphrase === 'string' && config.request.passphrase.length > 0) {
-//   requestOptions.passphrase = config.request.passphrase;
-// }
+module.exports = {
+  setRequestWithDefaults,
+  authenticatedRequest
+};
 
-// if (typeof config.request.ca === 'string' && config.request.ca.length > 0) {
-//   requestOptions.ca = fs.readFileSync(config.request.ca);
-// }
-
-// if (typeof config.request.proxy === 'string' && config.request.proxy.length > 0) {
-//   requestOptions.proxy = config.request.proxy;
-// }
-
-// if (typeof config.request.rejectUnauthorized === 'boolean') {
-//   requestOptions.rejectUnauthorized = config.request.rejectUnauthorized;
-// }
-
-// requestOptions.json = true;
-// requestWithDefaults = request.defaults(requestOptions);
-
-// authenticatedRequest = (options, requestOptions, cb, requestCounter = 0) => {
-//   if (requestCounter === MAX_AUTH_RETRIES) {
-//     // We reached the maximum number of auth retries
-//     return cb({
-//       detail: `Attempted to authenticate ${MAX_AUTH_RETRIES} times but failed authentication`
-//     });
-//   }
-
-//   generateAccessToken(options, function (err, token) {
-//     if (err) {
-//       Logger.error({ err: err }, 'Error getting token');
-//       return cb({
-//         err: err,
-//         detail: 'Error creating authentication token'
-//       });
-//     }
-
-//     requestOptions.headers = { authorization: `bearer ${token}` };
-
-//     requestWithDefaults(requestOptions, (err, resp, body) => {
-//       if (err) {
-//         return cb(err, resp, body);
-//       }
-
-//       if (resp.statusCode === EXPIRED_BEARER_TOKEN_HTTP_CODE || resp.statusCode === INVALID_BEARER_TOKEN_HTTP_CODE) {
-//         // Unable to authenticate so we attempt to get a new token
-//         invalidateToken(options);
-//         authenticatedRequest(options, requestOptions, cb, ++requestCounter);
-//         return;
-//       }
-
-//       let restError = handleRestErrors(resp);
-
-//       if (restError) {
-//         return cb(restError);
-//       }
-
-//       cb(null, resp, body);
-//     });
-//   });
-// };
+// in a list of ids,  a request is made for each id
+// if one of the ids does not match it will throw a 400

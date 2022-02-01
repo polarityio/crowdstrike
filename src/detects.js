@@ -9,21 +9,18 @@ const SEVERITY_LEVELS = {
   getDetects returns devices that were matched with returned id's from searchDetects(). 
   It is possible that searchDetects returns a list of ids that do not have a matching device 
 */
-const searchDetects = async (requestWithDefaults, token, entity, options, Logger) => {
+const searchDetects = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
   try {
     const requestOptions = {
       method: 'GET',
       uri: `${options.url}/detects/queries/detects/v1`,
       qs: _getQuery(entity, options),
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
       json: true
     };
 
     Logger.trace({ requestOptions }, 'searchDetects() request options');
 
-    const response = await requestWithDefaults(requestOptions);
+    const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
     Logger.trace({ response }, 'Response containing detection ids');
 
     return response;
@@ -33,9 +30,9 @@ const searchDetects = async (requestWithDefaults, token, entity, options, Logger
 };
 
 // ONLY CALL THIS IF IDS ARE RETURNED
-const getDetects = async (requestWithDefaults, token, entity, options, Logger) => {
+const getDetects = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
   try {
-    const detectsResponse = await searchDetects(requestWithDefaults, token, entity, options, Logger);
+    const detectsResponse = await searchDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger);
     const detectIds = detectsResponse.body.resources;
 
     Logger.trace({ detectIds }, 'detections ids');
@@ -48,14 +45,11 @@ const getDetects = async (requestWithDefaults, token, entity, options, Logger) =
         body: {
           ids: detectIds
         },
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
         json: true
       };
       Logger.trace({ requestOptions }, 'getDetects() request options');
 
-      const response = await requestWithDefaults(requestOptions);
+      const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
       Logger.trace({ response }, 'Response from detects');
 
       const foundDetects = response.body.resources.map((resource) => {
@@ -65,7 +59,7 @@ const getDetects = async (requestWithDefaults, token, entity, options, Logger) =
       });
 
       Logger.debug({ foundDetects }, 'getDetects() return result');
-      return foundDetects;
+      return foundDetects
     }
   } catch (err) {
     throw err;
