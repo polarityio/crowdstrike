@@ -4,21 +4,20 @@ const SEVERITY_LEVELS = {
   Medium: '"Medium","High","Critical"',
   Low: '"Low","Medium","High","Critical"'
 };
-
 /* 
   getDetects returns devices that were matched with returned id's from searchDetects(). 
   It is possible that searchDetects returns a list of ids that do not have a matching device 
 */
-const searchDetects = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
+const getDetectionIds = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
   try {
     const requestOptions = {
       method: 'GET',
       uri: `${options.url}/detects/queries/detects/v1`,
-      qs: _getQuery(entity, options),
+      qs: _getQuery(entity, options, Logger),
       json: true
     };
 
-    Logger.trace({ requestOptions }, 'searchDetects() request options');
+    Logger.trace({ requestOptions }, 'searchDetects request options');
 
     const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
     Logger.trace({ response }, 'Response containing detection ids');
@@ -29,46 +28,49 @@ const searchDetects = async (authenticatedRequest, requestWithDefaults, entity, 
   }
 };
 
-// ONLY CALL THIS IF IDS ARE RETURNED
 const getDetects = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
   try {
-    const detectsResponse = await searchDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger);
-    const detectIds = detectsResponse.body.resources;
+    const detectionIdsResponse = await getDetectionIds(
+      authenticatedRequest,
+      requestWithDefaults,
+      entity,
+      options,
+      Logger
+    );
+    const ids = detectionIdsResponse.body.resources;
 
-    Logger.trace({ detectIds }, 'detections ids');
-
-    if (detectIds.length) {
-      //TEMPORARY CHECK
+    if (ids.length) {
       const requestOptions = {
         method: 'POST',
         uri: `${options.url}/detects/entities/summaries/GET/v1`,
         body: {
-          ids: detectIds
+          ids
         },
         json: true
       };
-      Logger.trace({ requestOptions }, 'getDetects() request options');
+
+      Logger.trace({ requestOptions }, 'getDetects request options');
 
       const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
       Logger.trace({ response }, 'Response from detects');
 
-      const foundDetects = response.body.resources.map((resource) => {
+      const detections = response.body.resources.map((resource) => {
         let split = resource.detection_id.split(':');
         resource.__url = `https://falcon.crowdstrike.com/activity/detections/detail/${split[1]}/${split[2]}`;
         return resource;
       });
 
-      Logger.debug({ foundDetects }, 'getDetects() return result');
-      return foundDetects
+      Logger.trace({ detections }, 'getDetects return result');
+      return { detections, statusCode: response.statusCode };
     }
   } catch (err) {
     throw err;
   }
 };
 
-const _getQuery = (entityObj, options) => {
+const _getQuery = (entityObj, options, Logger) => {
   const statuses = options.detectionStatuses.reduce((accum, statusObj) => {
-    // statuses need to be in double quotes
+    Logger.trace({ STATUS_OBJ: statusObj.value });
     if (statusObj && statusObj.value) {
       accum.push(`"${statusObj.value}"`);
     }
@@ -83,6 +85,10 @@ const _getQuery = (entityObj, options) => {
     type = 'md5';
   } else if (entityObj.type === 'custom' && entityObj.types.indexOf('custom.exeFile') >= 0) {
     type = 'filename';
+  }
+
+  if (entityObj.type === 'custom' && entityObj.types.indexOf('custom.hostname') >= 0) {
+    type = 'hostname';
   }
 
   let filter = `+status:[${statuses.toString()}]+max_severity_displayname:[${severityLevels}]`;
@@ -101,6 +107,5 @@ const _getQuery = (entityObj, options) => {
 };
 
 module.exports = {
-  searchDetects,
   getDetects
 };
