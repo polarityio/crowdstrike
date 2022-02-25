@@ -2,13 +2,12 @@ const Bottleneck = require('bottleneck/es5');
 const { map } = require('lodash/fp');
 const buildResponse = require('./src/getApiData');
 const { polarityError } = require('./src/responses');
-const containHost = require('./src/containHost');
+const { containHost } = require('./src/containHost');
 const { setRequestWithDefaults, authenticatedRequest } = require('./src/createRequestOptions');
 
 let limiter = null;
 let requestWithDefaults;
 let Logger;
-
 
 const startup = (logger) => {
   Logger = logger;
@@ -42,10 +41,30 @@ const doLookup = async (entities, options, callback) => {
   }
 };
 
-const onMessage = (payload, options, callback) => {
+const onMessage = async (payload, options, callback) => {
+  const data = payload.data;
+
   switch (payload.action) {
-    case 'connectHost':
-      containHost(requestWithDefaults, options, entity);
+    case 'CONTAIN_HOST':
+      const containedHost = await containHost(authenticatedRequest, requestWithDefaults, data, options, Logger);
+      return callback(null, containedHost);
+    case 'RETRY_LOOKUP': {
+      doLookup([payload.entity], options, (err, lookupResults) => {
+        if (err) {
+          Logger.error({ err }, 'Error retrying lookup');
+          callback(err);
+        } else {
+          callback(
+            null,
+            lookupResults && lookupResults[0] && lookupResults[0].data === null
+              ? { data: { summary: ['No Results Found on Retry'] } }
+              : lookupResults[0]
+          );
+        }
+      });
+    }
+    default:
+      return;
   }
 };
 
@@ -87,7 +106,3 @@ module.exports = {
   startup,
   validateOptions
 };
-
-// 1. implement new disconnect/connect route
-// add request path
-// wire up button
