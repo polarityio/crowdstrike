@@ -11,7 +11,6 @@ const emptyResponse = (entity) => ({
 });
 
 const polarityResponse = (entity, apiData, Logger) => {
-  Logger.trace({ RESSSI_API: apiData });
   return {
     entity,
     data: {
@@ -21,18 +20,21 @@ const polarityResponse = (entity, apiData, Logger) => {
   };
 };
 
-const retryablePolarityResponse = (entity) => ({
-  entity,
-  isVolatile: true,
-  data: {
-    summary: ['Lookup limit reached'],
-    details: {
-      summaryTag: 'Lookup limit reached',
-      errorMessage:
-        'A temporary Crowdstrike HX API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
+const retryablePolarityResponse = (entity, err) => {
+  return {
+    entity,
+    isVolatile: true,
+    data: {
+      summary: [err ? err.message : '! Lookup Limit Reached'],
+      details: {
+        summaryTag: err ? err.message : ['Lookup Limit Reached'],
+        errorMessage: err
+          ? err.message
+          : 'A temporary Crowdstrike HX API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
+      }
     }
-  }
-});
+  };
+};
 
 const getSummary = (apiData) => {
   let tags = [];
