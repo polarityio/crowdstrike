@@ -16,15 +16,15 @@ const getDevices = async (authenticatedRequest, requestWithDefaults, entity, opt
 
     Logger.trace({ requestOptions }, 'request options');
 
-    const results = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
+    const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
 
-    const devices = results.body.resources.map((resource) => {
+    const devices = response.body.resources.map((resource) => {
       resource.__url = `https://falcon.crowdstrike.com/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
       return resource;
     });
 
-    Logger.trace({ devices }, 'returned devices');
-    return devices;
+    Logger.trace({ devices, statusCode: response.statusCode }, 'returned devices');
+    return { devices, statusCode: response.statusCode };
   } catch (err) {
     throw err;
   }
@@ -55,6 +55,7 @@ const getIocIds = async (authenticatedRequest, requestWithDefaults, entity, opti
 
   try {
     const devicesIds = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
+    Logger.trace({ devicesIds }, 'Device Ids');
     return devicesIds;
   } catch (err) {
     throw err;
