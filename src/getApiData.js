@@ -1,22 +1,26 @@
 const _ = require('lodash');
-const generateAccessToken = require('./getToken');
 const { getDetects } = require('./detects');
 const { getDevices } = require('./devices');
 const { polarityResponse, polarityError, retryablePolarityResponse } = require('./responses');
 
 const getApiData = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
-  let devices;
+  let deviceResponse;
   try {
-    const detections = await getDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger);
-
-    Logger.trace({ detections }, 'detections API data');
+    const detectionResponse = await getDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+    Logger.trace({ detectionResponse }, 'detectionResponse API data');
 
     if (options.searchIoc) {
-      devices = await getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger);
-      Logger.trace({ devices }, 'Devices API data');
+      deviceResponse = await getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+      Logger.trace({ deviceResponse }, 'devices API data');
     }
 
-    const apiData = { devices: devices, detections: detections };
+    apiData = {
+      devices: deviceResponse.devices,
+      detections: detectionResponse.detections,
+      statusCode:
+        deviceResponse.statusCode === 200 && detectionResponse.statusCode === 200 ? 200 : detectionResponse.statusCode
+    };
+
     return apiData;
   } catch (err) {
     throw err;
@@ -26,14 +30,13 @@ const getApiData = async (authenticatedRequest, requestWithDefaults, entity, opt
 const buildResponse = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
   try {
     const apiData = await getApiData(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+    Logger.trace({ apiData }, 'api result');
 
-    Logger.trace({ apiData }, 'API RESULT');
-
-    // return apiData.statusCode === 200 ? polarityResponse(entity, apiData, Logger) : retryablePolarityResponse(entity);
-    return polarityResponse(entity, apiData, Logger);
+    return apiData.statusCode === 200 ? polarityResponse(entity, apiData, Logger) : retryablePolarityResponse(entity);
   } catch (err) {
+    const isConnectionTimeout = _.get(err, 'code', '') === 'ETIMEDOUT';
     const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
-    if (isConnectionReset) return retryablePolarityResponse(entity);
+    if (isConnectionReset || isConnectionTimeout) return retryablePolarityResponse(entity, err);
     else throw polarityError(err);
   }
 };
