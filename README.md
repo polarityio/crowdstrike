@@ -44,6 +44,13 @@ Detection statuses you would like to return results for. Defaults to `True Posit
 ## Search Crowdstrike-IOC
 
 Ability to search using Crowdstrike-IOC endpoint
+### Max Concurrent Search Requests
+
+Maximum number of concurrent search requests (defaults to 20). Integration must be restarted after changing this option.
+
+### Minimum Time Between Searches
+
+Minimum amount of time in milliseconds between each entity search (defaults to 100). Integration must be restarted after changing this option.
 
 ## Polarity
 
