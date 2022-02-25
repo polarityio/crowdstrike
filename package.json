@@ -5,10 +5,16 @@
   "private": true,
   "license": "MIT",
   "author": "Polarity",
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
     "async": "^3.2.0",
     "bottleneck": "^2.19.5",
+    "debug": "^4.3.3",
+    "jest": "^27.5.1",
     "lodash": "^4.17.21",
+    "nock": "^13.2.4",
     "postman-request": "^2.88.1-postman.31"
   }
 }
