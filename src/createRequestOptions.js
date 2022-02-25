@@ -28,8 +28,6 @@ const setRequestWithDefaults = (Logger) => {
 
   const _defaultsRequest = request.defaults(defaults);
 
-  Logger.trace({ _defaultsRequest }, 'Defaults Request');
-
   requestWithDefaults = (requestOptions) =>
     new Promise((resolve, reject) => {
       _defaultsRequest(requestOptions, (err, res, body) => {
@@ -52,17 +50,25 @@ const setRequestWithDefaults = (Logger) => {
   return requestWithDefaults;
 };
 
+const checkForStatusError = (response, requestOptions) => {
+  const statusCode = response.statusCode;
+  if (![200, 201, 202, 404, 409, 429, 500, 502, 504].includes(statusCode)) {
+    const requestError = Error('Request Error');
+    requestError.status = statusCode;
+    requestError.description = JSON.stringify(response.body);
+    requestError.requestOptions = requestOptions;
+    throw requestError;
+  }
+};
+
 const authenticatedRequest = async (requestWithDefaults, requestOptions, options, Logger) => {
-  // startup sets requestwith defaults,
   // if (requestCount === MAX_AUTH_RETRIES) {
   //   throw new Error(`Attempted to authenticate ${MAX_AUTH_RETRIES} times but failed authentication`);
   // }
 
   try {
     const tokenResponse = await generateAccessToken(requestWithDefaults, options, Logger);
-    Logger.trace({ TOKEN: tokenResponse });
     requestOptions.headers = { authorization: `Bearer ${tokenResponse}` };
-
     const response = await requestWithDefaults(requestOptions);
 
     if (
@@ -81,27 +87,6 @@ const authenticatedRequest = async (requestWithDefaults, requestOptions, options
   }
 };
 
-const checkForStatusError = (response, requestOptions) => {
-  const statusCode = response.statusCode;
-
-  if (![200, 201, 404, 429, 500, 502, 504].includes(statusCode)) {
-    // possibly handle 404 differently
-    const requestError = Error('Request Error');
-    requestError.status = statusCode;
-    requestError.description = JSON.stringify(response.body);
-    requestError.requestOptions = requestOptions;
-    throw requestError;
-  }
-};
-
-const getTokenFromCache = (options) => {
-  return tokenCache.get(_getTokenKey(options));
-};
-
-const setTokenInCache = (options, token) => {
-  tokenCache.set(_getTokenKey(options), token);
-};
-
 const invalidateToken = (options) => {
   tokenCache.delete(_getTokenKey(options));
 };
@@ -114,6 +99,3 @@ module.exports = {
   setRequestWithDefaults,
   authenticatedRequest
 };
-
-// in a list of ids,  a request is made for each id
-// if one of the ids does not match it will throw a 400
