@@ -11,9 +11,54 @@ polarity.export = PolarityComponent.extend({
     'machine_domain'
   ],
   compactBehaviorProperties: ['scenario', 'objective', 'filename', 'tactic', 'technique', 'severity', 'confidence'],
+  containmentStatus: '',
+  isRunning: false,
+  init() {
+    const LABELS = {
+      lift_containment_pending: 'Lift Containment Pending',
+      containment_pending: 'Containment Pending',
+      contained: 'Disconnected',
+      normal: 'Connected'
+    };
+
+    let index = 0;
+
+    const devices = this.get('block.data.details.devices');
+
+    if (devices) {
+      this.get('block.data.details.devices').forEach((device) => {
+        this.set('block.data.details.devices.' + index + '.statusLabel', LABELS[device.status]);
+
+        index += 1;
+      });
+
+      this._super(...arguments);
+    }
+  },
   actions: {
     changeTab: function (tabName) {
       this.set('activeTab', tabName);
+    },
+    retryLookup: function () {
+      this.set('running', true);
+      this.set('errorMessage', '');
+
+      const payload = {
+        action: 'RETRY_LOOKUP',
+        entity: this.get('block.entity')
+      };
+
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          if (result.data.summary) this.set('summary', result.summary);
+          this.set('block.data', result.data);
+        })
+        .catch((err) => {
+          this.set('details.errorMessage', JSON.stringify(err, null, 4));
+        })
+        .finally(() => {
+          this.set('running', false);
+        });
     },
     showAllDeviceInfo: function (detectionIndex) {
       let detection = this.get('details.detections.' + detectionIndex);
@@ -33,11 +78,12 @@ polarity.export = PolarityComponent.extend({
         Ember.set(detection, '__showAllBehaviorInfo', true);
       }
     },
-    connectHost: function (hostnames, index) {
-      this.sendIntegratingMessage({
-        action: 'connectHost',
-        data: { id: hostnames.id }
+    containHost: function (device, index) {
+      this.sendIntegrationMessage({
+        action: 'CONTAIN_HOST',
+        data: { id: device.device_id, status: device.status }
       });
+      this.get('block').notifyPropertyChange('data');
     }
   }
 });
