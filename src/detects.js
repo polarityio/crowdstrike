@@ -37,23 +37,28 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
       options,
       Logger
     );
+
+    Logger.trace({ detectionIdsResponse }, 'detections');
     const ids = detectionIdsResponse.body.resources;
 
-    if (ids.length) {
-      const requestOptions = {
-        method: 'POST',
-        uri: `${options.url}/detects/entities/summaries/GET/v1`,
-        body: {
-          ids
-        },
-        json: true
-      };
+    const requestOptions = {
+      method: 'POST',
+      uri: `${options.url}/detects/entities/summaries/GET/v1`,
+      body: {
+        ids
+      },
+      json: true
+    };
 
-      Logger.trace({ requestOptions }, 'getDetects request options');
+    Logger.trace({ requestOptions }, 'getDetects request options');
 
-      const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
-      Logger.trace({ response }, 'Response from detects');
+    const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
+    Logger.trace({ response }, 'Response from detects');
 
+    if (
+      (response && response.statusCode === 200) ||
+      (response && response.body && response.body.resources && response.body.resources.length > 0)
+    ) {
       const detections = response.body.resources.map((resource) => {
         let split = resource.detection_id.split(':');
         resource.__url = `https://falcon.crowdstrike.com/activity/detections/detail/${split[1]}/${split[2]}`;
@@ -62,6 +67,8 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
 
       Logger.trace({ detections }, 'getDetects return result');
       return { detections, statusCode: response.statusCode };
+    } else {
+      return { detections: null, statusCode: response.statusCode };
     }
   } catch (err) {
     throw err;
@@ -70,7 +77,6 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
 
 const _getQuery = (entityObj, options, Logger) => {
   const statuses = options.detectionStatuses.reduce((accum, statusObj) => {
-    Logger.trace({ STATUS_OBJ: statusObj.value });
     if (statusObj && statusObj.value) {
       accum.push(`"${statusObj.value}"`);
     }

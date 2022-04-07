@@ -3,6 +3,7 @@ const { map } = require('lodash/fp');
 const buildResponse = require('./src/getApiData');
 const { polarityError } = require('./src/responses');
 const { containHost } = require('./src/containHost');
+const { getAndUpdateDeviceState } = require('./src/devices');
 const { setRequestWithDefaults, authenticatedRequest } = require('./src/createRequestOptions');
 
 let limiter = null;
@@ -45,9 +46,27 @@ const onMessage = async (payload, options, callback) => {
   const data = payload.data;
 
   switch (payload.action) {
-    case 'CONTAIN_HOST':
-      const containedHost = await containHost(authenticatedRequest, requestWithDefaults, data, options, Logger);
-      return callback(null, containedHost);
+    case 'containOrUncontain':
+      try {
+        const containedHost = await containHost(authenticatedRequest, requestWithDefaults, data, options, Logger);
+        return callback(null, containedHost);
+      } catch (err) {
+        return callback(err, null);
+      }
+    case 'getAndUpdateDeviceState':
+      const deviceId = payload.data.id;
+      try {
+        const deviceStatus = await getAndUpdateDeviceState(
+          authenticatedRequest,
+          requestWithDefaults,
+          deviceId,
+          options,
+          Logger
+        );
+        return callback(null, { deviceStatus });
+      } catch (err) {
+        return callback(err, null);
+      }
     case 'RETRY_LOOKUP': {
       doLookup([payload.entity], options, (err, lookupResults) => {
         if (err) {

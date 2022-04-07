@@ -52,7 +52,7 @@ const setRequestWithDefaults = (Logger) => {
 
 const checkForStatusError = (response, requestOptions) => {
   const statusCode = response.statusCode;
-  if (![200, 201, 202, 404, 409, 429, 500, 502, 504].includes(statusCode)) {
+  if (![200, 201, 202, 400, 404, 409, 429, 500, 502, 504].includes(statusCode)) {
     const requestError = Error('Request Error');
     requestError.status = statusCode;
     requestError.description = JSON.stringify(response.body);

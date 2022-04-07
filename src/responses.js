@@ -11,13 +11,18 @@ const emptyResponse = (entity) => ({
 });
 
 const polarityResponse = (entity, apiData, Logger) => {
-  return {
-    entity,
-    data: {
-      summary: getSummary(apiData),
-      details: { detections: apiData.detections, devices: apiData.devices }
-    }
-  };
+  Logger.trace({ apiData }, 'API_DATE');
+  if ((apiData && apiData.detections !== null) || (apiData && apiData.devices !== null)) {
+    return {
+      entity,
+      data: {
+        summary: getSummary(apiData),
+        details: { detections: apiData.detections, devices: apiData.devices }
+      }
+    };
+  } else {
+    return emptyResponse(entity);
+  }
 };
 
 const retryablePolarityResponse = (entity, err) => {
@@ -40,8 +45,13 @@ const getSummary = (apiData) => {
   let tags = [];
   const { detections, devices } = apiData;
 
-  tags.push(`Detections: ${detections.length}`);
-  tags.push(`Devices: ${devices.length}`);
+  if (apiData && apiData.detections !== null) {
+    tags.push(`Detections: ${detections.length}`);
+  }
+  if (apiData && apiData.devices !== null) {
+    tags.push(`Devices: ${devices.length}`);
+  }
+
   return tags;
 };
 

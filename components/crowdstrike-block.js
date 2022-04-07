@@ -10,31 +10,12 @@ polarity.export = PolarityComponent.extend({
     'hostname',
     'machine_domain'
   ],
+  containOrUncontainMessages: {},
+  containOrUncontainErrorMessages: {},
+  containOrUncontainIsRunning: {},
   compactBehaviorProperties: ['scenario', 'objective', 'filename', 'tactic', 'technique', 'severity', 'confidence'],
   containmentStatus: '',
   isRunning: false,
-  init() {
-    const LABELS = {
-      lift_containment_pending: 'Lift Containment Pending',
-      containment_pending: 'Containment Pending',
-      contained: 'Disconnected',
-      normal: 'Connected'
-    };
-
-    let index = 0;
-
-    const devices = this.get('block.data.details.devices');
-
-    if (devices) {
-      this.get('block.data.details.devices').forEach((device) => {
-        this.set('block.data.details.devices.' + index + '.statusLabel', LABELS[device.status]);
-
-        index += 1;
-      });
-
-      this._super(...arguments);
-    }
-  },
   actions: {
     changeTab: function (tabName) {
       this.set('activeTab', tabName);
@@ -78,12 +59,68 @@ polarity.export = PolarityComponent.extend({
         Ember.set(detection, '__showAllBehaviorInfo', true);
       }
     },
-    containHost: function (device, index) {
+    containOrUncontain: function (device, index) {
+      const outerThis = this;
+
+      this.setMessages(index, 'containOrUncontain', '');
+      this.setErrorMessages(index, 'containOrUncontain', '');
+      this.setIsRunning(index, 'containOrUncontain', true);
+
       this.sendIntegrationMessage({
-        action: 'CONTAIN_HOST',
+        action: 'containOrUncontain',
         data: { id: device.device_id, status: device.status }
-      });
-      this.get('block').notifyPropertyChange('data');
+      })
+        .then(({ updatedDeviceState }) => {
+          this.set('details.devices.' + index + '.status', updatedDeviceState);
+        })
+        .catch((err) => {
+          outerThis.setErrorMessages(
+            index,
+            'containOrUncontain',
+            `
+            Failed
+
+            `
+          );
+        })
+        .finally(() => {
+          this.setIsRunning(index, 'containOrUncontain', false);
+          outerThis.get('block').notifyPropertyChange('data');
+          setTimeout(() => {
+            outerThis.setMessages(index, 'containOrUncontain', '');
+            outerThis.setErrorMessages(index, 'containOrUncontain', '');
+            outerThis.get('block').notifyPropertyChange('data');
+          }, 5000);
+        });
+    },
+    getAndUpdateDeviceState: function (device, index) {
+      this.sendIntegrationMessage({
+        action: 'getAndUpdateDeviceState',
+        data: { id: device.device_id }
+      })
+        .then(({ deviceStatus }) => {
+          this.set('details.devices.' + index + '.status', deviceStatus);
+          console.log('details.devices.' + index + '.status', deviceStatus);
+        })
+        .catch((err) => {
+          this.setErrorMessages(index, 'getAndUpdateDeviceState', `${err}`);
+        });
     }
+  },
+  setMessages: function (index, prefix, message) {
+    console.log(index, prefix, message);
+    this.set(`${prefix}Messages`, Object.assign({}, this.get(`${prefix}Messages`), { [index]: message }));
+  },
+  setErrorMessages: function (index, prefix, message) {
+    this.set(
+      `${prefix}ErrorMessages`,
+      Object.assign({}, this.get(`${prefix}ErrorMessages`), {
+        [index]: message
+      })
+    );
+  },
+  setIsRunning: function (index, prefix, value) {
+    console.log(`${prefix}IsRunning`, Object.assign({}, this.get(`${prefix}IsRunning`), { [index]: value }));
+    this.set(`${prefix}IsRunning`, Object.assign({}, this.get(`${prefix}IsRunning`), { [index]: value }));
   }
 });

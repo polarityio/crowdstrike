@@ -1,3 +1,5 @@
+const { getAndUpdateDeviceState } = require('./devices');
+
 const containHost = async (authenticatedRequest, requestWithDefaults, data, options, Logger) => {
   const status = data.status;
   const deviceId = data.id;
@@ -16,10 +18,21 @@ const containHost = async (authenticatedRequest, requestWithDefaults, data, opti
         body: { ids: [deviceId] },
         json: true
       };
-
       Logger.trace({ requestOptions }, 'containHost requestOptions');
+
       const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
-      return response;
+      Logger.trace({ response }, 'devices response');
+
+      const updatedDeviceState = await getAndUpdateDeviceState(
+        authenticatedRequest,
+        requestWithDefaults,
+        deviceId,
+        options,
+        Logger
+      );
+
+      Logger.trace({ updatedDeviceState }, 'single device response');
+      return { response, updatedDeviceState };
     }
   } catch (err) {
     throw err;
@@ -27,3 +40,4 @@ const containHost = async (authenticatedRequest, requestWithDefaults, data, opti
 };
 
 module.exports = { containHost };
+// can return status normal, contain, contained, lift_containment

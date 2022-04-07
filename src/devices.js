@@ -2,7 +2,6 @@ const getDevices = async (authenticatedRequest, requestWithDefaults, entity, opt
   try {
     const ids = await getIocIds(authenticatedRequest, requestWithDefaults, entity, options, Logger);
     const deviceIds = ids.body.resources;
-
     Logger.trace({ deviceIds }, 'device ids');
 
     const requestOptions = {
@@ -18,13 +17,20 @@ const getDevices = async (authenticatedRequest, requestWithDefaults, entity, opt
 
     const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
 
-    const devices = response.body.resources.map((resource) => {
-      resource.__url = `https://falcon.crowdstrike.com/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
-      return resource;
-    });
+    if (
+      (response && response.statusCode === 200) ||
+      (response && response.body && response.body.resources && response.body.resources.length > 0)
+    ) {
+      const devices = response.body.resources.map((resource) => {
+        resource.__url = `https://falcon.crowdstrike.com/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
+        return resource;
+      });
 
-    Logger.trace({ devices, statusCode: response.statusCode }, 'returned devices');
-    return { devices, statusCode: response.statusCode };
+      Logger.trace({ devices, statusCode: response.statusCode }, 'returned devices');
+      return { devices, statusCode: response.statusCode };
+    } else {
+      return { devices: null, statusCode: response.statusCode };
+    }
   } catch (err) {
     throw err;
   }
@@ -62,7 +68,32 @@ const getIocIds = async (authenticatedRequest, requestWithDefaults, entity, opti
   }
 };
 
+const getAndUpdateDeviceState = async (authenticatedRequest, requestWithDefaults, deviceId, options, Logger) => {
+  try {
+    const requestOptions = {
+      method: 'GET',
+      uri: `${options.url}/devices/entities/devices/v1`,
+      body: {
+        ids: [deviceId]
+      },
+      json: true
+    };
+    Logger.trace({ requestOptions }, 'request options in getAndUpdateDeviceState');
+
+    const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
+    Logger.trace({ response }, 'response in getAndUpdateDeviceState');
+
+    const singleDeviceStatus = response.body.resources[0].status;
+    Logger.trace({ singleDeviceStatus }, 'single device status');
+
+    return singleDeviceStatus;
+  } catch (err) {
+    throw err;
+  }
+};
+
 module.exports = {
   getDevices,
-  getIocIds
+  getIocIds,
+  getAndUpdateDeviceState
 };

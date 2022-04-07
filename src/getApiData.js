@@ -32,7 +32,9 @@ const buildResponse = async (authenticatedRequest, requestWithDefaults, entity, 
     const apiData = await getApiData(authenticatedRequest, requestWithDefaults, entity, options, Logger);
     Logger.trace({ apiData }, 'api result');
 
-    return apiData.statusCode === 200 ? polarityResponse(entity, apiData, Logger) : retryablePolarityResponse(entity);
+    return apiData.statusCode === 200 || apiData.statusCode === 400
+      ? polarityResponse(entity, apiData, Logger)
+      : retryablePolarityResponse(entity);
   } catch (err) {
     const isConnectionTimeout = _.get(err, 'code', '') === 'ETIMEDOUT';
     const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
