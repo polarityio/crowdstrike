@@ -25,21 +25,19 @@ const polarityResponse = (entity, apiData, Logger) => {
   }
 };
 
-const retryablePolarityResponse = (entity, err) => {
-  return {
-    entity,
-    isVolatile: true,
-    data: {
-      summary: [err ? err.message : '! Lookup Limit Reached'],
-      details: {
-        summaryTag: err ? err.message : ['Lookup Limit Reached'],
-        errorMessage: err
-          ? err.message
-          : 'A temporary Crowdstrike HX API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
-      }
+const retryablePolarityResponse = (entity, err) => ({
+  entity,
+  isVolatile: true,
+  data: {
+    summary: [err ? err.message : '! Lookup Limit Reached'],
+    details: {
+      summaryTag: err ? err.message : ['Lookup Limit Reached'],
+      errorMessage: err
+        ? err.message
+        : 'A temporary Crowdstrike HX API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
     }
-  };
-};
+  }
+});
 
 const getSummary = (apiData) => {
   let tags = [];

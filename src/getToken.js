@@ -2,10 +2,7 @@ const tokenCache = new Map();
 
 const generateAccessToken = async (requestWithDefaults, options, Logger) => {
   let token = getTokenFromCache(options);
-
-  if (token) {
-    return token;
-  }
+  if (token) return token;
 
   try {
     const response = await requestWithDefaults({
@@ -30,16 +27,10 @@ const generateAccessToken = async (requestWithDefaults, options, Logger) => {
   }
 };
 
-const getTokenFromCache = (options) => {
-  return tokenCache.get(_getTokenKey(options));
-};
+const getTokenFromCache = (options) => tokenCache.get(_getTokenKey(options));
 
-const setTokenInCache = (options, token) => {
-  tokenCache.set(_getTokenKey(options), token);
-};
+const setTokenInCache = (options, token) => tokenCache.set(_getTokenKey(options), token);
 
-const _getTokenKey = (options) => {
-  return options.url + options.id + options.secret;
-};
+const _getTokenKey = (options) => options.url + options.id + options.secret;
 
 module.exports = generateAccessToken;
