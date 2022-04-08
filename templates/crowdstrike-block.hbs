@@ -3,7 +3,6 @@
     <div class='alert alert-danger'>
       <pre>{{details.errorMessage}}</pre>
     </div>
-
     {{#if (not (eq details.allowRetry false))}}
       <button type='button' class='p-btn btn btn-sm btn-secondary retry-btn mt-2' {{action 'retryLookup'}}>
         {{#if running}}
@@ -30,7 +29,7 @@
       </a>
     </li>
 
-    {{#if block.userOptions.searchIoc}}
+    {{#if (and block.userOptions.searchIoc details.devices)}}
       <li class='nav-item'>
         <a
           {{action 'changeTab' 'crowdstrikeIoc'}}
@@ -41,26 +40,29 @@
         </a>
       </li>
     {{/if}}
-
-    <li class='nav-item'>
-      <a
-        {{action 'changeTab' 'hosts'}}
-        class='nav-link {{if (or (eq activeTab "hosts") (not activeTab)) "active"}}'
-        href='#'
-      >
-        Containment
-      </a>
-    </li>
+    {{#if details.devices}}
+      <li class='nav-item'>
+        <a
+          {{action 'changeTab' 'hosts'}}
+          class='nav-link {{if (or (eq activeTab "hosts") (not activeTab)) "active"}}'
+          href='#'
+        >
+          Containment
+        </a>
+      </li>
+    {{/if}}
   </ul>
   {{#if (eq activeTab 'crowdstrike')}}
     {{#if details.detections}}
-      <div>
-        Displaying
-        {{details.detections.length}}
-        of
-        {{details.meta.totalResults}}
-        results.
-      </div>
+      {{#if (and details.detections.length details.meta.totalResults)}}
+        <div class="display-results">
+          Displaying
+          {{details.detections.length}}
+          of
+          {{details.meta.totalResults}}
+          results.
+        </div>
+      {{/if}}
     {{else}}
       <div class='m-1'>
         No Results.
@@ -78,7 +80,7 @@
       </div>
       {{#each detectionProperties as |prop|}}
         <div>
-          <span class='p-key'>{{humanize prop}}:</span>
+          <span class='p-key'>{{titleize (humanize (dasherize prop))}}:</span>
           <span class='p-value'>{{get detection prop}}</span>
         </div>
       {{/each}}
@@ -150,13 +152,15 @@
   {{! crowdstrikeIOC }}
   {{#if (eq activeTab 'crowdstrikeIoc')}}
     {{#if details.devices}}
-      <div>
-        Displaying
-        {{details.devices.length}}
-        of
-        {{details.meta.totalResults}}
-        results.
-      </div>
+      {{#if (and details.devices.length details.meta.totalResults)}}
+        <div class="display-results">
+          Displaying
+          {{details.devices.length}}
+          of
+          {{details.meta.totalResults}}
+          results.
+        </div>
+      {{/if}}
       <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
         Device Information
       </div>
@@ -164,7 +168,7 @@
         <div class='devices-container'>
           {{#if device.hostname}}
             <div>
-              <span class='p-key'>hostname:</span>
+              <span class='p-key'>Hostname:</span>
               <span class='p-value'>{{device.hostname}}</span>
             </div>
           {{/if}}
@@ -207,13 +211,13 @@
           {{#if device.first_seen}}
             <div>
               <span class='p-key'>First Seen:</span>
-              <span class='p-value'>{{moment-format device.first_seen}}</span>
+              <span class='p-value'>{{moment-format device.first_seen timeZone=timezone}}</span>
             </div>
           {{/if}}
           {{#if device.last_seen}}
             <div>
               <span class='p-key'>Last Seen:</span>
-              <span class='p-value'>{{moment-format device.last_seen}}</span>
+              <span class='p-value'>{{moment-format device.last_seen timeZone=timezone}}</span>
             </div>
           {{/if}}
           {{#each device.policies as |policy|}}
@@ -236,13 +240,15 @@
   {{! hosts tab }}
   {{#if (eq activeTab 'hosts')}}
     {{#if details.devices}}
-      <div>
-        Displaying
-        {{details.devices.length}}
-        of 1
-        {{details.meta.totalResults}}
-        results.
-      </div>
+      {{#if (and details.devices.length details.meta.totalResults)}}
+        <div class="display-results">
+          Displaying
+          {{details.devices.length}}
+          of 1
+          {{details.meta.totalResults}}
+          results.
+        </div>
+      {{/if}}
       <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
         Device Information
       </div>
@@ -279,35 +285,42 @@
           {{/if}}
 
           {{#if (eq device.status 'normal')}}
-            <button {{action 'containOrUncontain' device index}} class='p-btn btn btn-light mt-1'>
+            <button {{action 'containOrUncontain' device index}} class='p-btn btn btn-light mt-1' disabled={{get containOrUncontainIsRunning index}}>
               {{#if (get containOrUncontainIsRunning index)}}
                 {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
               {{/if}}
               Contain
             </button>
           {{else if (eq device.status 'contained')}}
-            <button {{action 'containOrUncontain' device index}} class='p-btn btn btn-light mt-1'>
+            <button {{action 'containOrUncontain' device index}} class='p-btn btn btn-light mt-1' disabled={{get containOrUncontainIsRunning index}}>
               {{#if (get containOrUncontainIsRunning index)}}
                 {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
               {{/if}}
               Lift Containment
             </button>
           {{else}}
-            <button {{action 'getAndUpdateDeviceState' device index}} class='p-btn btn btn-light mt-1'>
-              {{#if (get getAndUpdateDeviceState index)}}
-                {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+            <div class="d-flex flex-row  justify-content-between align-items-center">
+              <button {{action 'getAndUpdateDeviceState' device index}} class='p-btn btn btn-light mt-1' disabled={{get getAndUpdateDeviceStateIsRunning index}}>
+                {{#if (get getAndUpdateDeviceStateIsRunning index)}}
+                  {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+                {{/if}}
+                Check{{if (get getAndUpdateDeviceStateIsRunning index) 'ing'}} Containment Status
+              </button>
+              {{#if (get getAndUpdateDeviceStateMessages index)}}
+                <div class='alert alert-info mt-1'>
+                  {{get getAndUpdateDeviceStateMessages index}}
+                </div>
               {{/if}}
-              Check Containment Status
-            </button>
-          {{/if}}
-          {{#if (get containOrUncontainMessages agentIndex)}}
-            <div class='alert alert-info mt-1'>
-              {{get containOrUncontainMessages agentIndex}}
             </div>
           {{/if}}
-          {{#if (get containOrUncontainErrorMessages agentIndex)}}
+          {{#if (get containOrUncontainMessages index)}}
+            <div class='alert alert-info mt-1'>
+              {{get containOrUncontainMessages index}}
+            </div>
+          {{/if}}
+          {{#if (get containOrUncontainErrorMessages index)}}
             <div class='alert alert-danger mt-1'>
-              {{get containOrUncontainErrorMessages agentIndex}}
+              {{get containOrUncontainErrorMessages index}}
             </div>
           {{/if}}
         </div>
