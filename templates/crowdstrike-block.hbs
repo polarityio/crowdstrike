@@ -56,9 +56,9 @@
     {{#if details.detections}}
       <div>
         Displaying
-        {{details.detections.length}}
+        {{details.detections.detections.length}}
         of
-        {{details.meta.totalResults}}
+        {{details.detections.detectionTotalResults}}
         results.
       </div>
     {{else}}
@@ -66,7 +66,7 @@
         No Results.
       </div>
     {{/if}}
-    {{#each details.detections as |detection detectionIndex|}}
+    {{#each details.detections.detections as |detection detectionIndex|}}
       {{#if (gt detectionIndex 0)}}
         <hr />
       {{/if}}
@@ -152,15 +152,15 @@
     {{#if details.devices}}
       <div>
         Displaying
-        {{details.devices.length}}
+        {{details.devices.devices.length}}
         of
-        {{details.meta.totalResults}}
+        {{details.devices.deviceTotalResults}}
         results.
       </div>
       <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
         Device Information
       </div>
-      {{#each details.devices as |device|}}
+      {{#each details.devices.devices as |device|}}
         <div class='devices-container'>
           {{#if device.hostname}}
             <div>
@@ -238,10 +238,10 @@
     {{#if details.devices}}
       <div>
         Displaying
-        {{details.devices.length}}
-        of 1
-        {{details.meta.totalResults}}
-        results.
+        {{details.devices.devices.length}}
+        of
+        {{details.devices.deviceTotalResults}}
+        results
       </div>
       <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
         Device Information
@@ -249,7 +249,7 @@
       {{! Depending on the status of the device, either a button will be rendered that will allow a user to contain/lift containment of a host
           or if the containment status of a device is in a pending state, a link to the falcon dashboard will be rendered.     
       }}
-      {{#each details.devices as |device index|}}
+      {{#each details.devices.devices as |device index|}}
         <div>
           {{#if (or (eq device.status 'lift_containment_pending') (eq device.status 'containment_pending'))}}
             <div class='mt-1'>
@@ -271,6 +271,7 @@
               <span class='p-value'>{{device.system_manufacturer}}</span>
             </div>
           {{/if}}
+
           {{#if device.status}}
             <div>
               <span class='p-key'>Containment Status:</span>
@@ -283,7 +284,7 @@
               {{#if (get containOrUncontainIsRunning index)}}
                 {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
               {{/if}}
-              Contain
+              Network Contain
             </button>
           {{else if (eq device.status 'contained')}}
             <button {{action 'containOrUncontain' device index}} class='p-btn btn btn-light mt-1'>
@@ -310,6 +311,7 @@
               {{get containOrUncontainErrorMessages agentIndex}}
             </div>
           {{/if}}
+
         </div>
       {{/each}}
     {{else}}

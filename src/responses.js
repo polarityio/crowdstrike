@@ -11,18 +11,17 @@ const emptyResponse = (entity) => ({
 });
 
 const polarityResponse = (entity, apiData, Logger) => {
-  Logger.trace({ apiData }, 'API_DATE');
-  if ((apiData && apiData.detections !== null) || (apiData && apiData.devices !== null)) {
-    return {
-      entity,
-      data: {
-        summary: getSummary(apiData),
-        details: { detections: apiData.detections, devices: apiData.devices }
+  Logger.trace({ API_DATA_IN_RESPONSE: apiData });
+  const { detections, devices } = apiData;
+  return (apiData && apiData.detections !== null) || (apiData && apiData.devices !== null)
+    ? {
+        entity,
+        data: {
+          summary: getSummary(apiData, Logger),
+          details: { detections, devices }
+        }
       }
-    };
-  } else {
-    return emptyResponse(entity);
-  }
+    : emptyResponse(entity);
 };
 
 const retryablePolarityResponse = (entity, err) => {
@@ -35,29 +34,38 @@ const retryablePolarityResponse = (entity, err) => {
         summaryTag: err ? err.message : ['Lookup Limit Reached'],
         errorMessage: err
           ? err.message
-          : 'A temporary Crowdstrike HX API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
+          : 'A temporary CrowdStrike HX API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
       }
     }
   };
 };
 
-const getSummary = (apiData) => {
+const getSummary = (apiData, Logger) => {
   let tags = [];
-  const { detections, devices } = apiData;
 
+  Logger.trace({ IN_SUMMARY: apiData.detections });
   if (apiData && apiData.detections !== null) {
-    tags.push(`Detections: ${detections.length}`);
+    tags.push(`Detections: ${apiData.detections.length}`);
   }
   if (apiData && apiData.devices !== null) {
-    tags.push(`Devices: ${devices.length}`);
+    tags.push(`Devices: ${apiData.devices.length}`);
   }
 
   return tags;
+};
+
+const parseErrorToReadableJSON = (error) => {
+  return JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
 };
 
 module.exports = {
   polarityError,
   emptyResponse,
   polarityResponse,
-  retryablePolarityResponse
+  retryablePolarityResponse,
+  parseErrorToReadableJSON
 };
+
+// always show check status button
+// See how containment buttons are rendered with multiple hosts.
+// DESKTOP-G12Q1NU - belongs to Blair

@@ -1,28 +1,29 @@
 const _ = require('lodash');
 const { getDetects } = require('./detects');
 const { getDevices } = require('./devices');
-const { polarityResponse, polarityError, retryablePolarityResponse } = require('./responses');
+const { polarityResponse, polarityError, retryablePolarityResponse, parseErrorToReadableJSON } = require('./responses');
 
 const getApiData = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
-  let deviceResponse;
+  let deviceData;
   try {
-    const detectionResponse = await getDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger);
-    Logger.trace({ detectionResponse }, 'detectionResponse API data');
+    const detectionData = await getDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+    Logger.trace({ detectionData }, 'detectionData API data');
 
     if (options.searchIoc) {
-      deviceResponse = await getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger);
-      Logger.trace({ deviceResponse }, 'devices API data');
+      deviceData = await getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+      Logger.trace({ deviceData }, 'devices API data');
     }
 
     apiData = {
-      devices: deviceResponse.devices,
-      detections: detectionResponse.detections,
-      statusCode:
-        deviceResponse.statusCode === 200 && detectionResponse.statusCode === 200 ? 200 : detectionResponse.statusCode
+      devices: deviceData,
+      detections: detectionData,
+      statusCode: deviceData.statusCode === 200 && detectionData.statusCode === 200 ? 200 : detectionData.statusCode
     };
 
     return apiData;
-  } catch (err) {
+  } catch (error) {
+    const err = parseErrorToReadableJSON(error);
+    Logger.error({ err }, 'error in getApiData');
     throw err;
   }
 };

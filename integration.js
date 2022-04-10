@@ -1,7 +1,7 @@
 const Bottleneck = require('bottleneck/es5');
 const { map } = require('lodash/fp');
 const buildResponse = require('./src/getApiData');
-const { polarityError } = require('./src/responses');
+const { polarityError, parseErrorToReadableJSON } = require('./src/responses');
 const { containHost } = require('./src/containHost');
 const { getAndUpdateDeviceState } = require('./src/devices');
 const { setRequestWithDefaults, authenticatedRequest } = require('./src/createRequestOptions');
@@ -37,7 +37,9 @@ const doLookup = async (entities, options, callback) => {
 
     Logger.trace({ lookupResults }, 'DoLookup Response');
     callback(null, lookupResults);
-  } catch (err) {
+  } catch (error) {
+    const err = parseErrorToReadableJSON(error);
+    Logger.error({ err }, 'error in doLookup');
     return callback(polarityError(err));
   }
 };
@@ -47,26 +49,19 @@ const onMessage = async (payload, options, callback) => {
 
   switch (payload.action) {
     case 'containOrUncontain':
-      try {
-        const containedHost = await containHost(authenticatedRequest, requestWithDefaults, data, options, Logger);
-        return callback(null, containedHost);
-      } catch (err) {
-        return callback(err, null);
-      }
+      const containedHost = await containHost(authenticatedRequest, requestWithDefaults, data, options, Logger);
+      return callback(null, containedHost);
     case 'getAndUpdateDeviceState':
       const deviceId = payload.data.id;
-      try {
-        const deviceStatus = await getAndUpdateDeviceState(
-          authenticatedRequest,
-          requestWithDefaults,
-          deviceId,
-          options,
-          Logger
-        );
-        return callback(null, { deviceStatus });
-      } catch (err) {
-        return callback(err, null);
-      }
+
+      const deviceStatus = await getAndUpdateDeviceState(
+        authenticatedRequest,
+        requestWithDefaults,
+        deviceId,
+        options,
+        Logger
+      );
+      return callback(null, { deviceStatus });
     case 'RETRY_LOOKUP': {
       doLookup([payload.entity], options, (err, lookupResults) => {
         if (err) {

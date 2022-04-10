@@ -10,6 +10,7 @@ polarity.export = PolarityComponent.extend({
     'hostname',
     'machine_domain'
   ],
+  modalOpen: false,
   containOrUncontainMessages: {},
   containOrUncontainErrorMessages: {},
   containOrUncontainIsRunning: {},
@@ -118,6 +119,11 @@ polarity.export = PolarityComponent.extend({
         [index]: message
       })
     );
+  },
+  toggleModal: function () {
+    if(!this.get('modalOpen')){
+      
+    }
   },
   setIsRunning: function (index, prefix, value) {
     console.log(`${prefix}IsRunning`, Object.assign({}, this.get(`${prefix}IsRunning`), { [index]: value }));

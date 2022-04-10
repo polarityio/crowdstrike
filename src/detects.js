@@ -1,3 +1,6 @@
+const { parseErrorToReadableJSON } = require('./responses');
+const { get } = require('lodash/fp');
+
 const SEVERITY_LEVELS = {
   Critical: '"Critical"',
   High: '"High","Critical"',
@@ -23,7 +26,9 @@ const getDetectionIds = async (authenticatedRequest, requestWithDefaults, entity
     Logger.trace({ response }, 'Response containing detection ids');
 
     return response;
-  } catch (err) {
+  } catch (error) {
+    const err = parseErrorToReadableJSON(error);
+    Logger.error({ err }, 'error in getAndUpdateDeviceState');
     throw err;
   }
 };
@@ -55,10 +60,7 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
     const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
     Logger.trace({ response }, 'Response from detects');
 
-    if (
-      (response && response.statusCode === 200) ||
-      (response && response.body && response.body.resources && response.body.resources.length > 0)
-    ) {
+    if (get('statusCode', response) === 200 || get('body.resources.length', response) > 0) {
       const detections = response.body.resources.map((resource) => {
         let split = resource.detection_id.split(':');
         resource.__url = `https://falcon.crowdstrike.com/activity/detections/detail/${split[1]}/${split[2]}`;
@@ -66,11 +68,17 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
       });
 
       Logger.trace({ detections }, 'getDetects return result');
-      return { detections, statusCode: response.statusCode };
+      return {
+        detections,
+        detectionTotalResults: detectionIdsResponse.body.meta.pagination.total,
+        statusCode: response.statusCode
+      };
     } else {
       return { detections: null, statusCode: response.statusCode };
     }
-  } catch (err) {
+  } catch (error) {
+    const err = parseErrorToReadableJSON(error);
+    Logger.error({ err }, 'error in getAndUpdateDeviceState');
     throw err;
   }
 };
