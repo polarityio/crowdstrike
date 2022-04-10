@@ -1,5 +1,8 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
+  timezone: Ember.computed('Intl', function () {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }),
   detectionProperties: ['status', 'max_confidence', 'max_severity', 'first_behavior', 'last_behavior'],
   activeTab: 'crowdstrike',
   compactDeviceProperties: [
@@ -95,16 +98,25 @@ polarity.export = PolarityComponent.extend({
         });
     },
     getAndUpdateDeviceState: function (device, index) {
+      this.setIsRunning(index, 'getAndUpdateDeviceState', true);
       this.sendIntegrationMessage({
         action: 'getAndUpdateDeviceState',
         data: { id: device.device_id }
       })
         .then(({ deviceStatus }) => {
           this.set('details.devices.' + index + '.status', deviceStatus);
-          console.log('details.devices.' + index + '.status', deviceStatus);
+          if (!['normal', 'contained'].includes(deviceStatus)) this.setMessages(index, 'getAndUpdateDeviceState', 'Still Pending...');
         })
         .catch((err) => {
           this.setErrorMessages(index, 'getAndUpdateDeviceState', `${err}`);
+        })
+        .finally(() => {
+          this.setIsRunning(index, 'getAndUpdateDeviceState', false);
+          this.get('block').notifyPropertyChange('data');
+          setTimeout(() => {
+            this.setMessages(index, 'getAndUpdateDeviceState', '');
+            this.get('block').notifyPropertyChange('data');
+          }, 5000);
         });
     }
   },
