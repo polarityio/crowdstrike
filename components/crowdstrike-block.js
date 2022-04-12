@@ -63,26 +63,34 @@ polarity.export = PolarityComponent.extend({
         Ember.set(detection, '__showAllBehaviorInfo', true);
       }
     },
-    containOrUncontain: function (device, index) {
+    openContainmentModal: function () {
+      this.toggleProperty('modalOpen');
+    },
+    cancelContainment: function () {
+      this.toggleProperty('modalOpen');
+    },
+    confirmContainmentOrLiftContainment: function (device, index) {
       const outerThis = this;
 
       this.setMessages(index, 'containOrUncontain', '');
       this.setErrorMessages(index, 'containOrUncontain', '');
       this.setIsRunning(index, 'containOrUncontain', true);
+      this.set('modalOpen', false);
 
       this.sendIntegrationMessage({
         action: 'containOrUncontain',
         data: { id: device.device_id, status: device.status }
       })
         .then(({ updatedDeviceState }) => {
-          this.set('details.devices.' + index + '.status', updatedDeviceState);
+          this.set('details.devices.devices.' + index + '.status', updatedDeviceState);
         })
         .catch((err) => {
+          console.log(err);
           outerThis.setErrorMessages(
             index,
             'containOrUncontain',
             `
-            Failed
+            Failed ${err}
 
             `
           );
@@ -90,6 +98,7 @@ polarity.export = PolarityComponent.extend({
         .finally(() => {
           this.setIsRunning(index, 'containOrUncontain', false);
           outerThis.get('block').notifyPropertyChange('data');
+
           setTimeout(() => {
             outerThis.setMessages(index, 'containOrUncontain', '');
             outerThis.setErrorMessages(index, 'containOrUncontain', '');
@@ -105,7 +114,8 @@ polarity.export = PolarityComponent.extend({
       })
         .then(({ deviceStatus }) => {
           this.set('details.devices.' + index + '.status', deviceStatus);
-          if (!['normal', 'contained'].includes(deviceStatus)) this.setMessages(index, 'getAndUpdateDeviceState', 'Still Pending...');
+          if (!['normal', 'contained'].includes(deviceStatus))
+            this.setMessages(index, 'getAndUpdateDeviceState', 'Still Pending...');
         })
         .catch((err) => {
           this.setErrorMessages(index, 'getAndUpdateDeviceState', `${err}`);
@@ -133,8 +143,7 @@ polarity.export = PolarityComponent.extend({
     );
   },
   toggleModal: function () {
-    if(!this.get('modalOpen')){
-      
+    if (!this.get('modalOpen')) {
     }
   },
   setIsRunning: function (index, prefix, value) {
