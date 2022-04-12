@@ -4,36 +4,39 @@ const { get } = require('lodash/fp');
 const getDevices = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
   try {
     const ids = await getIocIds(authenticatedRequest, requestWithDefaults, entity, options, Logger);
-    const deviceIds = ids.body.resources;
-    Logger.trace({ ids: ids.body.meta.pagination }, 'device ids');
-    /// in ids - ids.body.meta.pagination.limit
 
-    const requestOptions = {
-      method: 'GET',
-      uri: `${options.url}/devices/entities/devices/v1`,
-      body: {
-        ids: deviceIds
-      },
-      json: true
-    };
-    Logger.trace({ requestOptions }, 'request options');
+    if (ids.isValidType != true) {
+      const deviceIds = ids.body.resources;
 
-    const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
-    Logger.trace({ response }, 'response in getDevices');
+      const requestOptions = {
+        method: 'GET',
+        uri: `${options.url}/devices/entities/devices/v1`,
+        body: {
+          ids: deviceIds
+        },
+        json: true
+      };
+      Logger.trace({ requestOptions }, 'request options');
 
-    if (get('statusCode', response) === 200 || get('body.resources.length', response) > 0) {
-      const devices = response.body.resources.map((resource) => {
-        resource.__url = `https://falcon.crowdstrike.com/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
-        return resource;
-      });
+      const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
+      Logger.trace({ response }, 'response in getDevices');
 
-      Logger.trace(
-        { devices, deviceTotalResults: ids.body.meta.pagination.limit, statusCode: response.statusCode },
-        'returned devices'
-      );
-      return { devices, deviceTotalResults: ids.body.meta.pagination.limit, statusCode: response.statusCode };
+      if (get('statusCode', response) === 200 || get('body.resources.length', response) > 0) {
+        const devices = response.body.resources.map((resource) => {
+          resource.__url = `https://falcon.crowdstrike.com/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
+          return resource;
+        });
+
+        Logger.trace(
+          { devices, deviceTotalResults: ids.body.meta.pagination.limit, statusCode: response.statusCode },
+          'returned devices'
+        );
+        return { devices, deviceTotalResults: ids.body.meta.pagination.limit, statusCode: response.statusCode };
+      } else {
+        return { devices: null, statusCode: response.statusCode };
+      }
     } else {
-      return { devices: null, statusCode: response.statusCode };
+      return { devices: null, statusCode: 400 }; //handles the case of no data being found for an entity
     }
   } catch (error) {
     const err = parseErrorToReadableJSON(error);
@@ -61,7 +64,7 @@ const getIocIds = async (authenticatedRequest, requestWithDefaults, entity, opti
     ? 'domain'
     : false;
 
-  if (!type) return;
+  if (!type) return { isValidType: true };
 
   requestOptions.qs = { type, value: entity.value };
 

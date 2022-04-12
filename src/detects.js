@@ -83,7 +83,7 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
   }
 };
 
-const _getQuery = (entityObj, options, Logger) => {
+const _getQuery = (entityObj, options) => {
   const statuses = options.detectionStatuses.reduce((accum, statusObj) => {
     if (statusObj && statusObj.value) {
       accum.push(`"${statusObj.value}"`);

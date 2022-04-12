@@ -11,9 +11,8 @@ const emptyResponse = (entity) => ({
 });
 
 const polarityResponse = (entity, apiData, Logger) => {
-  Logger.trace({ API_DATA_IN_RESPONSE: apiData });
   const { detections, devices } = apiData;
-  return (apiData && apiData.detections !== null) || (apiData && apiData.devices !== null)
+  return (apiData && apiData.detections.detections !== null) || (apiData && apiData.devices.devices !== null)
     ? {
         entity,
         data: {
@@ -40,13 +39,12 @@ const retryablePolarityResponse = (entity, err) => ({
 
 const getSummary = (apiData, Logger) => {
   let tags = [];
-
-  Logger.trace({ IN_SUMMARY: apiData.detections });
-  if (apiData && apiData.detections !== null) {
-    tags.push(`Detections: ${apiData.detections.length}`);
+  
+  if (apiData && apiData.detections.detections !== null) {
+    tags.push(`Detections: ${apiData.detections.detections.length}`);
   }
-  if (apiData && apiData.devices !== null) {
-    tags.push(`Devices: ${apiData.devices.length}`);
+  if (apiData && apiData.devices.devices !== null) {
+    tags.push(`Devices: ${apiData.devices.devices.length}`);
   }
 
   return tags;
@@ -63,7 +61,3 @@ module.exports = {
   retryablePolarityResponse,
   parseErrorToReadableJSON
 };
-
-// always show check status button
-// See how containment buttons are rendered with multiple hosts.
-// DESKTOP-G12Q1NU - belongs to Blair
