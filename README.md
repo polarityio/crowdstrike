@@ -2,8 +2,9 @@
 
 ![image](https://img.shields.io/badge/status-beta-green.svg)
 
-The Polarity Crowdstrike integration searches detections for MD5, SHA256 and MS windows executable filenames (EXE, DLL). The integration searches both IoCs and the triggering process hashes for detections. The integration also searches device information based on IPv4 (Local IP and External IP).
-
+The Polarity Crowdstrike integration searches detections for MD5, SHA256 and MS windows executable filenames (EXE, DLL). The integration searches both IoCs and the triggering process hashes for detections. The integration also searches device information based on SHA256 and MD5 hashes.
+ 
+> 
 ![image](images/overlay.png)
 
 ## Creating a Client ID / Client Secret
