@@ -19,17 +19,18 @@
   </div>
 {{else}}
   <ul class='nav nav-tabs'>
-    <li class='nav-item'>
-      <a
-        {{action 'changeTab' 'crowdstrike'}}
-        class='nav-link {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
-        href='#'
-      >
-        Crowdstrike
-      </a>
-    </li>
-
-    {{#if (and block.userOptions.searchIoc details.devices)}}
+    {{#if details.detections.detections.length}}
+      <li class='nav-item'>
+        <a
+          {{action 'changeTab' 'crowdstrike'}}
+          class='nav-link {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
+          href='#'
+        >
+          Crowdstrike
+        </a>
+      </li>
+    {{/if}}
+    {{#if (and block.userOptions.searchIoc details.devices.devices.length)}}
       <li class='nav-item'>
         <a
           {{action 'changeTab' 'crowdstrikeIoc'}}
@@ -40,7 +41,7 @@
         </a>
       </li>
     {{/if}}
-    {{#if details.devices}}
+    {{#if details.devices.devices.length}}
       <li class='nav-item'>
         <a
           {{action 'changeTab' 'hosts'}}
@@ -53,17 +54,13 @@
     {{/if}}
   </ul>
   {{#if (eq activeTab 'crowdstrike')}}
-    {{#if details.detections}}
+    {{#if details.detections.detections.length}}
       <div>
         Displaying
         {{details.detections.detections.length}}
         of
         {{details.detections.detectionTotalResults}}
         results.
-      </div>
-    {{else}}
-      <div class='m-1'>
-        No Results.
       </div>
     {{/if}}
     {{#each details.detections.detections as |detection detectionIndex|}}
@@ -150,7 +147,6 @@
   {{! crowdstrikeIOC }}
   {{#if (eq activeTab 'crowdstrikeIoc')}}
     {{#if details.devices}}
-<<<<<<< HEAD
       <div>
         Displaying
         {{details.devices.devices.length}}
@@ -158,17 +154,6 @@
         {{details.devices.deviceTotalResults}}
         results.
       </div>
-=======
-      {{#if (and details.devices.length details.meta.totalResults)}}
-        <div class="display-results">
-          Displaying
-          {{details.devices.length}}
-          of
-          {{details.meta.totalResults}}
-          results.
-        </div>
-      {{/if}}
->>>>>>> 51a9a982ecc3fdc870f66d3b08d02f6c49ab2da3
       <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
         Device Information
       </div>
@@ -238,17 +223,12 @@
           {{/each}}
         </div>
       {{/each}}
-    {{else}}
-      <div class='m-1'>
-        No Results.
-      </div>
     {{/if}}
   {{/if}}
 
   {{! hosts tab }}
   {{#if (eq activeTab 'hosts')}}
     {{#if details.devices}}
-<<<<<<< HEAD
       <div>
         Displaying
         {{details.devices.devices.length}}
@@ -256,99 +236,120 @@
         {{details.devices.deviceTotalResults}}
         results
       </div>
-=======
-      {{#if (and details.devices.length details.meta.totalResults)}}
-        <div class="display-results">
-          Displaying
-          {{details.devices.length}}
-          of
-          {{details.meta.totalResults}}
-          results.
-        </div>
-      {{/if}}
->>>>>>> 51a9a982ecc3fdc870f66d3b08d02f6c49ab2da3
       <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
         Device Information
       </div>
-      {{! Depending on the status of the device, either a button will be rendered that will allow a user to contain/lift containment of a host
-          or if the containment status of a device is in a pending state, a link to the falcon dashboard will be rendered.     
-      }}
-      {{#each details.devices.devices as |device index|}}
-        <div>
-          {{#if (or (eq device.status 'lift_containment_pending') (eq device.status 'containment_pending'))}}
-            <div class='mt-1'>
-              <a class='p-link' href='https://falcon.crowdstrike.com/hosts/hosts/host/{{device.device_id}}'>
-                {{fa-icon icon='external-link-square' class='external-link-icon'}}
-                View Host Information
-              </a>
-            </div>
-          {{/if}}
-          {{#if device.hostname}}
-            <div>
-              <span class='p-key'>Device:</span>
-              <span class='p-value'>{{device.hostname}}</span>
-            </div>
-          {{/if}}
-          {{#if device.system_manufacturer}}
-            <div>
-              <span class='p-key'>Sys. Manufacturer:</span>
-              <span class='p-value'>{{device.system_manufacturer}}</span>
-            </div>
-          {{/if}}
+      <div class='containment-info'>
+        {{#each details.devices.devices as |device index|}}
+          <div>
+            {{#if (or (eq device.status 'lift_containment_pending') (eq device.status 'containment_pending'))}}
+              <div class='mt-1'>
+                <a class='p-link' href='https://falcon.crowdstrike.com/hosts/hosts/host/{{device.device_id}}'>
+                  {{fa-icon icon='external-link-square' class='external-link-icon'}}
+                  View Containment Information
+                </a>
+              </div>
+            {{/if}}
+            {{#if device.hostname}}
+              <div>
+                <span class='p-key'>Device:</span>
+                <span class='p-value'>{{device.hostname}}</span>
+              </div>
+            {{/if}}
+            {{#if device.system_manufacturer}}
+              <div>
+                <span class='p-key'>Sys. Manufacturer:</span>
+                <span class='p-value'>{{device.system_manufacturer}}</span>
+              </div>
+            {{/if}}
 
-          {{#if device.status}}
-            <div>
-              <span class='p-key'>Containment Status:</span>
-              <span class='p-value'>{{titleize (humanize (dasherize device.status))}}</span>
-            </div>
-          {{/if}}
+            {{#if device.status}}
+              <div>
+                <span class='p-key'>Containment Status:</span>
+                <span class='p-value'>{{titleize (humanize (dasherize device.status))}}</span>
+              </div>
+            {{/if}}
 
-          {{#if (eq device.status 'normal')}}
-            <button {{action 'containOrUncontain' device index}} class='p-btn btn btn-light mt-1' disabled={{get containOrUncontainIsRunning index}}>
-              {{#if (get containOrUncontainIsRunning index)}}
-                {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
-              {{/if}}
-              Network Contain
-            </button>
-          {{else if (eq device.status 'contained')}}
-            <button {{action 'containOrUncontain' device index}} class='p-btn btn btn-light mt-1' disabled={{get containOrUncontainIsRunning index}}>
-              {{#if (get containOrUncontainIsRunning index)}}
-                {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
-              {{/if}}
-              Lift Containment
-            </button>
-          {{else}}
-            <div class="d-flex flex-row  justify-content-between align-items-center">
-              <button {{action 'getAndUpdateDeviceState' device index}} class='p-btn btn btn-light mt-1' disabled={{get getAndUpdateDeviceStateIsRunning index}}>
-                {{#if (get getAndUpdateDeviceStateIsRunning index)}}
+            {{#if (eq device.status 'normal')}}
+              <button
+                {{action 'openContainmentModal' device index}}
+                class='p-btn btn btn-light mt-1'
+                disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
+              >
+                {{#if (get openContainmentModalIsRunning index)}}
                   {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
                 {{/if}}
-                Check{{if (get getAndUpdateDeviceStateIsRunning index) 'ing'}} Containment Status
+                Network Contain
               </button>
-              {{#if (get getAndUpdateDeviceStateMessages index)}}
-                <div class='alert alert-info mt-1'>
-                  {{get getAndUpdateDeviceStateMessages index}}
+            {{else if (eq device.status 'contained')}}
+              <button
+                {{action 'openContainmentModal' device index}}
+                class='p-btn btn btn-light mt-1'
+                disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
+              >
+                {{#if (get openContainmentModalIsRunning index)}}
+                  {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+                {{/if}}
+                Lift Containment
+              </button>
+            {{else}}
+              <div class='d-flex flex-row justify-content-between align-items-center'>
+                <button
+                  {{action 'getAndUpdateDeviceState' device index}}
+                  class='p-btn btn btn-light mt-1'
+                  disabled={{get getAndUpdateDeviceStateIsRunning index}}
+                >
+                  {{#if (get getAndUpdateDeviceStateIsRunning index)}}
+                    {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+                  {{/if}}
+                  Check{{if (get getAndUpdateDeviceStateIsRunning index) 'ing'}}
+                  Containment Status
+                </button>
+                {{#if (get getAndUpdateDeviceStateMessages index)}}
+                  <div class='alert alert-info mt-1'>
+                    {{get getAndUpdateDeviceStateMessages index}}
+                  </div>
+                {{/if}}
+              </div>
+            {{/if}}
+            {{#if (get openContainmentModalMessages index)}}
+              <div class='alert alert-info mt-1'>
+                {{get openContainmentModalMessages index}}
+              </div>
+            {{/if}}
+            {{#if (get openContainmentModalErrorMessages index)}}
+              <div class='alert alert-danger mt-1'>
+                {{get openContainmentModalErrorMessages index}}
+              </div>
+            {{/if}}
+          </div>
+          {{#if modalOpen}}
+            <div class='containment-modal'>
+              <div class='modal-container'>
+                <div class='modal-text'>
+                  <span>
+                    Are you sure you want to
+                    {{if (eq device.status 'contained') 'lift containment on' 'contain'}}
+                    this host?
+                  </span>
                 </div>
-              {{/if}}
+                <div class='modal-options'>
+                  <div>
+                    <button {{action 'cancelContainment' device index}} class='modal-btn'>Cancel</button>
+                  </div>
+                  <div>
+                    <button
+                      {{action 'confirmContainmentOrLiftContainment' device index}}
+                      class='modal-btn'
+                    >Confirm</button>
+                  </div>
+                </div>
+              </div>
             </div>
           {{/if}}
-          {{#if (get containOrUncontainMessages index)}}
-            <div class='alert alert-info mt-1'>
-              {{get containOrUncontainMessages index}}
-            </div>
-          {{/if}}
-          {{#if (get containOrUncontainErrorMessages index)}}
-            <div class='alert alert-danger mt-1'>
-              {{get containOrUncontainErrorMessages index}}
-            </div>
-          {{/if}}
-
-        </div>
-      {{/each}}
-    {{else}}
-      <div class='m-1'>
-        No Results.
+        {{/each}}
       </div>
+
     {{/if}}
   {{/if}}
 {{/if}}
