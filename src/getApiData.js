@@ -9,9 +9,11 @@ const getApiData = async (authenticatedRequest, requestWithDefaults, entity, opt
     const detectionData = await getDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger);
     Logger.trace({ detectionData }, 'detectionData API data');
 
+    deviceData = await getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+    Logger.trace({ deviceData }, 'devices API data');
+    
     if (options.searchIoc) {
-      deviceData = await getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger);
-      Logger.trace({ deviceData }, 'devices API data');
+      //TODO: Add Query and data transformations
     }
 
     apiData = {
