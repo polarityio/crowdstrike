@@ -101,16 +101,17 @@ const _getQuery = (entityObj, options) => {
     type = 'filename';
   }
 
-  if (entityObj.type === 'custom' && entityObj.types.indexOf('custom.hostname') >= 0) {
-    type = 'hostname';
-  }
-
   let filter = `+status:[${statuses.toString()}]+max_severity_displayname:[${severityLevels}]`;
 
   if (entityObj.isIPv4) {
     return {
       limit: 10,
       filter: `(device.external_ip:"${entityObj.value}"${filter}),(device.local_ip:"${entityObj.value}"${filter})`
+    };
+  } else if (entityObj.type === 'custom' && entityObj.types.indexOf('custom.hostname') >= 0){
+    return {
+      limit: 10,
+      filter: `device.hostname: "${entityObj.value.toUpperCase()}"`
     };
   } else {
     return {

@@ -20,6 +20,19 @@ polarity.export = PolarityComponent.extend({
   compactBehaviorProperties: ['scenario', 'objective', 'filename', 'tactic', 'technique', 'severity', 'confidence'],
   containmentStatus: '',
   isRunning: false,
+  modalDevice: {},
+  init() {
+    this.set(
+      'activeTab',
+      this.get('details.detections.detections.length')
+        ? 'crowdstrike'
+        : this.get('block.userOptions.searchIoc')
+        ? 'crowdstrikeIoc'
+        : 'hosts'
+    );
+
+    this._super(...arguments);
+  },
   actions: {
     changeTab: function (tabName) {
       this.set('activeTab', tabName);
@@ -63,14 +76,15 @@ polarity.export = PolarityComponent.extend({
         Ember.set(detection, '__showAllBehaviorInfo', true);
       }
     },
-    openContainmentModal: function () {
+    toggleShowModal: function (device, index) {
       this.toggleProperty('modalOpen');
+
+      if (device && index) this.set('modalDevice', { device, index });
     },
-    cancelContainment: function () {
-      this.toggleProperty('modalOpen');
-    },
-    confirmContainmentOrLiftContainment: function (device, index) {
+    confirmContainmentOrLiftContainment: function () {
       const outerThis = this;
+
+      const { device, index } = this.get('modalDevice');
 
       this.setMessages(index, 'containOrUncontain', '');
       this.setErrorMessages(index, 'containOrUncontain', '');

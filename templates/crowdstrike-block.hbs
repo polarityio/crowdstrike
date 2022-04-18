@@ -26,7 +26,7 @@
           class='nav-link {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
           href='#'
         >
-          Crowdstrike
+          Detections
         </a>
       </li>
     {{/if}}
@@ -272,7 +272,7 @@
 
             {{#if (eq device.status 'normal')}}
               <button
-                {{action 'openContainmentModal' device index}}
+                {{action 'toggleShowModal' device index}}
                 class='p-btn btn btn-light mt-1'
                 disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
               >
@@ -283,7 +283,7 @@
               </button>
             {{else if (eq device.status 'contained')}}
               <button
-                {{action 'openContainmentModal' device index}}
+                {{action 'toggleShowModal' device index}}
                 class='p-btn btn btn-light mt-1'
                 disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
               >
@@ -335,11 +335,11 @@
                 </div>
                 <div class='modal-options'>
                   <div>
-                    <button {{action 'cancelContainment' device index}} class='modal-btn'>Cancel</button>
+                    <button {{action 'toggleShowModal'}} class='modal-btn'>Cancel</button>
                   </div>
                   <div>
                     <button
-                      {{action 'confirmContainmentOrLiftContainment' device index}}
+                      {{action 'confirmContainmentOrLiftContainment'}}
                       class='modal-btn'
                     >Confirm</button>
                   </div>
