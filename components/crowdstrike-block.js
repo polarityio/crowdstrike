@@ -79,7 +79,7 @@ polarity.export = PolarityComponent.extend({
     toggleShowModal: function (device, index) {
       this.toggleProperty('modalOpen');
 
-      if (device && index) this.set('modalDevice', { device, index });
+      if (device) this.set('modalDevice', { device, index });
     },
     confirmContainmentOrLiftContainment: function () {
       const outerThis = this;

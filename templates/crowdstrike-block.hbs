@@ -4,7 +4,11 @@
       <pre>{{details.errorMessage}}</pre>
     </div>
     {{#if (not (eq details.allowRetry false))}}
-      <button type='button' class='p-btn btn btn-sm btn-secondary retry-btn mt-2' {{action 'retryLookup'}}>
+      <button
+        type='button'
+        class='p-btn btn btn-sm btn-secondary retry-btn mt-2'
+        {{action 'retryLookup'}}
+      >
         {{#if running}}
           {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
         {{else}}
@@ -23,7 +27,8 @@
       <li class='nav-item'>
         <a
           {{action 'changeTab' 'crowdstrike'}}
-          class='nav-link {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
+          class='nav-link
+            {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
           href='#'
         >
           Detections
@@ -37,7 +42,7 @@
           class='nav-link {{if (eq activeTab "crowdstrikeIoc") "active"}}'
           href='#'
         >
-          Crowdstrike IOC
+          IOC Management
         </a>
       </li>
     {{/if}}
@@ -48,7 +53,7 @@
           class='nav-link {{if (or (eq activeTab "hosts") (not activeTab)) "active"}}'
           href='#'
         >
-          Containment
+          Host Management
         </a>
       </li>
     {{/if}}
@@ -204,13 +209,19 @@
           {{#if device.first_seen}}
             <div>
               <span class='p-key'>First Seen:</span>
-              <span class='p-value'>{{moment-format device.first_seen timeZone=timezone}}</span>
+              <span class='p-value'>{{moment-format
+                  device.first_seen
+                  timeZone=timezone
+                }}</span>
             </div>
           {{/if}}
           {{#if device.last_seen}}
             <div>
               <span class='p-key'>Last Seen:</span>
-              <span class='p-value'>{{moment-format device.last_seen timeZone=timezone}}</span>
+              <span class='p-value'>{{moment-format
+                  device.last_seen
+                  timeZone=timezone
+                }}</span>
             </div>
           {{/if}}
           {{#each device.policies as |policy|}}
@@ -236,37 +247,93 @@
         {{details.devices.deviceTotalResults}}
         results
       </div>
-      <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
-        Device Information
-      </div>
+
       <div class='containment-info'>
         {{#each details.devices.devices as |device index|}}
-          <div>
-            {{#if (or (eq device.status 'lift_containment_pending') (eq device.status 'containment_pending'))}}
-              <div class='mt-1'>
-                <a class='p-link' href='https://falcon.crowdstrike.com/hosts/hosts/host/{{device.device_id}}'>
-                  {{fa-icon icon='external-link-square' class='external-link-icon'}}
-                  View Containment Information
-                </a>
+          <div class='devices-container'>
+            {{#if device.hostname}}
+              <h1 class=''>{{fa-icon 'laptop' fixedWidth=true}}
+                {{device.hostname}}
+              </h1>
+            {{/if}}
+            <div class='mb-1 mt-1'>
+              <a
+                class='p-link'
+                href='https://falcon.crowdstrike.com/hosts/hosts/host/{{device.device_id}}'
+              >
+                View Containment Information
+                {{fa-icon icon='external-link-square' class='external-link-icon'}}
+              </a>
+            </div>
+            {{#if device.external_ip}}
+              <div>
+                <span class='p-key'>External IP:</span>
+                <span class='p-value'>{{device.external_ip}}</span>
               </div>
             {{/if}}
-            {{#if device.hostname}}
+            {{#if device.local_ip}}
               <div>
-                <span class='p-key'>Device:</span>
-                <span class='p-value'>{{device.hostname}}</span>
+                <span class='p-key'>Local IP:</span>
+                <span class='p-value'>{{device.local_ip}}</span>
+              </div>
+            {{/if}}
+            {{#if device.product_type_desc}}
+              <div>
+                <span class='p-key'>Host Type:</span>
+                <span class='p-value'>{{device.product_type_desc}}</span>
               </div>
             {{/if}}
             {{#if device.system_manufacturer}}
               <div>
-                <span class='p-key'>Sys. Manufacturer:</span>
+                <span class='p-key'>Manufacturer:</span>
                 <span class='p-value'>{{device.system_manufacturer}}</span>
               </div>
             {{/if}}
+            {{#if device.system_product_name}}
+              <div>
+                <span class='p-key'>Model:</span>
+                <span class='p-value'>{{device.system_product_name}}</span>
+              </div>
+            {{/if}}
+            {{#if device.os_version}}
+              <div>
+                <span class='p-key'>OS Version:</span>
+                <span class='p-value'>{{device.os_version}}</span>
+              </div>
+            {{/if}}
+            {{#if device.first_seen}}
+              <div>
+                <span class='p-key'>First Seen:</span>
+                <span class='p-value'>{{moment-format
+                    device.first_seen
+                    timeZone=timezone
+                  }}</span>
+              </div>
+            {{/if}}
+            {{#if device.last_seen}}
+              <div>
+                <span class='p-key'>Last Seen:</span>
+                <span class='p-value'>{{moment-format
+                    device.last_seen
+                    timeZone=timezone
+                  }}</span>
+              </div>
+            {{/if}}
+            {{#each device.policies as |policy|}}
+              {{#if (eq policy.policy_type 'prevention')}}
+                <div>
+                  <span class='p-key'>Prevention Policy Applied:</span>
+                  <span class='p-value'>{{policy.applied}}</span>
+                </div>
+              {{/if}}
+            {{/each}}
 
             {{#if device.status}}
-              <div>
+              <div class="mt-1">
                 <span class='p-key'>Containment Status:</span>
-                <span class='p-value'>{{titleize (humanize (dasherize device.status))}}</span>
+                <span class='p-value'>{{titleize
+                    (humanize (dasherize device.status))
+                  }}</span>
               </div>
             {{/if}}
 
@@ -330,7 +397,7 @@
                   <span>
                     Are you sure you want to
                     {{if (eq device.status 'contained') 'lift containment on' 'contain'}}
-                    this host?
+                    this host: <span class="bold">{{device.hostname}}</span>?
                   </span>
                 </div>
                 <div class='modal-options'>
