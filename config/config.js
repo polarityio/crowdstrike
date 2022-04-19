@@ -142,7 +142,7 @@ module.exports = {
     {
       key: 'minimumSeverity',
       name: 'Minimum Severity',
-      description: 'The minimum severity level required for indicators to be displayed',
+      description: 'The minimum severity level required for Detections or IOCs to be displayed',
       default: {
         value: 'Medium',
         display: 'Medium'

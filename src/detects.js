@@ -1,12 +1,7 @@
 const { parseErrorToReadableJSON } = require('./responses');
 const { get } = require('lodash/fp');
+const { SEVERITY_LEVELS_FOR_DETECTIONS } = require('./constants');
 
-const SEVERITY_LEVELS = {
-  Critical: '"Critical"',
-  High: '"High","Critical"',
-  Medium: '"Medium","High","Critical"',
-  Low: '"Low","Medium","High","Critical"'
-};
 /* 
   getDetects returns devices that were matched with returned id's from searchDetects(). 
   It is possible that searchDetects returns a list of ids that do not have a matching device 
@@ -63,13 +58,14 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
     if (get('statusCode', response) === 200 || get('body.resources.length', response) > 0) {
       const detections = response.body.resources.map((resource) => {
         let split = resource.detection_id.split(':');
-        resource.__url = `https://falcon.crowdstrike.com/activity/detections/detail/${split[1]}/${split[2]}`;
+        resource.__url = `${options.url}/activity/detections/detail/${split[1]}/${split[2]}`;
         return resource;
       });
 
       Logger.trace({ detections }, 'getDetects return result');
       return {
         detections,
+        contentKeyName: 'detections',
         detectionTotalResults: detectionIdsResponse.body.meta.pagination.total,
         statusCode: response.statusCode
       };
@@ -91,7 +87,7 @@ const _getQuery = (entityObj, options) => {
     return accum;
   }, []);
 
-  let severityLevels = SEVERITY_LEVELS[options.minimumSeverity.value];
+  let severityLevels = SEVERITY_LEVELS_FOR_DETECTIONS[options.minimumSeverity.value];
 
   let type = 'sha256';
 

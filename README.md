@@ -36,7 +36,7 @@ The secret associated with the Client ID.
 
 ### Minimum Severity
 
-The minimum severity level required for indicators to be displayed. Defaults to `Medium`.
+The minimum severity level required for Detections or IOCs to be displayed. Defaults to `Medium`.
 
 ### Detection Statuses
 

@@ -1,4 +1,4 @@
-const _ = require('lodash');
+const { flow, keys, some, size, get } = require('lodash/fp');
 
 const polarityError = (err) => ({
   detail: err.message || 'Unknown Error',
@@ -11,13 +11,24 @@ const emptyResponse = (entity) => ({
 });
 
 const polarityResponse = (entity, apiData, Logger) => {
-  const { detections, devices } = apiData;
-  return (apiData && apiData.detections.detections !== null) || (apiData && apiData.devices.devices !== null)
+  const someDataHasContent = flow(
+    keys,
+    some((dataKey) => {
+      const data = get(dataKey, apiData);
+      const content = get(
+        get('contentKeyName', data), 
+        data
+      );
+      return size(content);
+    })
+  )(apiData);
+
+  return someDataHasContent
     ? {
         entity,
         data: {
           summary: getSummary(apiData, Logger),
-          details: { detections, devices }
+          details: apiData
         }
       }
     : emptyResponse(entity);
@@ -40,12 +51,16 @@ const retryablePolarityResponse = (entity, err) => ({
 const getSummary = (apiData, Logger) => {
   let tags = [];
   
-  if (apiData && apiData.detections.detections !== null) {
-    tags.push(`Detections: ${apiData.detections.detections.length}`);
-  }
-  if (apiData && apiData.devices.devices !== null) {
-    tags.push(`Devices: ${apiData.devices.devices.length}`);
-  }
+  const getPathSize = (path) => flow(get(path), size)(apiData)
+
+  const detectionsSize = getPathSize('events.detections')
+  if (detectionsSize) tags.push(`Detections: ${detectionsSize}`);
+
+  const devicesSize = getPathSize('hosts.devices')
+  if (devicesSize) tags.push(`Devices: ${devicesSize}`);
+
+  const iocSize = getPathSize('iocs.indicators')
+  if (iocSize) tags.push(`IOCs: ${iocSize}`);
 
   return tags;
 };

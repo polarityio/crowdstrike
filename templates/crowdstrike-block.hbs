@@ -23,7 +23,7 @@
   </div>
 {{else}}
   <ul class='nav nav-tabs'>
-    {{#if details.detections.detections.length}}
+    {{#if details.events.detections.length}}
       <li class='nav-item'>
         <a
           {{action 'changeTab' 'crowdstrike'}}
@@ -35,7 +35,7 @@
         </a>
       </li>
     {{/if}}
-    {{#if (and block.userOptions.searchIoc details.devices.devices.length)}}
+    {{#if (and block.userOptions.searchIoc details.hosts.devices.length)}}
       <li class='nav-item'>
         <a
           {{action 'changeTab' 'crowdstrikeIoc'}}
@@ -46,7 +46,7 @@
         </a>
       </li>
     {{/if}}
-    {{#if details.devices.devices.length}}
+    {{#if details.hosts.devices.length}}
       <li class='nav-item'>
         <a
           {{action 'changeTab' 'hosts'}}
@@ -59,16 +59,16 @@
     {{/if}}
   </ul>
   {{#if (eq activeTab 'crowdstrike')}}
-    {{#if details.detections.detections.length}}
+    {{#if details.events.detections.length}}
       <div>
         Displaying
-        {{details.detections.detections.length}}
+        {{details.events.detections.length}}
         of
-        {{details.detections.detectionTotalResults}}
+        {{details.events.detectionTotalResults}}
         results.
       </div>
     {{/if}}
-    {{#each details.detections.detections as |detection detectionIndex|}}
+    {{#each details.events.detections as |detection detectionIndex|}}
       {{#if (gt detectionIndex 0)}}
         <hr />
       {{/if}}
@@ -151,18 +151,18 @@
 
   {{! crowdstrikeIOC }}
   {{#if (eq activeTab 'crowdstrikeIoc')}}
-    {{#if details.devices}}
+    {{#if details.hosts}}
       <div>
         Displaying
-        {{details.devices.devices.length}}
+        {{details.hosts.devices.length}}
         of
-        {{details.devices.deviceTotalResults}}
+        {{details.hosts.deviceTotalResults}}
         results.
       </div>
       <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
         Device Information
       </div>
-      {{#each details.devices.devices as |device|}}
+      {{#each details.hosts.devices as |device|}}
         <div class='devices-container'>
           {{#if device.hostname}}
             <div>
@@ -239,17 +239,17 @@
 
   {{! hosts tab }}
   {{#if (eq activeTab 'hosts')}}
-    {{#if details.devices}}
+    {{#if details.hosts}}
       <div>
         Displaying
-        {{details.devices.devices.length}}
+        {{details.hosts.devices.length}}
         of
-        {{details.devices.deviceTotalResults}}
+        {{details.hosts.deviceTotalResults}}
         results
       </div>
 
       <div class='containment-info'>
-        {{#each details.devices.devices as |device index|}}
+        {{#each details.hosts.devices as |device index|}}
           <div class='devices-container'>
             {{#if device.hostname}}
               <h1 class=''>{{fa-icon 'laptop' fixedWidth=true}}
@@ -259,7 +259,7 @@
             <div class='mb-1 mt-1'>
               <a
                 class='p-link'
-                href='https://falcon.crowdstrike.com/hosts/hosts/host/{{device.device_id}}'
+                href='{{block.userOptions.url}}/hosts/hosts/host/{{device.device_id}}'
               >
                 View Containment Information
                 {{fa-icon icon='external-link-square' class='external-link-icon'}}

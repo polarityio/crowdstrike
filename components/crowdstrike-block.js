@@ -24,7 +24,7 @@ polarity.export = PolarityComponent.extend({
   init() {
     this.set(
       'activeTab',
-      this.get('details.detections.detections.length')
+      this.get('details.events.detections.length')
         ? 'crowdstrike'
         : this.get('block.userOptions.searchIoc')
         ? 'crowdstrikeIoc'
@@ -59,8 +59,8 @@ polarity.export = PolarityComponent.extend({
         });
     },
     showAllDeviceInfo: function (detectionIndex) {
-      let detection = this.get('details.detections.' + detectionIndex);
-      let __viewAllDeviceInfo = this.get('details.detections.' + detectionIndex + '.__showAllDeviceInfo');
+      let detection = this.get('details.events.' + detectionIndex);
+      let __viewAllDeviceInfo = this.get('details.events.' + detectionIndex + '.__showAllDeviceInfo');
       if (__viewAllDeviceInfo) {
         Ember.set(detection, '__showAllDeviceInfo', false);
       } else {
@@ -68,8 +68,8 @@ polarity.export = PolarityComponent.extend({
       }
     },
     showAllBehaviorInfo: function (detectionIndex) {
-      let detection = this.get('details.detections.' + detectionIndex);
-      let __showAllBehaviorInfo = this.get('details.detections.' + detectionIndex + '.__showAllBehaviorInfo');
+      let detection = this.get('details.events.' + detectionIndex);
+      let __showAllBehaviorInfo = this.get('details.events.' + detectionIndex + '.__showAllBehaviorInfo');
       if (__showAllBehaviorInfo) {
         Ember.set(detection, '__showAllBehaviorInfo', false);
       } else {
@@ -96,7 +96,7 @@ polarity.export = PolarityComponent.extend({
         data: { id: device.device_id, status: device.status }
       })
         .then(({ updatedDeviceState }) => {
-          this.set('details.devices.devices.' + index + '.status', updatedDeviceState);
+          this.set('details.hosts.devices.' + index + '.status', updatedDeviceState);
         })
         .catch((err) => {
           console.log(err);
@@ -127,7 +127,7 @@ polarity.export = PolarityComponent.extend({
         data: { id: device.device_id }
       })
         .then(({ deviceStatus }) => {
-          this.set('details.devices.' + index + '.status', deviceStatus);
+          this.set('details.hosts.' + index + '.status', deviceStatus);
           if (!['normal', 'contained'].includes(deviceStatus))
             this.setMessages(index, 'getAndUpdateDeviceState', 'Still Pending...');
         })

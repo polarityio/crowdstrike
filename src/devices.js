@@ -1,5 +1,5 @@
 const { parseErrorToReadableJSON } = require('./responses');
-const { get, size, flow, first, last, split, toUpper, identity, getOr } = require('lodash/fp');
+const { get, size, flow, first, last, split, toUpper, getOr } = require('lodash/fp');
 
 const getDevices = async (
   authenticatedRequest,
@@ -41,7 +41,7 @@ const getDevices = async (
 
     if (requestSuccessfulWithContent) {
       const devices = response.body.resources.map((resource) => {
-        resource.__url = `https://falcon.crowdstrike.com/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
+        resource.__url = `${options.url}/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
         return resource;
       });
 
@@ -55,6 +55,7 @@ const getDevices = async (
       );
       return {
         devices,
+        contentKeyName: 'devices',
         deviceTotalResults: size(deviceIds),
         statusCode: response.statusCode
       };

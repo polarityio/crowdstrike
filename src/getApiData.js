@@ -1,25 +1,35 @@
+const { includes } = require('lodash');
 const _ = require('lodash');
+const { keys, every, get, flow } = require('lodash/fp');
 const { getDetects } = require('./detects');
 const { getDevices } = require('./devices');
+const { getIocIndicators } = require('./iocs');
 const { polarityResponse, polarityError, retryablePolarityResponse, parseErrorToReadableJSON } = require('./responses');
 
 const getApiData = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
-  let deviceData;
   try {
     const detectionData = await getDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger);
     Logger.trace({ detectionData }, 'detectionData API data');
 
-    deviceData = await getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+    const deviceData = await getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger);
     Logger.trace({ deviceData }, 'devices API data');
-    
+
+    let iocData;
     if (options.searchIoc) {
-      //TODO: Add Query and data transformations
+      iocData = await getIocIndicators(
+        authenticatedRequest,
+        requestWithDefaults,
+        entity,
+        options,
+        Logger
+      );
+      Logger.trace({ iocData }, 'IOC API data');
     }
 
-    apiData = {
-      devices: deviceData,
-      detections: detectionData,
-      statusCode: deviceData.statusCode === 200 && detectionData.statusCode === 200 ? 200 : detectionData.statusCode
+    const apiData = {
+      hosts: deviceData,
+      events: detectionData,
+      iocs: iocData
     };
 
     return apiData;
@@ -35,7 +45,12 @@ const buildResponse = async (authenticatedRequest, requestWithDefaults, entity, 
     const apiData = await getApiData(authenticatedRequest, requestWithDefaults, entity, options, Logger);
     Logger.trace({ apiData }, 'api result');
 
-    return apiData.statusCode === 200 || apiData.statusCode === 400
+    const allStatusCodesAreSuccessful = flow(
+      keys,
+      every((dataKey) => [200, 400].includes(get([dataKey, 'statusCode'], apiData)))
+    )(apiData);
+
+    return allStatusCodesAreSuccessful
       ? polarityResponse(entity, apiData, Logger)
       : retryablePolarityResponse(entity);
   } catch (err) {
