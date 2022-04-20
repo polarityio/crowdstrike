@@ -4,17 +4,40 @@ const { keys, every, get, flow } = require('lodash/fp');
 const { getDetects } = require('./detects');
 const { getDevices } = require('./devices');
 const { getIocIndicators } = require('./iocs');
-const { polarityResponse, polarityError, retryablePolarityResponse, parseErrorToReadableJSON } = require('./responses');
+const {
+  polarityResponse,
+  polarityError,
+  retryablePolarityResponse,
+  parseErrorToReadableJSON
+} = require('./responses');
 
-const getApiData = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
+const getApiData = async (
+  authenticatedRequest,
+  requestWithDefaults,
+  entity,
+  options,
+  Logger
+) => {
   try {
-    const detectionData = await getDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+    const detectionData = await getDetects(
+      authenticatedRequest,
+      requestWithDefaults,
+      entity,
+      options,
+      Logger
+    );
     Logger.trace({ detectionData }, 'detectionData API data');
 
-    const deviceData = await getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+    const deviceData = await getDevices(
+      authenticatedRequest,
+      requestWithDefaults,
+      entity,
+      options,
+      Logger
+    );
     Logger.trace({ deviceData }, 'devices API data');
 
-    let iocData;
+    let iocData = { indicators: null, statusCode: 400 };
     if (options.searchIoc) {
       iocData = await getIocIndicators(
         authenticatedRequest,
@@ -29,7 +52,7 @@ const getApiData = async (authenticatedRequest, requestWithDefaults, entity, opt
     const apiData = {
       hosts: deviceData,
       events: detectionData,
-      iocs: iocData
+      iocs: iocData 
     };
 
     return apiData;
@@ -40,9 +63,21 @@ const getApiData = async (authenticatedRequest, requestWithDefaults, entity, opt
   }
 };
 
-const buildResponse = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
+const buildResponse = async (
+  authenticatedRequest,
+  requestWithDefaults,
+  entity,
+  options,
+  Logger
+) => {
   try {
-    const apiData = await getApiData(authenticatedRequest, requestWithDefaults, entity, options, Logger);
+    const apiData = await getApiData(
+      authenticatedRequest,
+      requestWithDefaults,
+      entity,
+      options,
+      Logger
+    );
     Logger.trace({ apiData }, 'api result');
 
     const allStatusCodesAreSuccessful = flow(
@@ -56,7 +91,8 @@ const buildResponse = async (authenticatedRequest, requestWithDefaults, entity, 
   } catch (err) {
     const isConnectionTimeout = _.get(err, 'code', '') === 'ETIMEDOUT';
     const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
-    if (isConnectionReset || isConnectionTimeout) return retryablePolarityResponse(entity, err);
+    if (isConnectionReset || isConnectionTimeout)
+      return retryablePolarityResponse(entity, err);
     else throw polarityError(err);
   }
 };
