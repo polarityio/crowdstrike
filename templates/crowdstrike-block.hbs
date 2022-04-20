@@ -35,7 +35,7 @@
         </a>
       </li>
     {{/if}}
-    {{#if (and block.userOptions.searchIoc details.hosts.iocs.length)}}
+    {{#if (and block.userOptions.searchIoc details.iocs.indicators.length)}}
       <li class='nav-item'>
         <a
           {{action 'changeTab' 'crowdstrikeIoc'}}
@@ -151,7 +151,7 @@
 
   {{! crowdstrikeIOC }}
   {{#if (eq activeTab 'crowdstrikeIoc')}}
-    {{#if details.iocs.indicators}}
+    {{#if details.iocs.indicators.length}}
       <div>
         Displaying
         {{details.iocs.indicators.length}}

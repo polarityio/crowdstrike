@@ -26,7 +26,8 @@ polarity.export = PolarityComponent.extend({
       'activeTab',
       this.get('details.events.detections.length')
         ? 'crowdstrike'
-        : this.get('block.userOptions.searchIoc') && this.get('details.hosts.iocs.length')
+        : this.get('block.userOptions.searchIoc') &&
+          this.get('details.iocs.indicators.length')
         ? 'crowdstrikeIoc'
         : 'hosts'
     );
