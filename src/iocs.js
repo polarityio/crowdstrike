@@ -42,7 +42,7 @@ const getIocIndicators = async (
 
     if (requestSuccessfulWithContent) {
       const indicators = response.body.resources.map((resource) => {
-        resource.__url = `${options.url}/iocs/indicators/${resource.id}/summary`;
+        resource.__url = `https://falcon.crowdstrike.com/iocs/indicators/${resource.id}`;
         return resource;
       });
 
@@ -106,7 +106,6 @@ const getIndicatorIds = async (
   }
 };
 
-
 const getIocDevicesIds = async (
   authenticatedRequest,
   requestWithDefaults,
@@ -153,7 +152,6 @@ const getIocDevicesIds = async (
     throw err;
   }
 };
-
 
 module.exports = {
   getIocIndicators

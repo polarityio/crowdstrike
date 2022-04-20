@@ -58,7 +58,7 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
     if (get('statusCode', response) === 200 || get('body.resources.length', response) > 0) {
       const detections = response.body.resources.map((resource) => {
         let split = resource.detection_id.split(':');
-        resource.__url = `${options.url}/activity/detections/detail/${split[1]}/${split[2]}`;
+        resource.__url = `https://falcon.crowdstrike.com/activity/detections/detail/${split[1]}/${split[2]}`;
         return resource;
       });
 

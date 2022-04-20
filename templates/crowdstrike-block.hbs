@@ -151,87 +151,91 @@
 
   {{! crowdstrikeIOC }}
   {{#if (eq activeTab 'crowdstrikeIoc')}}
-    {{#if details.hosts}}
+    {{#if details.iocs.indicators}}
       <div>
         Displaying
-        {{details.hosts.devices.length}}
+        {{details.iocs.indicators.length}}
         of
-        {{details.hosts.deviceTotalResults}}
+        {{details.iocs.indicatorsTotalResults}}
         results.
       </div>
-      <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
-        Device Information
-      </div>
-      {{#each details.hosts.devices as |device|}}
+      {{#each details.iocs.indicators as |indicator|}}
         <div class='devices-container'>
-          {{#if device.hostname}}
+          {{#if indicator.value}}
+            <h1 class=''>{{fa-icon 'info-circle' fixedWidth=true}}
+              Indicator: {{indicator.value}}
+            </h1>
+          {{/if}}
+          <div class='mb-1 mt-1'>
+            <a class='p-link' href='{{indicator.__url}}'>
+              View Full Details
+              {{fa-icon icon='external-link-square' class='external-link-icon'}}
+            </a>
+          </div>
+          {{!-- {{#if indicator.value}}
             <div>
-              <span class='p-key'>Hostname:</span>
-              <span class='p-value'>{{device.hostname}}</span>
+              <span class='p-key'>Indicator: </span>
+              <span class='p-value'>{{indicator.value}}</span>
+            </div>
+          {{/if}} --}}
+          {{#if indicator.description}}
+            <div>
+              <span class='p-key'>Description:</span>
+              <span class='p-value'>{{indicator.description}}</span>
             </div>
           {{/if}}
-          {{#if device.product_type_desc}}
+          {{#if indicator.action}}
             <div>
-              <span class='p-key'>Product Type:</span>
-              <span class='p-value'>{{device.product_type_desc}}</span>
+              <span class='p-key'>Action:</span>
+              <span class='p-value'>{{capitalize indicator.action}}</span>
             </div>
           {{/if}}
-          {{#if device.system_manufacturer}}
+          {{#if indicator.severity}}
             <div>
-              <span class='p-key'>Sys. Manufacturer:</span>
-              <span class='p-value'>{{device.system_manufacturer}}</span>
+              <span class='p-key'>Severity:</span>
+              <span class='p-value'>{{capitalize indicator.severity}}</span>
             </div>
           {{/if}}
-          {{#if device.system_product_name}}
+          <div>
+            <span class='p-key'>Is Expired:</span>
+            <span class='p-value'>{{indicator.expired}}</span>
+          </div>
+          <div>
+            <span class='p-key'>Is Deleted:</span>
+            <span class='p-value'>{{indicator.deleted}}</span>
+          </div>
+          {{#if indicator.created_by}}
             <div>
-              <span class='p-key'>Product Type:</span>
-              <span class='p-value'>{{device.system_product_name}}</span>
+              <span class='p-key'>Created By:</span>
+              <span class='p-value'>{{indicator.created_by}}</span>
             </div>
           {{/if}}
-          {{#if device.os_version}}
+          {{#if indicator.created_on}}
             <div>
-              <span class='p-key'>OS Version:</span>
-              <span class='p-value'>{{device.os_version}}</span>
-            </div>
-          {{/if}}
-          {{#if device.external_ip}}
-            <div>
-              <span class='p-key'>External IP:</span>
-              <span class='p-value'>{{device.external_ip}}</span>
-            </div>
-          {{/if}}
-          {{#if device.local_ip}}
-            <div>
-              <span class='p-key'>Local IP:</span>
-              <span class='p-value'>{{device.local_ip}}</span>
-            </div>
-          {{/if}}
-          {{#if device.first_seen}}
-            <div>
-              <span class='p-key'>First Seen:</span>
+              <span class='p-key'>Created On:</span>
               <span class='p-value'>{{moment-format
-                  device.first_seen
+                  indicator.created_on
+                  'MM/DD/YYYY HH:mm:ss'
                   timeZone=timezone
                 }}</span>
             </div>
           {{/if}}
-          {{#if device.last_seen}}
+          {{#if indicator.modified_by}}
             <div>
-              <span class='p-key'>Last Seen:</span>
+              <span class='p-key'>Modified By:</span>
+              <span class='p-value'>{{indicator.modified_by}}</span>
+            </div>
+          {{/if}}
+          {{#if indicator.modified_on}}
+            <div>
+              <span class='p-key'>Modified On:</span>
               <span class='p-value'>{{moment-format
-                  device.last_seen
+                  indicator.modified_on
+                  'MM/DD/YYYY HH:mm:ss'
                   timeZone=timezone
                 }}</span>
             </div>
           {{/if}}
-          {{#each device.policies as |policy|}}
-            {{#if (eq policy.policy_type 'prevention')}}
-              <div>
-                <span class='p-key'>Prevention Policy Applied:</span>
-                <span class='p-value'>{{policy.applied}}</span>
-              </div>
-            {{/if}}
-          {{/each}}
         </div>
       {{/each}}
     {{/if}}
@@ -329,7 +333,7 @@
             {{/each}}
 
             {{#if device.status}}
-              <div class="mt-1">
+              <div class='mt-1'>
                 <span class='p-key'>Containment Status:</span>
                 <span class='p-value'>{{titleize
                     (humanize (dasherize device.status))
@@ -397,7 +401,8 @@
                   <span>
                     Are you sure you want to
                     {{if (eq device.status 'contained') 'lift containment on' 'contain'}}
-                    this host: <span class="bold">{{device.hostname}}</span>?
+                    this host:
+                    <span class='bold'>{{device.hostname}}</span>?
                   </span>
                 </div>
                 <div class='modal-options'>
