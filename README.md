@@ -2,8 +2,9 @@
 
 ![image](https://img.shields.io/badge/status-beta-green.svg)
 
-The Polarity Crowdstrike integration searches detections for MD5, SHA256 and MS windows executable filenames (EXE, DLL). The integration searches both IoCs and the triggering process hashes for detections. The integration also searches device information based on IPv4 (Local IP and External IP).
-
+The Polarity Crowdstrike integration searches detections for MD5, SHA256 and MS windows executable filenames (EXE, DLL). The integration searches both IoCs and the triggering process hashes for detections. The integration also searches device information based on SHA256 and MD5 hashes.
+ 
+> 
 ![image](images/overlay.png)
 
 ## Creating a Client ID / Client Secret
@@ -35,7 +36,7 @@ The secret associated with the Client ID.
 
 ### Minimum Severity
 
-The minimum severity level required for indicators to be displayed. Defaults to `Medium`.
+The minimum severity level required for Detections or IOCs to be displayed. Defaults to `Medium`.
 
 ### Detection Statuses
 
@@ -44,6 +45,13 @@ Detection statuses you would like to return results for. Defaults to `True Posit
 ## Search Crowdstrike-IOC
 
 Ability to search using Crowdstrike-IOC endpoint
+### Max Concurrent Search Requests
+
+Maximum number of concurrent search requests (defaults to 20). Integration must be restarted after changing this option.
+
+### Minimum Time Between Searches
+
+Minimum amount of time in milliseconds between each entity search (defaults to 100). Integration must be restarted after changing this option.
 
 ## Polarity
 
