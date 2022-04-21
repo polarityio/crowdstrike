@@ -3,7 +3,13 @@ polarity.export = PolarityComponent.extend({
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
-  detectionProperties: ['status', 'max_confidence', 'max_severity', 'first_behavior', 'last_behavior'],
+  detectionProperties: [
+    'status',
+    'max_confidence',
+    'max_severity',
+    'first_behavior',
+    'last_behavior'
+  ],
   activeTab: 'crowdstrike',
   compactDeviceProperties: [
     'platform_name',
@@ -17,7 +23,15 @@ polarity.export = PolarityComponent.extend({
   containOrUncontainMessages: {},
   containOrUncontainErrorMessages: {},
   containOrUncontainIsRunning: {},
-  compactBehaviorProperties: ['scenario', 'objective', 'filename', 'tactic', 'technique', 'severity', 'confidence'],
+  compactBehaviorProperties: [
+    'scenario',
+    'objective',
+    'filename',
+    'tactic',
+    'technique',
+    'severity',
+    'confidence'
+  ],
   containmentStatus: '',
   isRunning: false,
   modalDevice: {},
@@ -59,23 +73,15 @@ polarity.export = PolarityComponent.extend({
           this.set('running', false);
         });
     },
-    showAllDeviceInfo: function (detectionIndex) {
-      let detection = this.get('details.events.' + detectionIndex);
-      let __viewAllDeviceInfo = this.get('details.events.' + detectionIndex + '.__showAllDeviceInfo');
-      if (__viewAllDeviceInfo) {
-        Ember.set(detection, '__showAllDeviceInfo', false);
-      } else {
-        Ember.set(detection, '__showAllDeviceInfo', true);
-      }
+    showAllDeviceInfo: function (devicesIndex) {
+      this.toggleProperty(
+        'details.events.detections.' + devicesIndex + '.__showAllDeviceInfo'
+      );
     },
     showAllBehaviorInfo: function (detectionIndex) {
-      let detection = this.get('details.events.' + detectionIndex);
-      let __showAllBehaviorInfo = this.get('details.events.' + detectionIndex + '.__showAllBehaviorInfo');
-      if (__showAllBehaviorInfo) {
-        Ember.set(detection, '__showAllBehaviorInfo', false);
-      } else {
-        Ember.set(detection, '__showAllBehaviorInfo', true);
-      }
+      this.toggleProperty(
+        'details.events.detections.' + detectionIndex + '.__showAllBehaviorInfo'
+      );
     },
     toggleShowModal: function (device, index) {
       this.toggleProperty('modalOpen');
@@ -147,7 +153,10 @@ polarity.export = PolarityComponent.extend({
   },
   setMessages: function (index, prefix, message) {
     console.log(index, prefix, message);
-    this.set(`${prefix}Messages`, Object.assign({}, this.get(`${prefix}Messages`), { [index]: message }));
+    this.set(
+      `${prefix}Messages`,
+      Object.assign({}, this.get(`${prefix}Messages`), { [index]: message })
+    );
   },
   setErrorMessages: function (index, prefix, message) {
     this.set(
@@ -162,7 +171,13 @@ polarity.export = PolarityComponent.extend({
     }
   },
   setIsRunning: function (index, prefix, value) {
-    console.log(`${prefix}IsRunning`, Object.assign({}, this.get(`${prefix}IsRunning`), { [index]: value }));
-    this.set(`${prefix}IsRunning`, Object.assign({}, this.get(`${prefix}IsRunning`), { [index]: value }));
+    console.log(
+      `${prefix}IsRunning`,
+      Object.assign({}, this.get(`${prefix}IsRunning`), { [index]: value })
+    );
+    this.set(
+      `${prefix}IsRunning`,
+      Object.assign({}, this.get(`${prefix}IsRunning`), { [index]: value })
+    );
   }
 });
