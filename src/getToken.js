@@ -1,7 +1,5 @@
-const tokenCache = new Map();
-
-const generateAccessToken = async (requestWithDefaults, options, Logger) => {
-  let token = getTokenFromCache(options);
+const generateAccessToken = async (requestWithDefaults, options, cache, Logger) => {
+  let token = getTokenFromCache(options, cache);
   if (token) return token;
 
   try {
@@ -18,7 +16,7 @@ const generateAccessToken = async (requestWithDefaults, options, Logger) => {
     const { body } = response;
 
     if (response.statusCode === 201 && body.access_token) {
-      setTokenInCache(options, body.access_token, Logger);
+      setTokenInCache(options, body.access_token, cache, Logger);
       return response.body.access_token;
     }
   } catch (err) {
@@ -27,9 +25,10 @@ const generateAccessToken = async (requestWithDefaults, options, Logger) => {
   }
 };
 
-const getTokenFromCache = (options) => tokenCache.get(_getTokenKey(options));
+const getTokenFromCache = (options, cache) => cache.get(_getTokenKey(options));
 
-const setTokenInCache = (options, token) => tokenCache.set(_getTokenKey(options), token);
+const setTokenInCache = (options, token, cache) =>
+  cache.set(_getTokenKey(options), token);
 
 const _getTokenKey = (options) => options.url + options.id + options.secret;
 

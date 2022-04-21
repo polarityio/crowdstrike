@@ -10,7 +10,11 @@ let requestWithDefaults;
 
 const EXPIRED_BEARER_TOKEN_HTTP_CODE = 403;
 const INVALID_BEARER_TOKEN_HTTP_CODE = 401;
-const MAX_AUTH_RETRIES = 2;
+const NodeCache = require('node-cache');
+
+const tokenCache = new NodeCache({
+  stdTTL: 2 * 60
+});
 
 const setRequestWithDefaults = (Logger) => {
   const {
@@ -62,12 +66,13 @@ const checkForStatusError = (response, requestOptions) => {
 };
 
 const authenticatedRequest = async (requestWithDefaults, requestOptions, options, Logger) => {
-  // if (requestCount === MAX_AUTH_RETRIES) {
-  //   throw new Error(`Attempted to authenticate ${MAX_AUTH_RETRIES} times but failed authentication`);
-  // }
-
   try {
-    const tokenResponse = await generateAccessToken(requestWithDefaults, options, Logger);
+    const tokenResponse = await generateAccessToken(
+      requestWithDefaults,
+      options,
+      tokenCache,
+      Logger
+    );
     requestOptions.headers = { authorization: `Bearer ${tokenResponse}` };
     const response = await requestWithDefaults(requestOptions);
 
@@ -76,7 +81,6 @@ const authenticatedRequest = async (requestWithDefaults, requestOptions, options
       response.statusCode === INVALID_BEARER_TOKEN_HTTP_CODE
     ) {
       invalidateToken(options);
-      // requestCount++;
       authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
       return;
     }
@@ -88,12 +92,10 @@ const authenticatedRequest = async (requestWithDefaults, requestOptions, options
 };
 
 const invalidateToken = (options) => {
-  tokenCache.delete(_getTokenKey(options));
+  tokenCache.del(_getTokenKey(options));
 };
 
-const _getTokenKey = (options) => {
-  return options.url + options.id + options.secret;
-};
+const _getTokenKey = (options) => options.url + options.id + options.secret;
 
 module.exports = {
   setRequestWithDefaults,

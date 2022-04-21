@@ -19,36 +19,22 @@ const getApiData = async (
   Logger
 ) => {
   try {
-    const detectionData = await getDetects(
-      authenticatedRequest,
-      requestWithDefaults,
-      entity,
-      options,
-      Logger
-    );
-    Logger.trace({ detectionData }, 'detectionData API data');
 
-    const deviceData = await getDevices(
-      authenticatedRequest,
-      requestWithDefaults,
-      entity,
-      options,
-      Logger
-    );
-    Logger.trace({ deviceData }, 'devices API data');
-
-    let iocData = { indicators: null, statusCode: 400 };
-    if (options.searchIoc) {
-      iocData = await getIocIndicators(
-        authenticatedRequest,
-        requestWithDefaults,
-        entity,
-        options,
-        Logger
-      );
-      Logger.trace({ iocData }, 'IOC API data');
-    }
-
+    const [detectionData, deviceData, iocData] = await Promise.all([
+      getDetects(authenticatedRequest, requestWithDefaults, entity, options, Logger),
+      getDevices(authenticatedRequest, requestWithDefaults, entity, options, Logger),
+      options.searchIoc
+        ? getIocIndicators(
+            authenticatedRequest,
+            requestWithDefaults,
+            entity,
+            options,
+            Logger
+          )
+        : () => ({ indicators: null, statusCode: 400 })
+    ]);
+    Logger.trace({ detectionData, deviceData, iocData }, 'API data');
+    
     const apiData = {
       hosts: deviceData,
       events: detectionData,
