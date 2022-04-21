@@ -1,5 +1,5 @@
 const { parseErrorToReadableJSON } = require('./responses');
-const { get, size } = require('lodash/fp');
+const { get, size, toLower } = require('lodash/fp');
 const { SEVERITY_LEVELS_FOR_INDICATORS } = require('./constants');
 
 const getIocIndicators = async (
@@ -84,8 +84,7 @@ const getIndicatorIds = async (
       qs: {
         filter:
           `(value: ~"${entity.value}", description: ~"${entity.value}",` +
-          `metadata.filename.raw: "${entity.value}", metadata.original_filename.raw: "${entity.value}")` +
-          //TODO: test severity levels on polarityx
+          `metadata.filename.raw: "${entity.value}", metadata.original_filename.raw: "${entity.value}", value: ~"${toLower(entity.value)}")` +
           `+severity:[${SEVERITY_LEVELS_FOR_INDICATORS[options.minimumSeverity.value]}]`
       },
       json: true
