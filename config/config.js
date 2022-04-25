@@ -133,8 +133,19 @@ module.exports = {
     {
       key: 'searchIoc',
       name: 'Search Crowdstrike-IOC',
-      description: 'If enabled, the integration will additionally search the Crowdstrike IOC database',
+      description:
+        'If enabled, the integration will additionally search the Crowdstrike IOC database',
       default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'networkContainment',
+      name: 'Contain hosts on the network',
+      description:
+        'The ability to network contain or un-contain a system with CrowdStrike Falcon',
+      default: false,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: true
@@ -142,7 +153,8 @@ module.exports = {
     {
       key: 'minimumSeverity',
       name: 'Minimum Severity',
-      description: 'The minimum severity level required for Detections or IOCs to be displayed',
+      description:
+        'The minimum severity level required for Detections or IOCs to be displayed',
       default: {
         value: 'Medium',
         display: 'Medium'

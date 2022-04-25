@@ -16,6 +16,7 @@ const getDevices = async (
       options,
       Logger
     );
+
     if (!size(deviceIds)) return { devices: null, statusCode: 400 }; //handles the case of no data being found for an entity
 
     const requestOptions = {
@@ -71,7 +72,7 @@ const getDevices = async (
 
 const REQUEST_FILTER_BY_TYPE = {
   IPv4: (value) => `(external_ip:"${value}", local_ip:"${value}")`,
-  hostname: (value) => `hostname:"${toUpper(value)}"`
+  hostname: (value) => `hostname:"${toUpper(value)}"`,
 };
 
 const getDeviceIds = async (
@@ -92,6 +93,7 @@ const getDeviceIds = async (
       entityWithType,
       REQUEST_FILTER_BY_TYPE
     )(entity.value);
+
     if (!requestFilter) return;
 
     const requestOptions = {
