@@ -24,12 +24,16 @@ module.exports = {
    */
   description:
     'Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).',
-  entityTypes: ['md5', 'sha256', 'ipv4'],
+  entityTypes: ['md5', 'sha256', 'IPv4'],
   customTypes: [
-      {
-          key: 'exeFile',
-          regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|exe)/
-      }
+    {
+      key: 'exeFile',
+      regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|exe)/
+    },
+    // {
+    //   key: 'hostname',
+    //   regex: /DESKTOP\-[A-Za-z0-9]*/
+    // }
   ],
   defaultColor: 'light-purple',
   /**
@@ -127,9 +131,29 @@ module.exports = {
       adminOnly: true
     },
     {
+      key: 'searchIoc',
+      name: 'Search Crowdstrike IOC',
+      description:
+        'If enabled, the integration will additionally search the Crowdstrike IOC database',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'allowContainment',
+      name: 'Allow Containment Status Change',
+      description: 'If enabled, you will be able to change the Containment Status on Devices',
+      default: false,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'minimumSeverity',
       name: 'Minimum Severity',
-      description: 'The minimum severity level required for indicators to be displayed',
+      description:
+        'The minimum severity level required for Detections or IOCs to be displayed',
       default: {
         value: 'Medium',
         display: 'Medium'
@@ -201,6 +225,26 @@ module.exports = {
       multiple: true,
       userCanEdit: true,
       adminOnly: false
+    },
+    {
+      key: 'maxConcurrent',
+      name: 'Max Concurrent Requests',
+      description:
+        'Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 20.',
+      default: 20,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'minTime',
+      name: 'Minimum Time Between Lookups',
+      description:
+        'Minimum amount of time in milliseconds between lookups. Integration must be restarted after changing this option. Defaults to 100.',
+      default: 100,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
     }
   ]
 };

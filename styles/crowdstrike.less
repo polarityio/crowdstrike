@@ -1,17 +1,125 @@
+pre {
+  overflow-y: scroll;
+  overflow-x: hidden;
+  max-height: 200px;
+  margin: 3px 0px;
+  white-space: pre-wrap;
+}
+
 table {
   th {
     display: none;
   }
 }
 
-.detection-title{
+button {
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background-color: #404041;
+}
+
+.detection-title {
   word-break: break-all;
 }
 
-.external-link{
+.external-link {
   font-size: 10px;
 }
 
-.show-behaviors-toggle{
+.show-behaviors-toggle {
   margin: 10px 0px;
+}
+
+.devices-container {
+  margin: 10px 0px 5px 0px;
+}
+
+.alert {
+  margin-bottom: 0;
+}
+
+.alert-information {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.retry-btn {
+  height: 25px;
+  padding: 5px;
+  width: 150px;
+  font-weight: 500;
+}
+
+.display-results {
+  margin-top: 5px;
+}
+
+.containment-info {
+  position: relative;
+}
+
+.modal-options {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-right: 0;
+  margin-left: 0;
+  display: inline-block;
+}
+
+.containment-modal {
+  position: absolute;
+  z-index: 9999;
+  bottom: 16px;
+  right: 0;
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.5) 0px 0.5rem 2rem;
+  border-radius: 6px;
+  margin-right: 10%;
+  margin-left: 17%;
+  border: 1px solid white;
+
+  & .modal-container {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    max-width: 200px;
+
+    .modal-text {
+      display: flex;
+      width: 170px;
+      font-size: 14px;
+      font-weight: 500px;
+      line-height: 17px;
+    }
+
+    .modal-options {
+      display: flex;
+      justify-content: center;
+      & > * {
+        margin-right: 5px;
+      }
+      button.modal-btn {
+        padding: 7px 12px 7px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+        background-color: #404041;
+      }
+    }
+  }
+}
+
+.bold {
+  font-weight: bold;
+}
+.p-link {
+  border-radius: 3px;
+  padding: 2px;
+}
+
+.highlight {
+  background-color: lightblue;
 }
