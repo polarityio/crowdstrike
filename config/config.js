@@ -30,10 +30,10 @@ module.exports = {
       key: 'exeFile',
       regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|exe)/
     },
-    {
-      key: 'hostname',
-      regex: /DESKTOP\-[A-Za-z0-9]*/
-    }
+    // {
+    //   key: 'hostname',
+    //   regex: /DESKTOP\-[A-Za-z0-9]*/
+    // }
   ],
   defaultColor: 'light-purple',
   /**
