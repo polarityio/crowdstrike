@@ -132,9 +132,19 @@ module.exports = {
     },
     {
       key: 'searchIoc',
-      name: 'Search Crowdstrike-IOC',
-      description: 'If enabled, the integration will additionally search the Crowdstrike IOC database',
+      name: 'Search Crowdstrike IOC',
+      description:
+        'If enabled, the integration will additionally search the Crowdstrike IOC database',
       default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'allowContainment',
+      name: 'Allow Containment Status Change',
+      description: 'If enabled, you will be able to change the Containment Status on Devices',
+      default: false,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: true
@@ -142,7 +152,8 @@ module.exports = {
     {
       key: 'minimumSeverity',
       name: 'Minimum Severity',
-      description: 'The minimum severity level required for Detections or IOCs to be displayed',
+      description:
+        'The minimum severity level required for Detections or IOCs to be displayed',
       default: {
         value: 'Medium',
         display: 'Medium'

@@ -60,8 +60,6 @@ button {
   position: relative;
 }
 
-
-
 .modal-options {
   margin-top: 10px;
   margin-bottom: 10px;
@@ -88,32 +86,40 @@ button {
     padding: 10px;
     max-width: 200px;
 
-      .modal-text  {
-        display: flex;
-        width: 170px;
-        font-size: 14px;
-        font-weight: 500px;
-        line-height: 17px;
-      }
+    .modal-text {
+      display: flex;
+      width: 170px;
+      font-size: 14px;
+      font-weight: 500px;
+      line-height: 17px;
+    }
 
-      .modal-options {
-        display: flex;
-        justify-content: center;
-      & > *{
+    .modal-options {
+      display: flex;
+      justify-content: center;
+      & > * {
         margin-right: 5px;
       }
-       button.modal-btn {
-          padding: 7px 12px 7px 12px;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 700;
-          color: white;
-          background-color: #404041;
-        }
+      button.modal-btn {
+        padding: 7px 12px 7px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+        background-color: #404041;
       }
+    }
   }
 }
 
 .bold {
   font-weight: bold;
+}
+.p-link {
+  border-radius: 3px;
+  padding: 2px;
+}
+
+.highlight {
+  background-color: lightblue;
 }

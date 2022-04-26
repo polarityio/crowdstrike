@@ -27,26 +27,24 @@ Use the Client ID and Client Secret that you recorded previously to fill out the
 The REST API URL for your Crowdstrike instance which should include the schema (i.e., http, https) and port if required. Defaults to `https://api.crowdstrike.com`.
 
 ### Client ID
-
 The Client ID to use to connect to Crowdstrike.
 
 ### Client Secret
-
 The secret associated with the Client ID.
 
 ### Minimum Severity
-
 The minimum severity level required for Detections or IOCs to be displayed. Defaults to `Medium`.
 
 ### Detection Statuses
-
 Detection statuses you would like to return results for. Defaults to `True Positive`, `In Progress` and `New`.
 
-## Search Crowdstrike-IOC
-
+### Search Crowdstrike-IOC
 Ability to search using Crowdstrike-IOC endpoint
-### Max Concurrent Search Requests
 
+### Allow Containment Status Change
+If enabled, you will be able to change the Containment Status on Devices
+
+### Max Concurrent Search Requests
 Maximum number of concurrent search requests (defaults to 20). Integration must be restarted after changing this option.
 
 ### Minimum Time Between Searches

@@ -263,9 +263,10 @@
             <div class='mb-1 mt-1'>
               <a
                 class='p-link'
-                href='{{block.userOptions.url}}/hosts/hosts/host/{{device.device_id}}'
+                id='device-{{index}}'
+                href='https://falcon.crowdstrike.com/hosts/hosts/host/{{device.device_id}}'
               >
-                View Containment Information
+                View {{if (or (eq device.status 'normal') (eq device.status 'contained')) "Host" "Containment"}} Information
                 {{fa-icon icon='external-link-square' class='external-link-icon'}}
               </a>
             </div>
@@ -341,59 +342,57 @@
               </div>
             {{/if}}
 
-            {{#if (eq device.status 'normal')}}
-              <button
-                {{action 'toggleShowModal' device index}}
-                class='p-btn btn btn-light mt-1'
-                disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
-              >
-                {{#if (get openContainmentModalIsRunning index)}}
-                  {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
-                {{/if}}
-                Network Contain
-              </button>
-            {{else if (eq device.status 'contained')}}
-              <button
-                {{action 'toggleShowModal' device index}}
-                class='p-btn btn btn-light mt-1'
-                disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
-              >
-                {{#if (get openContainmentModalIsRunning index)}}
-                  {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
-                {{/if}}
-                Lift Containment
-              </button>
-            {{else}}
-              <div class='d-flex flex-row justify-content-between align-items-center'>
+            {{#if block.userOptions.allowContainment}}
+              {{#if (eq device.status 'normal')}}
                 <button
-                  {{action 'getAndUpdateDeviceState' device index}}
+                  {{action 'toggleShowModal' device index}}
                   class='p-btn btn btn-light mt-1'
-                  disabled={{get getAndUpdateDeviceStateIsRunning index}}
+                  disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
                 >
-                  {{#if (get getAndUpdateDeviceStateIsRunning index)}}
+                  {{#if (get openContainmentModalIsRunning index)}}
                     {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
                   {{/if}}
-                  Check{{if (get getAndUpdateDeviceStateIsRunning index) 'ing'}}
-                  Containment Status
+                  Network Contain
                 </button>
-                {{#if (get getAndUpdateDeviceStateMessages index)}}
-                  <div class='alert alert-info mt-1'>
-                    {{get getAndUpdateDeviceStateMessages index}}
-                  </div>
-                {{/if}}
-              </div>
-            {{/if}}
-            {{#if (get openContainmentModalMessages index)}}
-              <div class='alert alert-info mt-1'>
-                {{get openContainmentModalMessages index}}
-              </div>
-            {{/if}}
-            {{#if (get openContainmentModalErrorMessages index)}}
-              <div class='alert alert-danger mt-1'>
-                {{get openContainmentModalErrorMessages index}}
-              </div>
+              {{else if (eq device.status 'contained')}}
+                <button
+                  {{action 'toggleShowModal' device index}}
+                  class='p-btn btn btn-light mt-1'
+                  disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
+                >
+                  {{#if (get openContainmentModalIsRunning index)}}
+                    {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+                  {{/if}}
+                  Lift Containment
+                </button>
+              {{else}}
+                <div class='d-flex flex-row justify-content-between align-items-center'>
+                  <button
+                    {{action 'getAndUpdateDeviceState' device index}}
+                    class='p-btn btn btn-light mt-1'
+                    disabled={{get getAndUpdateDeviceStateIsRunning index}}
+                  >
+                    {{#if (get getAndUpdateDeviceStateIsRunning index)}}
+                      {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+                    {{/if}}
+                    Check{{if (get getAndUpdateDeviceStateIsRunning index) 'ing'}}
+                    Containment Status
+                  </button>
+                  {{#if (get getAndUpdateDeviceStateMessages index)}}
+                    <div class='alert alert-info mt-1'>
+                      {{get getAndUpdateDeviceStateMessages index}}
+                    </div>
+                  {{/if}}
+                </div>
+              {{/if}}
+              {{#if (get getAndUpdateDeviceStateErrorMessages index)}}
+                <div class='alert alert-danger mt-1'>
+                  {{get getAndUpdateDeviceStateErrorMessages index}}
+                </div>
+              {{/if}}
             {{/if}}
           </div>
+
           {{#if modalOpen}}
             <div class='containment-modal'>
               <div class='modal-container'>
@@ -421,7 +420,6 @@
           {{/if}}
         {{/each}}
       </div>
-
     {{/if}}
   {{/if}}
 {{/if}}
