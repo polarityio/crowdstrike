@@ -10,6 +10,10 @@ const getIocIndicators = async (
   Logger
 ) => {
   try {
+    if (entity.type === 'custom') {
+      return { indicators: null, statusCode: 200 };
+    }
+
     const indicatorIds = await getIndicatorIds(
       authenticatedRequest,
       requestWithDefaults,
