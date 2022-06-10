@@ -19,7 +19,6 @@ polarity.export = PolarityComponent.extend({
     'hostname',
     'machine_domain'
   ],
-  modalOpen: false,
   containOrUncontainMessages: {},
   containOrUncontainErrorMessages: {},
   containOrUncontainIsRunning: {},
@@ -84,9 +83,8 @@ polarity.export = PolarityComponent.extend({
       );
     },
     toggleShowModal: function (device, index) {
-      this.toggleProperty('modalOpen');
-
-      if (device) this.set('modalDevice', { device, index });
+      this.toggleProperty('details.hosts.devices.' + index + '.__modalOpen');
+      this.set('modalDevice', { device, index });
     },
     confirmContainmentOrLiftContainment: function () {
       const outerThis = this;
@@ -96,7 +94,7 @@ polarity.export = PolarityComponent.extend({
       this.setMessages(index, 'getAndUpdateDeviceState', '');
       this.setErrorMessages(index, 'getAndUpdateDeviceState', '');
       this.setIsRunning(index, 'getAndUpdateDeviceState', true);
-      this.set('modalOpen', false);
+      this.set('details.hosts.devices.' + index + '.__modalOpen', false);
 
       this.sendIntegrationMessage({
         action: 'containOrUncontain',
@@ -104,7 +102,7 @@ polarity.export = PolarityComponent.extend({
       })
         .then(({ updatedDeviceState }) => {
           this.set('details.hosts.devices.' + index + '.status', updatedDeviceState);
-          outerThis.setMessages(index, 'getAndUpdateDeviceState', 'Success!');
+          outerThis.setMessages(index, 'getAndUpdateDeviceState', 'Containment successfully started.');
         })
         .catch((err) => {
           outerThis.setErrorMessages(index, 'getAndUpdateDeviceState', `Failed ${err}`);
@@ -132,7 +130,11 @@ polarity.export = PolarityComponent.extend({
         .then(({ deviceStatus }) => {
           this.set('details.hosts.devices.' + index + '.status', deviceStatus);
           if (!['normal', 'contained'].includes(deviceStatus)) {
-            this.setMessages(index, 'getAndUpdateDeviceState', 'Still Pending...');
+            if(device.status === 'lift_containment_pending'){
+              this.setMessages(index, 'getAndUpdateDeviceState', 'Lift Containment Still Pending ...');
+            } else {
+              this.setMessages(index, 'getAndUpdateDeviceState', 'Containment Still Pending ...');
+            }
             let element = document.getElementById(`device-${index}`);
             this.flashElement(element);
           }
@@ -173,10 +175,6 @@ polarity.export = PolarityComponent.extend({
       element.classList.remove('highlight');
       setTimeout(() => this.flashElement(element, flashCount - 1), flashTime);
     }, flashTime);
-  },
-  toggleModal: function () {
-    if (!this.get('modalOpen')) {
-    }
   },
   setIsRunning: function (index, prefix, value) {
     this.set(

@@ -1,7 +1,7 @@
 const Bottleneck = require('bottleneck/es5');
 const { map } = require('lodash/fp');
 const buildResponse = require('./src/getApiData');
-const { polarityError, parseErrorToReadableJSON } = require('./src/responses');
+const { parseErrorToReadableJSON } = require('./src/responses');
 const { containHost } = require('./src/containHost');
 const { getAndUpdateDeviceState } = require('./src/devices');
 const { setRequestWithDefaults, authenticatedRequest } = require('./src/createRequestOptions');
@@ -38,9 +38,10 @@ const doLookup = async (entities, options, callback) => {
     Logger.trace({ lookupResults }, 'DoLookup Response');
     callback(null, lookupResults);
   } catch (error) {
+
     const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in doLookup');
-    return callback(polarityError(err));
+    Logger.error(err, 'doLookup Error');
+    return callback(err);
   }
 };
 

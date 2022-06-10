@@ -6,7 +6,13 @@ const { SEVERITY_LEVELS_FOR_DETECTIONS } = require('./constants');
   getDetects returns devices that were matched with returned id's from searchDetects(). 
   It is possible that searchDetects returns a list of ids that do not have a matching device 
 */
-const getDetectionIds = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
+const getDetectionIds = async (
+  authenticatedRequest,
+  requestWithDefaults,
+  entity,
+  options,
+  Logger
+) => {
   try {
     const requestOptions = {
       method: 'GET',
@@ -17,19 +23,33 @@ const getDetectionIds = async (authenticatedRequest, requestWithDefaults, entity
 
     Logger.trace({ requestOptions }, 'searchDetects request options');
 
-    const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
+    const response = await authenticatedRequest(
+      requestWithDefaults,
+      requestOptions,
+      options,
+      Logger
+    );
     Logger.trace({ response }, 'Response containing detection ids');
 
     return response;
   } catch (error) {
-    const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in getAndUpdateDeviceState');
-    throw err;
+    error.source = 'getDetectionIds';
+    throw error;
   }
 };
 
-const getDetects = async (authenticatedRequest, requestWithDefaults, entity, options, Logger) => {
+const getDetects = async (
+  authenticatedRequest,
+  requestWithDefaults,
+  entity,
+  options,
+  Logger
+) => {
   try {
+    if (entity.isDomain) {
+      return { detections: null, statusCode: 200 };
+    }
+
     const detectionIdsResponse = await getDetectionIds(
       authenticatedRequest,
       requestWithDefaults,
@@ -40,6 +60,11 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
 
     Logger.trace({ detectionIdsResponse }, 'detections');
     const ids = detectionIdsResponse.body.resources;
+
+    if (Array.isArray(ids) && ids.length === 0) {
+      // no detections found so just return
+      return { detections: null, statusCode: 200 };
+    }
 
     const requestOptions = {
       method: 'POST',
@@ -52,10 +77,18 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
 
     Logger.trace({ requestOptions }, 'getDetects request options');
 
-    const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
+    const response = await authenticatedRequest(
+      requestWithDefaults,
+      requestOptions,
+      options,
+      Logger
+    );
     Logger.trace({ response }, 'Response from detects');
 
-    if (get('statusCode', response) === 200 || get('body.resources.length', response) > 0) {
+    if (
+      get('statusCode', response) === 200 ||
+      get('body.resources.length', response) > 0
+    ) {
       const detections = response.body.resources.map((resource) => {
         let split = resource.detection_id.split(':');
         resource.__url = `https://falcon.crowdstrike.com/activity/detections/detail/${split[1]}/${split[2]}`;
@@ -73,9 +106,8 @@ const getDetects = async (authenticatedRequest, requestWithDefaults, entity, opt
       return { detections: null, statusCode: response.statusCode };
     }
   } catch (error) {
-    const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in getAndUpdateDeviceState');
-    throw err;
+    error.source = 'getDetects';
+    throw error;
   }
 };
 
@@ -93,7 +125,10 @@ const _getQuery = (entityObj, options) => {
 
   if (entityObj.isMD5) {
     type = 'md5';
-  } else if (entityObj.type === 'custom' && entityObj.types.indexOf('custom.exeFile') >= 0) {
+  } else if (
+    entityObj.type === 'custom' &&
+    entityObj.types.indexOf('custom.exeFile') >= 0
+  ) {
     type = 'filename';
   }
 
@@ -104,7 +139,10 @@ const _getQuery = (entityObj, options) => {
       limit: 10,
       filter: `(device.external_ip:"${entityObj.value}"${filter}),(device.local_ip:"${entityObj.value}"${filter})`
     };
-  } else if (entityObj.type === 'custom' && entityObj.types.indexOf('custom.hostname') >= 0){
+  } else if (
+    entityObj.type === 'custom' &&
+    entityObj.types.indexOf('custom.hostname') >= 0
+  ) {
     return {
       limit: 10,
       filter: `device.hostname: "${entityObj.value.toUpperCase()}"`

@@ -60,7 +60,7 @@
   </ul>
   {{#if (eq activeTab 'crowdstrike')}}
     {{#if details.events.detections.length}}
-      <div>
+      <div class="mt-2">
         Displaying
         {{details.events.detections.length}}
         of
@@ -130,7 +130,7 @@
         {{#if detection.__showAllBehaviorInfo}}
           {{#each detection.behaviors as |behavior behaviorIndex|}}
             <div class='p-title'>Behavior ID: {{behavior.behavior_id}}</div>
-            {{object-to-table behavior}}s
+            {{object-to-table behavior}}
           {{/each}}
         {{else}}
           {{#each detection.behaviors as |behavior behaviorIndex|}}
@@ -152,7 +152,7 @@
   {{! crowdstrikeIOC }}
   {{#if (eq activeTab 'crowdstrikeIoc')}}
     {{#if details.iocs.indicators.length}}
-      <div>
+      <div class="mt-2">
         Displaying
         {{details.iocs.indicators.length}}
         of
@@ -162,7 +162,7 @@
       {{#each details.iocs.indicators as |indicator|}}
         <div class='devices-container'>
           {{#if indicator.value}}
-            <h1 class=''>{{fa-icon 'info-circle' fixedWidth=true}}
+            <h1>{{fa-icon 'info-circle' fixedWidth=true}}
               Indicator: {{indicator.value}}
             </h1>
           {{/if}}
@@ -172,16 +172,10 @@
               {{fa-icon icon='external-link-square' class='external-link-icon'}}
             </a>
           </div>
-          {{!-- {{#if indicator.value}}
-            <div>
-              <span class='p-key'>Indicator: </span>
-              <span class='p-value'>{{indicator.value}}</span>
-            </div>
-          {{/if}} --}}
           {{#if indicator.description}}
             <div>
               <span class='p-key'>Description:</span>
-              <span class='p-value'>{{indicator.description}}</span>
+              <span class='p-block'>{{indicator.description}}</span>
             </div>
           {{/if}}
           {{#if indicator.action}}
@@ -236,6 +230,14 @@
                 }}</span>
             </div>
           {{/if}}
+          {{#if (gt indicator.tags.length 0)}}
+            <div>
+              <h1 class='p-title'>{{fa-icon icon="tags" fixedWidth=true}} Tags</h1>
+              {{#each indicator.tags as | tag |}}
+                <span class="tag">{{tag}}</span>
+              {{/each}}
+            </div>
+          {{/if}}
         </div>
       {{/each}}
     {{/if}}
@@ -244,7 +246,7 @@
   {{! hosts tab }}
   {{#if (eq activeTab 'hosts')}}
     {{#if details.hosts}}
-      <div>
+      <div class="mt-2">
         Displaying
         {{details.hosts.devices.length}}
         of
@@ -346,10 +348,10 @@
               {{#if (eq device.status 'normal')}}
                 <button
                   {{action 'toggleShowModal' device index}}
-                  class='p-btn btn btn-light mt-1'
-                  disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
+                  class='p-btn btn btn-secondary mt-1'
+                  disabled={{or (get getAndUpdateDeviceStateIsRunning index) device.__modalOpen}}
                 >
-                  {{#if (get openContainmentModalIsRunning index)}}
+                  {{#if (get getAndUpdateDeviceStateIsRunning index)}}
                     {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
                   {{/if}}
                   Network Contain
@@ -357,10 +359,10 @@
               {{else if (eq device.status 'contained')}}
                 <button
                   {{action 'toggleShowModal' device index}}
-                  class='p-btn btn btn-light mt-1'
-                  disabled={{or (get openContainmentModalIsRunning index) modalOpen}}
+                  class='p-btn btn btn-secondary mt-1'
+                  disabled={{or (get getAndUpdateDeviceStateIsRunning index) device.__modalOpen}}
                 >
-                  {{#if (get openContainmentModalIsRunning index)}}
+                  {{#if (get getAndUpdateDeviceStateIsRunning index)}}
                     {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
                   {{/if}}
                   Lift Containment
@@ -369,7 +371,7 @@
                 <div class='d-flex flex-row justify-content-between align-items-center'>
                   <button
                     {{action 'getAndUpdateDeviceState' device index}}
-                    class='p-btn btn btn-light mt-1'
+                    class='p-btn btn btn-secondary mt-1'
                     disabled={{get getAndUpdateDeviceStateIsRunning index}}
                   >
                     {{#if (get getAndUpdateDeviceStateIsRunning index)}}
@@ -378,12 +380,12 @@
                     Check{{if (get getAndUpdateDeviceStateIsRunning index) 'ing'}}
                     Containment Status
                   </button>
-                  {{#if (get getAndUpdateDeviceStateMessages index)}}
-                    <div class='alert alert-info mt-1'>
-                      {{get getAndUpdateDeviceStateMessages index}}
-                    </div>
-                  {{/if}}
                 </div>
+                {{#if (get getAndUpdateDeviceStateMessages index)}}
+                  <div class='alert alert-info mt-1'>
+                    {{get getAndUpdateDeviceStateMessages index}}
+                  </div>
+                {{/if}}
               {{/if}}
               {{#if (get getAndUpdateDeviceStateErrorMessages index)}}
                 <div class='alert alert-danger mt-1'>
@@ -393,7 +395,7 @@
             {{/if}}
           </div>
 
-          {{#if modalOpen}}
+          {{#if device.__modalOpen}}
             <div class='containment-modal'>
               <div class='modal-container'>
                 <div class='modal-text'>
@@ -406,12 +408,12 @@
                 </div>
                 <div class='modal-options'>
                   <div>
-                    <button {{action 'toggleShowModal'}} class='modal-btn'>Cancel</button>
+                    <button {{action 'toggleShowModal' device index}} class='p-btn btn btn-light'>Cancel</button>
                   </div>
                   <div>
                     <button
                       {{action 'confirmContainmentOrLiftContainment'}}
-                      class='modal-btn'
+                      class='p-btn btn btn-secondary'
                     >Confirm</button>
                   </div>
                 </div>

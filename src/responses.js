@@ -10,15 +10,22 @@ const emptyResponse = (entity) => ({
   data: null
 });
 
+class RequestError extends Error {
+  constructor(message, status, description, requestOptions) {
+    super(message);
+    this.name = 'requestError';
+    this.status = status;
+    this.description = description;
+    this.requestOptions = requestOptions;
+  }
+}
+
 const polarityResponse = (entity, apiData, Logger) => {
   const someDataHasContent = flow(
     keys,
     some((dataKey) => {
       const data = get(dataKey, apiData);
-      const content = get(
-        get('contentKeyName', data), 
-        data
-      );
+      const content = get(get('contentKeyName', data), data);
       return size(content);
     })
   )(apiData);
@@ -50,23 +57,31 @@ const retryablePolarityResponse = (entity, err) => ({
 
 const getSummary = (apiData, Logger) => {
   let tags = [];
-  
-  const getPathSize = (path) => flow(get(path), size)(apiData)
 
-  const detectionsSize = getPathSize('events.detections')
+  const getPathSize = (path) => flow(get(path), size)(apiData);
+
+  const detectionsSize = getPathSize('events.detections');
   if (detectionsSize) tags.push(`Detections: ${detectionsSize}`);
 
-  const devicesSize = getPathSize('hosts.devices')
+  const devicesSize = getPathSize('hosts.devices');
   if (devicesSize) tags.push(`Devices: ${devicesSize}`);
 
-  const iocSize = getPathSize('iocs.indicators')
+  const iocSize = getPathSize('iocs.indicators');
   if (iocSize) tags.push(`IOCs: ${iocSize}`);
 
   return tags;
 };
 
-const parseErrorToReadableJSON = (error) => {
-  return JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+const parseErrorToReadableJSON = (err) => {
+  return err instanceof Error
+    ? {
+        ...err,
+        name: err.name,
+        message: err.message,
+        stack: err.stack,
+        detail: err.message ? err.message : 'Unexpected error encountered'
+      }
+    : err;
 };
 
 module.exports = {
@@ -74,5 +89,6 @@ module.exports = {
   emptyResponse,
   polarityResponse,
   retryablePolarityResponse,
-  parseErrorToReadableJSON
+  parseErrorToReadableJSON,
+  RequestError
 };

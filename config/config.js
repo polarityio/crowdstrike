@@ -24,17 +24,18 @@ module.exports = {
    */
   description:
     'Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).',
-  entityTypes: ['md5', 'sha256', 'IPv4'],
+  entityTypes: ['md5', 'sha256', 'IPv4', 'domain'],
   customTypes: [
     {
       key: 'exeFile',
-      regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|exe)/
+      regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|sh)/
     },
     // {
     //   key: 'hostname',
     //   regex: /DESKTOP\-[A-Za-z0-9]*/
     // }
   ],
+  onDemandOnly: true,
   defaultColor: 'light-purple',
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
@@ -62,23 +63,23 @@ module.exports = {
   },
   request: {
     // Provide the path to your certFile. Leave an empty string to ignore this option.
-    // Relative paths are relative to the STAXX integration's root directory
+    // Relative paths are relative to the integration's root directory
     cert: '',
     // Provide the path to your private key. Leave an empty string to ignore this option.
-    // Relative paths are relative to the STAXX integration's root directory
+    // Relative paths are relative to the integration's root directory
     key: '',
     // Provide the key passphrase if required.  Leave an empty string to ignore this option.
-    // Relative paths are relative to the STAXX integration's root directory
+    // Relative paths are relative to the integration's root directory
     passphrase: '',
     // Provide the Certificate Authority. Leave an empty string to ignore this option.
-    // Relative paths are relative to the STAXX integration's root directory
+    // Relative paths are relative to the integration's root directory
     ca: '',
     // An HTTP proxy to be used. Supports proxy Auth with Basic Auth, identical to support for
     // the url parameter (by embedding the auth info in the uri)
     proxy: '',
     /**
-     * If set to false, the integeration will ignore SSL errors.  This will allow the integration to connect
-     * to STAXX servers without valid SSL certificates.  Please note that we do NOT recommending setting this
+     * If set to false, the integration will ignore SSL errors.  This will allow the integration to connect
+     * to servers without valid SSL certificates.  Please note that we do NOT recommending setting this
      * to false in a production environment.
      */
     rejectUnauthorized: true
@@ -104,9 +105,9 @@ module.exports = {
   options: [
     {
       key: 'url',
-      name: 'Crowdstrike API URL',
+      name: 'CrowdStrike API URL',
       description:
-        'The REST API URL for your Crowdstrike instance which should include the schema (i.e., http, https) and port if required.',
+        'The REST API URL for your CrowdStrike instance which should include the schema (i.e., http, https) and port if required.',
       default: 'https://api.crowdstrike.com',
       type: 'text',
       userCanEdit: false,
@@ -115,7 +116,7 @@ module.exports = {
     {
       key: 'id',
       name: 'Client ID',
-      description: 'The Client ID to use to connect to Crowdstrike.',
+      description: 'The Client ID to use to connect to CrowdStrike.',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -124,7 +125,7 @@ module.exports = {
     {
       key: 'secret',
       name: 'Client Secret',
-      description: 'The secret associated with the Client ID.',
+      description: 'The secret associated with the Client ID. At a minimum, the API key must have \'Read\' access to the \'Detections\' scope.',
       default: '',
       type: 'password',
       userCanEdit: false,
@@ -132,9 +133,9 @@ module.exports = {
     },
     {
       key: 'searchIoc',
-      name: 'Search Crowdstrike IOC',
+      name: 'Search CrowdStrike IOCs',
       description:
-        'If enabled, the integration will additionally search the Crowdstrike IOC database',
+        'If checked, the integration will search IOCs detected in your environment.  IOCs (indicators of compromise) are artifacts that include SHA256, MD5 or domain values.  The provided API key must have \'Read\' access to the \'IOC Manager APIs\' scope for this option to work.',
       default: true,
       type: 'boolean',
       userCanEdit: false,
@@ -143,20 +144,20 @@ module.exports = {
     {
       key: 'allowContainment',
       name: 'Allow Containment Status Change',
-      description: 'If enabled, you will be able to change the Containment Status on Devices',
+      description: 'If checked, users will be able to change the Containment Status of Devices via the integration.  The provided API key must have \'Read\' and \'Write\' access to the \'Hosts\' scope for this option to work.  This option must be set to "Users can view only".',
       default: false,
       type: 'boolean',
       userCanEdit: false,
-      adminOnly: true
+      adminOnly: false
     },
     {
       key: 'minimumSeverity',
       name: 'Minimum Severity',
       description:
-        'The minimum severity level required for Detections or IOCs to be displayed',
+        'The minimum severity level required for Detections to be displayed.  Defaults to \'Low\'.',
       default: {
-        value: 'Medium',
-        display: 'Medium'
+        value: 'Low',
+        display: 'Low'
       },
       type: 'select',
       options: [
