@@ -1,5 +1,6 @@
 const { parseErrorToReadableJSON } = require('./responses');
 const { get } = require('lodash/fp');
+const _ = require('lodash');
 const { SEVERITY_LEVELS_FOR_DETECTIONS } = require('./constants');
 
 /* 
@@ -59,8 +60,7 @@ const getDetects = async (
     );
 
     Logger.trace({ detectionIdsResponse }, 'detections');
-    const ids = detectionIdsResponse.body.resources;
-
+    const ids = _.get(detectionIdsResponse, 'body.resources', []);
     if (Array.isArray(ids) && ids.length === 0) {
       // no detections found so just return
       return { detections: null, statusCode: 200 };
