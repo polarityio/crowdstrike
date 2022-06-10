@@ -265,7 +265,7 @@
             <div class='mb-1 mt-1'>
               <a
                 class='p-link'
-                id='device-{{index}}'
+                id='device-{{uniqueIdPrefix}}-{{index}}'
                 href='https://falcon.crowdstrike.com/hosts/hosts/host/{{device.device_id}}'
               >
                 View {{if (or (eq device.status 'normal') (eq device.status 'contained')) "Host" "Containment"}} Information

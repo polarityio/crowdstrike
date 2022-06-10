@@ -52,6 +52,9 @@ polarity.export = PolarityComponent.extend({
       });
     }
 
+    let array = new Uint32Array(5);
+    this.set('uniqueIdPrefix', window.crypto.getRandomValues(array).join(''));
+
     this._super(...arguments);
   },
   actions: {
@@ -194,7 +197,7 @@ polarity.export = PolarityComponent.extend({
               'Containment Still Pending ...'
             );
           }
-          let element = document.getElementById(`device-${index}`);
+          let element = document.getElementById(`device-${this.get('uniqueIdPrefix')}-${index}`);
           // element can be null here if the user is no on the tab with the device information
           // so we want to guard against that.
           if (element) {
