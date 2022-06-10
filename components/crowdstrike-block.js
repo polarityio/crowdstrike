@@ -112,10 +112,14 @@ polarity.export = PolarityComponent.extend({
       })
         .then(({ updatedDeviceState }) => {
           this.set('details.hosts.devices.' + index + '.status', updatedDeviceState);
+          let message = 'Containment successfully started.'
+          if (device.status === 'lift_containment_pending') {
+            message = 'Lift containment successfully started';
+          }
           outerThis.setMessages(
             index,
             'getAndUpdateDeviceState',
-            'Containment successfully started.'
+            message
           );
         })
         .catch((err) => {

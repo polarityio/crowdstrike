@@ -10,9 +10,13 @@ let Logger;
 let requestWithDefaults;
 let requestRetryCount = 0;
 
+// Note that CrowdStrike will return a 403 both if the token is expired and if the
+// token does not have correct permissions. This makes it difficult to differentiate between
+// when we need to refresh the token, and when the token does not have correct permissions and
+// will never work.
 const EXPIRED_BEARER_TOKEN_HTTP_CODE = 403;
 const INVALID_BEARER_TOKEN_HTTP_CODE = 401;
-const MAX_AUTH_RETRIES = 2;
+const MAX_AUTH_RETRIES = 1;
 
 const setRequestWithDefaults = (Logger) => {
   const {
@@ -76,7 +80,7 @@ const authenticatedRequest = async (
     const response = await requestWithDefaults(requestOptions);
     const statusCode = response.statusCode;
 
-    if (requestRetryCount === MAX_AUTH_RETRIES) {
+    if (requestRetryCount > MAX_AUTH_RETRIES) {
       const errorMessage = _.get(response, 'body.errors.0.message', `Attempted to authenticate ${MAX_AUTH_RETRIES} times but failed authentication`);
       throw new RequestError(
         errorMessage,
