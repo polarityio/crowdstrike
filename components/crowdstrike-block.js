@@ -45,6 +45,13 @@ polarity.export = PolarityComponent.extend({
         : 'hosts'
     );
 
+    // refresh the device status to ensure the containment options are always fresh
+    if (this.get('details.hosts.devices')) {
+      this.get('details.hosts.devices').forEach((device, index) => {
+        this.doGetAndUpdateDeviceState(device, index);
+      });
+    }
+
     this._super(...arguments);
   },
   actions: {
@@ -102,7 +109,11 @@ polarity.export = PolarityComponent.extend({
       })
         .then(({ updatedDeviceState }) => {
           this.set('details.hosts.devices.' + index + '.status', updatedDeviceState);
-          outerThis.setMessages(index, 'getAndUpdateDeviceState', 'Containment successfully started.');
+          outerThis.setMessages(
+            index,
+            'getAndUpdateDeviceState',
+            'Containment successfully started.'
+          );
         })
         .catch((err) => {
           outerThis.setErrorMessages(index, 'getAndUpdateDeviceState', `Failed ${err}`);
@@ -119,67 +130,89 @@ polarity.export = PolarityComponent.extend({
         });
     },
     getAndUpdateDeviceState: function (device, index) {
-      this.setIsRunning(index, 'getAndUpdateDeviceState', true);
-      this.setMessages(index, 'getAndUpdateDeviceState', '');
-      this.setErrorMessages(index, 'getAndUpdateDeviceState', '');
-
-      this.sendIntegrationMessage({
-        action: 'getAndUpdateDeviceState',
-        data: { id: device.device_id }
-      })
-        .then(({ deviceStatus }) => {
-          this.set('details.hosts.devices.' + index + '.status', deviceStatus);
-          if (!['normal', 'contained'].includes(deviceStatus)) {
-            if(device.status === 'lift_containment_pending'){
-              this.setMessages(index, 'getAndUpdateDeviceState', 'Lift Containment Still Pending ...');
-            } else {
-              this.setMessages(index, 'getAndUpdateDeviceState', 'Containment Still Pending ...');
-            }
-            let element = document.getElementById(`device-${index}`);
-            this.flashElement(element);
-          }
-        })
-        .catch((err) => {
-          this.setErrorMessages(index, 'getAndUpdateDeviceState', `${err}`);
-        })
-        .finally(() => {
-          this.setIsRunning(index, 'getAndUpdateDeviceState', false);
-          this.get('block').notifyPropertyChange('data');
-          setTimeout(() => {
-            this.setMessages(index, 'getAndUpdateDeviceState', '');
-            this.setErrorMessages(index, 'getAndUpdateDeviceState', '');
-            this.get('block').notifyPropertyChange('data');
-          }, 5000);
-        });
+      this.doGetAndUpdateDeviceState(device, index);
     }
   },
   setMessages: function (index, prefix, message) {
-    console.log(index, prefix, message);
-    this.set(
-      `${prefix}Messages`,
-      Object.assign({}, this.get(`${prefix}Messages`), { [index]: message })
-    );
+    if (!this.isDestroyed) {
+      this.set(
+        `${prefix}Messages`,
+        Object.assign({}, this.get(`${prefix}Messages`), { [index]: message })
+      );
+    }
   },
   setErrorMessages: function (index, prefix, message) {
-    this.set(
-      `${prefix}ErrorMessages`,
-      Object.assign({}, this.get(`${prefix}ErrorMessages`), {
-        [index]: message
-      })
-    );
+    if (!this.isDestroyed) {
+      this.set(
+        `${prefix}ErrorMessages`,
+        Object.assign({}, this.get(`${prefix}ErrorMessages`), {
+          [index]: message
+        })
+      );
+    }
   },
   flashElement: function (element, flashCount = 3, flashTime = 280) {
-    if (!flashCount) return;
-    element.classList.add('highlight');
-    setTimeout(() => {
-      element.classList.remove('highlight');
-      setTimeout(() => this.flashElement(element, flashCount - 1), flashTime);
-    }, flashTime);
+    if (!this.isDestroyed) {
+      if (!flashCount) return;
+      element.classList.add('highlight');
+      setTimeout(() => {
+        element.classList.remove('highlight');
+        setTimeout(() => this.flashElement(element, flashCount - 1), flashTime);
+      }, flashTime);
+    }
   },
   setIsRunning: function (index, prefix, value) {
-    this.set(
-      `${prefix}IsRunning`,
-      Object.assign({}, this.get(`${prefix}IsRunning`), { [index]: value })
-    );
+    if (!this.isDestroyed) {
+      this.set(
+        `${prefix}IsRunning`,
+        Object.assign({}, this.get(`${prefix}IsRunning`), { [index]: value })
+      );
+    }
+  },
+  doGetAndUpdateDeviceState: function (device, index) {
+    this.setIsRunning(index, 'getAndUpdateDeviceState', true);
+    this.setMessages(index, 'getAndUpdateDeviceState', '');
+    this.setErrorMessages(index, 'getAndUpdateDeviceState', '');
+
+    this.sendIntegrationMessage({
+      action: 'getAndUpdateDeviceState',
+      data: { id: device.device_id }
+    })
+      .then(({ deviceStatus }) => {
+        this.set('details.hosts.devices.' + index + '.status', deviceStatus);
+        if (!['normal', 'contained'].includes(deviceStatus)) {
+          if (device.status === 'lift_containment_pending') {
+            this.setMessages(
+              index,
+              'getAndUpdateDeviceState',
+              'Lift Containment Still Pending ...'
+            );
+          } else {
+            this.setMessages(
+              index,
+              'getAndUpdateDeviceState',
+              'Containment Still Pending ...'
+            );
+          }
+          let element = document.getElementById(`device-${index}`);
+          // element can be null here if the user is no on the tab with the device information
+          // so we want to guard against that.
+          if (element) {
+            this.flashElement(element);
+          }
+        }
+      })
+      .catch((err) => {
+        this.setErrorMessages(index, 'getAndUpdateDeviceState', `${err}`);
+      })
+      .finally(() => {
+        this.setIsRunning(index, 'getAndUpdateDeviceState', false);
+        this.get('block').notifyPropertyChange('data');
+        setTimeout(() => {
+          this.setMessages(index, 'getAndUpdateDeviceState', '');
+          this.setErrorMessages(index, 'getAndUpdateDeviceState', '');
+          this.get('block').notifyPropertyChange('data');
+        }, 5000);
+      });
   }
 });
