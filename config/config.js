@@ -152,7 +152,7 @@ module.exports = {
     },
     {
       key: 'minimumSeverity',
-      name: 'Minimum Severity',
+      name: 'Minimum Severity for Detections',
       description:
         'The minimum severity level required for Detections to be displayed.  Defaults to \'Low\'.',
       default: {
@@ -185,7 +185,7 @@ module.exports = {
     {
       key: 'detectionStatuses',
       name: 'Detection Statuses',
-      description: 'Detection statuses you would like to return results for',
+      description: 'Detection statuses you would like to return results for.',
       default: [
         {
           value: 'new',
