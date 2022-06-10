@@ -35,6 +35,7 @@ const containHost = async (authenticatedRequest, requestWithDefaults, data, opti
       return { response, updatedDeviceState };
     }
   } catch (err) {
+    err.source = 'containHost';
     throw err;
   }
 };

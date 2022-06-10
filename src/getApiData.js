@@ -52,14 +52,12 @@ const getApiData = async (
     const apiData = {
       hosts: deviceData,
       events: detectionData,
-      iocs: iocData 
+      iocs: iocData
     };
 
     return apiData;
   } catch (error) {
-    const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in getApiData');
-    throw err;
+    throw error;
   }
 };
 
@@ -91,9 +89,11 @@ const buildResponse = async (
   } catch (err) {
     const isConnectionTimeout = _.get(err, 'code', '') === 'ETIMEDOUT';
     const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
-    if (isConnectionReset || isConnectionTimeout)
+    if (isConnectionReset || isConnectionTimeout) {
       return retryablePolarityResponse(entity, err);
-    else throw polarityError(err);
+    } else {
+      throw err;
+    }
   }
 };
 

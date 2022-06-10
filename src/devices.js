@@ -9,6 +9,11 @@ const getDevices = async (
   Logger
 ) => {
   try {
+    // this endpoint doesn't support domain lookups
+    if (entity.isDomain) {
+      return { devices: null, statusCode: 200 };
+    }
+
     const deviceIds = await getDeviceIds(
       authenticatedRequest,
       requestWithDefaults,
@@ -16,7 +21,7 @@ const getDevices = async (
       options,
       Logger
     );
-    if (!size(deviceIds)) return { devices: null, statusCode: 400 }; //handles the case of no data being found for an entity
+    if (!size(deviceIds)) return { devices: null, statusCode: 200 }; //handles the case of no data being found for an entity
 
     const requestOptions = {
       method: 'GET',
@@ -63,9 +68,8 @@ const getDevices = async (
       return { devices: null, statusCode: response.statusCode };
     }
   } catch (error) {
-    const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in getDevices');
-    throw err;
+    error.source = 'getDevices';
+    throw error;
   }
 };
 
@@ -115,9 +119,8 @@ const getDeviceIds = async (
     Logger.trace({ devicesIds }, 'Device Ids');
     return devicesIds;
   } catch (error) {
-    const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in getIocIds');
-    throw err;
+    error.source = 'getDeviceIds';
+    throw error;
   }
 };
 
@@ -152,9 +155,8 @@ const getAndUpdateDeviceState = async (
 
     return singleDeviceStatus;
   } catch (error) {
-    const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in getAndUpdateDeviceState');
-    throw err;
+    error.source = 'getAndUpdateDeviceState';
+    throw error;
   }
 };
 

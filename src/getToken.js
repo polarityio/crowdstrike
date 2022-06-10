@@ -22,9 +22,13 @@ const generateAccessToken = async (requestWithDefaults, options, Logger) => {
       return response.body.access_token;
     }
   } catch (err) {
-    Logger.trace({ err }, 'err in generating tokens');
+    err.source = 'generateAccessToken'
     throw err;
   }
+};
+
+const invalidateToken = (options) => {
+  tokenCache.delete(_getTokenKey(options));
 };
 
 const getTokenFromCache = (options) => tokenCache.get(_getTokenKey(options));
@@ -33,4 +37,7 @@ const setTokenInCache = (options, token) => tokenCache.set(_getTokenKey(options)
 
 const _getTokenKey = (options) => options.url + options.id + options.secret;
 
-module.exports = generateAccessToken;
+module.exports = {
+  generateAccessToken,
+  invalidateToken
+};

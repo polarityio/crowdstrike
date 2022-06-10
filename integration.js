@@ -1,7 +1,7 @@
 const Bottleneck = require('bottleneck/es5');
 const { map } = require('lodash/fp');
 const buildResponse = require('./src/getApiData');
-const { polarityError, parseErrorToReadableJSON } = require('./src/responses');
+const { parseErrorToReadableJSON } = require('./src/responses');
 const { containHost } = require('./src/containHost');
 const { getAndUpdateDeviceState } = require('./src/devices');
 const { setRequestWithDefaults, authenticatedRequest } = require('./src/createRequestOptions');
@@ -28,6 +28,16 @@ const doLookup = async (entities, options, callback) => {
   if (!limiter) _setupLimiter(options);
 
   try {
+    // CrowdStrike does not differentiate between a token with incorrect permissions and an expired token. As a result,
+    // when a token expires, it is not possible to tell the difference between the two statuses.  If the token is expired
+    // we need to refresh the token.  To ensure we can do this successfully when multiple entities are looked up in a
+    // a single request we need to search the first entity and let the token refresh before running the rest of the
+    // entities in parallel.  If we run all the entities in parallel then the counter which tries to track the number
+    // auth attempts will get incremented by each failed lookup before the token can refresh and the user will see
+    // an auth error even though the credentials are valid.
+    const firstEntity = entities.shift();
+    const firstResult = await buildResponse(authenticatedRequest, requestWithDefaults, firstEntity, options, Logger);
+
     const lookupResults = await Promise.all(
       map(
         async (entity) => await buildResponse(authenticatedRequest, requestWithDefaults, entity, options, Logger),
@@ -35,12 +45,14 @@ const doLookup = async (entities, options, callback) => {
       )
     );
 
+    lookupResults.push(firstResult);
     Logger.trace({ lookupResults }, 'DoLookup Response');
     callback(null, lookupResults);
   } catch (error) {
+
     const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in doLookup');
-    return callback(polarityError(err));
+    Logger.error(err, 'doLookup Error');
+    return callback(err);
   }
 };
 

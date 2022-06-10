@@ -10,6 +10,10 @@ const getIocIndicators = async (
   Logger
 ) => {
   try {
+    if (entity.type === 'custom') {
+      return { indicators: null, statusCode: 200 };
+    }
+
     const indicatorIds = await getIndicatorIds(
       authenticatedRequest,
       requestWithDefaults,
@@ -17,7 +21,7 @@ const getIocIndicators = async (
       options,
       Logger
     );
-    if (!size(indicatorIds)) return { indicators: null, statusCode: 400 }; //handles the case of no data being found for an entity
+    if (!size(indicatorIds)) return { indicators: null, statusCode: 200 }; //handles the case of no data being found for an entity
 
     const requestOptions = {
       method: 'GET',
@@ -64,9 +68,8 @@ const getIocIndicators = async (
       return { indicators: null, statusCode: response.statusCode };
     }
   } catch (error) {
-    const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in getIocIndicators');
-    throw err;
+    error.source = 'getIocIndicators';
+    throw error;
   }
 };
 
@@ -82,11 +85,7 @@ const getIndicatorIds = async (
       method: 'GET',
       uri: `${options.url}/iocs/queries/indicators/v1`,
       qs: {
-        filter:
-          `(value: ~"${entity.value}", description: ~"${entity.value}",` +
-          `metadata.filename.raw: "${entity.value}", metadata.original_filename.raw: "${entity.value}")` +
-          //TODO: test severity levels on polarityx
-          `+severity:[${SEVERITY_LEVELS_FOR_INDICATORS[options.minimumSeverity.value]}]`
+        filter: `(value: ~"${entity.value.toLowerCase()}")`
       },
       json: true
     };
@@ -100,9 +99,8 @@ const getIndicatorIds = async (
     Logger.trace({ indicatorIds }, 'Indicator Ids');
     return indicatorIds;
   } catch (error) {
-    const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in getIndicatorIds');
-    throw err;
+    error.source = 'getIndicatorIds';
+    throw error;
   }
 };
 
@@ -147,9 +145,8 @@ const getIocDevicesIds = async (
     Logger.trace({ devicesIds }, 'Device Ids');
     return devicesIds;
   } catch (error) {
-    const err = parseErrorToReadableJSON(error);
-    Logger.error({ err }, 'error in getIocIds');
-    throw err;
+    error.source = 'getIocDevicesIds';
+    throw error;
   }
 };
 
