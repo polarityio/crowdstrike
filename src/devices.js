@@ -20,7 +20,7 @@ const getDevices = async (
       options,
       Logger
     );
-    if (!size(deviceIds)) return { devices: null, statusCode: 200 }; //handles the case of no data being found for an entity
+    // if (!size(deviceIds)) return { devices: null, statusCode: 200 }; //handles the case of no data being found for an entity
 
     const requestOptions = {
       method: 'GET',
