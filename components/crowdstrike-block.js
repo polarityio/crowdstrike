@@ -34,7 +34,7 @@ polarity.export = PolarityComponent.extend({
   containmentStatus: '',
   isRunning: false,
   modalDevice: {},
-  init() {
+  init () {
     this.set(
       'activeTab',
       this.get('details.events.detections.length')
@@ -44,7 +44,6 @@ polarity.export = PolarityComponent.extend({
         ? 'crowdstrikeIoc'
         : 'hosts'
     );
-
     // refresh the device status to ensure the containment options are always fresh
     if (this.get('details.hosts.devices')) {
       this.get('details.hosts.devices').forEach((device, index) => {
@@ -69,7 +68,6 @@ polarity.export = PolarityComponent.extend({
         action: 'RETRY_LOOKUP',
         entity: this.get('block.entity')
       };
-
       this.sendIntegrationMessage(payload)
         .then((result) => {
           if (result.data.summary) this.set('summary', result.summary);
@@ -98,7 +96,6 @@ polarity.export = PolarityComponent.extend({
     },
     confirmContainmentOrLiftContainment: function () {
       const outerThis = this;
-
       const { device, index } = this.get('modalDevice');
 
       this.setMessages(index, 'getAndUpdateDeviceState', '');
@@ -112,15 +109,11 @@ polarity.export = PolarityComponent.extend({
       })
         .then(({ updatedDeviceState }) => {
           this.set('details.hosts.devices.' + index + '.status', updatedDeviceState);
-          let message = 'Containment successfully started.'
+          let message = 'Containment successfully started.';
           if (device.status === 'lift_containment_pending') {
             message = 'Lift containment successfully started';
           }
-          outerThis.setMessages(
-            index,
-            'getAndUpdateDeviceState',
-            message
-          );
+          outerThis.setMessages(index, 'getAndUpdateDeviceState', message);
         })
         .catch((err) => {
           outerThis.setErrorMessages(index, 'getAndUpdateDeviceState', `Failed ${err}`);
@@ -201,7 +194,9 @@ polarity.export = PolarityComponent.extend({
               'Containment Still Pending ...'
             );
           }
-          let element = document.getElementById(`device-${this.get('uniqueIdPrefix')}-${index}`);
+          let element = document.getElementById(
+            `device-${this.get('uniqueIdPrefix')}-${index}`
+          );
           // element can be null here if the user is no on the tab with the device information
           // so we want to guard against that.
           if (element) {

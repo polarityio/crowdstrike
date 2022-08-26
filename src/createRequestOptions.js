@@ -56,9 +56,10 @@ const setRequestWithDefaults = (Logger) => {
   return requestWithDefaults;
 };
 
-const checkForStatusError = (response, requestOptions, logger) => {
+const checkForStatusError = (response, requestOptions, Logger) => {
   const statusCode = response.statusCode;
-  if (![200, 201, 202, 400, 404, 409, 403, 401, 429, 500, 502, 504].includes(statusCode)) {
+
+  if (![200, 201, 202, 404, 409, 403, 401, 429, 500, 502, 504].includes(statusCode)) {
     const errorMessage = _.get(response, 'body.errors.0.message', 'Request Error');
     const requestError = new RequestError(errorMessage, statusCode, response.body, {
       ...requestOptions,
@@ -75,22 +76,22 @@ const authenticatedRequest = async (
   Logger
 ) => {
   try {
+    Logger.trace({ HERE: generateAccessToken });
     const tokenResponse = await generateAccessToken(requestWithDefaults, options, Logger);
     requestOptions.headers = { authorization: `Bearer ${tokenResponse}` };
     const response = await requestWithDefaults(requestOptions);
     const statusCode = response.statusCode;
 
     if (requestRetryCount > MAX_AUTH_RETRIES) {
-      const errorMessage = _.get(response, 'body.errors.0.message', `Attempted to authenticate ${MAX_AUTH_RETRIES} times but failed authentication`);
-      throw new RequestError(
-        errorMessage,
-        statusCode,
-        response.body,
-        {
-          ...requestOptions,
-          headers: '********'
-        }
+      const errorMessage = _.get(
+        response,
+        'body.errors.0.message',
+        `Attempted to authenticate ${MAX_AUTH_RETRIES} times but failed authentication`
       );
+      throw new RequestError(errorMessage, statusCode, response.body, {
+        ...requestOptions,
+        headers: '********'
+      });
     }
 
     if (

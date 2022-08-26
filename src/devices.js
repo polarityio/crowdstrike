@@ -1,4 +1,3 @@
-const { parseErrorToReadableJSON } = require('./responses');
 const { get, size, flow, first, last, split, toUpper, getOr } = require('lodash/fp');
 
 const getDevices = async (
@@ -27,7 +26,7 @@ const getDevices = async (
       method: 'GET',
       uri: `${options.url}/devices/entities/devices/v1`,
       body: {
-        ids: deviceIds
+        ids: 111111
       },
       json: true
     };
