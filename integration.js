@@ -4,15 +4,15 @@ const buildResponse = require('./src/getApiData');
 const { parseErrorToReadableJSON } = require('./src/responses');
 const { containHost } = require('./src/containHost');
 const { getAndUpdateDeviceState } = require('./src/devices');
-const { setRequestWithDefaults, authenticatedRequest } = require('./src/createRequestOptions');
+const { setLogger } = require('./src/logger');
+const { logToken } = require('./src/tokenCache');
 
 let limiter = null;
-let requestWithDefaults;
 let Logger;
 
 const startup = (logger) => {
   Logger = logger;
-  requestWithDefaults = setRequestWithDefaults(Logger);
+  setLogger(Logger);
 };
 
 const _setupLimiter = (options) => {
@@ -28,28 +28,13 @@ const doLookup = async (entities, options, callback) => {
   if (!limiter) _setupLimiter(options);
 
   try {
-    // CrowdStrike does not differentiate between a token with incorrect permissions and an expired token. As a result,
-    // when a token expires, it is not possible to tell the difference between the two statuses.  If the token is expired
-    // we need to refresh the token.  To ensure we can do this successfully when multiple entities are looked up in a
-    // a single request we need to search the first entity and let the token refresh before running the rest of the
-    // entities in parallel.  If we run all the entities in parallel then the counter which tries to track the number
-    // auth attempts will get incremented by each failed lookup before the token can refresh and the user will see
-    // an auth error even though the credentials are valid.
-    const firstEntity = entities.shift();
-    const firstResult = await buildResponse(authenticatedRequest, requestWithDefaults, firstEntity, options, Logger);
-
     const lookupResults = await Promise.all(
-      map(
-        async (entity) => await buildResponse(authenticatedRequest, requestWithDefaults, entity, options, Logger),
-        entities
-      )
+      map(async (entity) => await buildResponse(entity, options), entities)
     );
-
-    lookupResults.push(firstResult);
     Logger.trace({ lookupResults }, 'DoLookup Response');
+    logToken(options);
     callback(null, lookupResults);
   } catch (error) {
-
     const err = parseErrorToReadableJSON(error);
     Logger.error(err, 'doLookup Error');
     return callback(err);
@@ -61,19 +46,26 @@ const onMessage = async (payload, options, callback) => {
 
   switch (payload.action) {
     case 'containOrUncontain':
-      const containedHost = await containHost(authenticatedRequest, requestWithDefaults, data, options, Logger);
-      return callback(null, containedHost);
+      try {
+        const containedHost = await containHost(data, options);
+        return callback(null, containedHost);
+      } catch (containError) {
+        const err = parseErrorToReadableJSON(containError);
+        Logger.error(err, 'onMessage containOrUncontain Error');
+        callback(err);
+        return;
+      }
     case 'getAndUpdateDeviceState':
-      const deviceId = payload.data.id;
-
-      const deviceStatus = await getAndUpdateDeviceState(
-        authenticatedRequest,
-        requestWithDefaults,
-        deviceId,
-        options,
-        Logger
-      );
-      return callback(null, { deviceStatus });
+      try {
+        const deviceId = payload.data.id;
+        const deviceStatus = await getAndUpdateDeviceState(deviceId, options);
+        return callback(null, { deviceStatus });
+      } catch (deviceStateError) {
+        const err = parseErrorToReadableJSON(deviceStateError);
+        Logger.error(err, 'onMessage getAndUpdateDeviceState Error');
+        callback(err);
+        return;
+      }
     case 'RETRY_LOOKUP': {
       doLookup([payload.entity], options, (err, lookupResults) => {
         if (err) {
@@ -97,7 +89,8 @@ const onMessage = async (payload, options, callback) => {
 const validateStringOption = (errors, options, optionName, errMessage) => {
   if (
     typeof options[optionName].value !== 'string' ||
-    (typeof options[optionName].value === 'string' && options[optionName].value.length === 0)
+    (typeof options[optionName].value === 'string' &&
+      options[optionName].value.length === 0)
   ) {
     errors.push({
       key: optionName,
@@ -107,7 +100,10 @@ const validateStringOption = (errors, options, optionName, errMessage) => {
 };
 
 const validateTrailingSlash = (errors, options, optionName, errMessage) => {
-  if (typeof options[optionName].value === 'string' && options[optionName].value.trim().endsWith('/')) {
+  if (
+    typeof options[optionName].value === 'string' &&
+    options[optionName].value.trim().endsWith('/')
+  ) {
     errors.push({
       key: optionName,
       message: errMessage
@@ -118,8 +114,18 @@ const validateTrailingSlash = (errors, options, optionName, errMessage) => {
 const validateOptions = (options, callback) => {
   let errors = [];
 
-  validateStringOption(errors, options, 'url', 'You must provide the Crowdstrike API url.');
-  validateTrailingSlash(errors, options, 'url', 'The url cannot end with a forward slash ("/").');
+  validateStringOption(
+    errors,
+    options,
+    'url',
+    'You must provide the Crowdstrike API url.'
+  );
+  validateTrailingSlash(
+    errors,
+    options,
+    'url',
+    'The url cannot end with a forward slash ("/").'
+  );
   validateStringOption(errors, options, 'id', 'You must provide a Client ID.');
   validateStringOption(errors, options, 'secret', 'You must provide a Client Secret.');
 

@@ -15,7 +15,7 @@
     "postman-request": "^2.88.1-postman.31"
   },
   "devDependencies": {
-    "nock": "^13.2.6",
-    "jest": "^28.1.1"
+    "nock": "^13.2.9",
+    "jest": "28.1.3"
   }
 }

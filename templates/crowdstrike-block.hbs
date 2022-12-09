@@ -17,7 +17,14 @@
       </button>
       <div class='mt-1'>
         <span class='p-footnote'>
-          You can retry your search by pressing the "Retry Search" button.</span>
+          You can retry your search by pressing the "Retry Search" button.
+        </span>
+        {{#if (and details.rateLimitLimit details.rateLimitRemaining)}}
+          <div class="p-footnote">Rate Limit: {{details.rateLimitLimit}} out of {{details.rateLimitRemaining}}</div>
+        {{/if}}
+        {{#if details.status}}
+          <div class="p-footnote mt-1">Status: {{details.status}}</div>
+        {{/if}}
       </div>
     {{/if}}
   </div>
@@ -228,6 +235,14 @@
                   'MM/DD/YYYY HH:mm:ss'
                   timeZone=timezone
                 }}</span>
+            </div>
+          {{/if}}
+          {{#if (gt indicator.platforms.length 0)}}
+            <div>
+              <h1 class='p-title'>{{fa-icon icon="computer-classic" fixedWidth=true}} Platforms</h1>
+              {{#each indicator.platforms as | platform |}}
+                <span class="tag">{{platform}}</span>
+              {{/each}}
             </div>
           {{/if}}
           {{#if (gt indicator.tags.length 0)}}

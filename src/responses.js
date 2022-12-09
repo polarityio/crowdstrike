@@ -1,15 +1,14 @@
 const { flow, keys, some, size, get } = require('lodash/fp');
-
-const polarityError = (err) => ({
-  detail: err.message || 'Unknown Error',
-  error: err
-});
+const { getLogger } = require('./logger');
 
 const emptyResponse = (entity) => ({
   entity,
   data: null
 });
 
+/**
+ * Generic error for REST requests
+ */
 class RequestError extends Error {
   constructor(message, status, description, requestOptions) {
     super(message);
@@ -17,10 +16,44 @@ class RequestError extends Error {
     this.status = status;
     this.description = description;
     this.requestOptions = requestOptions;
+    this.source = '';
+    this.meta = null;
   }
 }
 
-const polarityResponse = (entity, apiData, Logger) => {
+/**
+ * Thrown by generateAccessToken method if there is a failure to fetch a token
+ */
+class TokenRequestError extends Error {
+  constructor(message, status, description, requestOptions) {
+    super(message);
+    this.name = 'tokenRequestError';
+    this.status = status;
+    this.description = description;
+    this.requestOptions = requestOptions;
+    this.source = '';
+    this.meta = null;
+  }
+}
+
+/**
+ * Thrown by authenticated request method for any HTTP status codes where we want to allow
+ * the user to retry their lookup.
+ */
+class RetryRequestError extends Error {
+  constructor(message, status, description, requestOptions) {
+    super(message);
+    this.name = 'retryRequestError';
+    this.status = status;
+    this.description = description;
+    this.requestOptions = requestOptions;
+    this.source = '';
+    this.meta = null;
+  }
+}
+
+const polarityResponse = (entity, apiData) => {
+  const Logger = getLogger();
   const someDataHasContent = flow(
     keys,
     some((dataKey) => {
@@ -34,7 +67,7 @@ const polarityResponse = (entity, apiData, Logger) => {
     ? {
         entity,
         data: {
-          summary: getSummary(apiData, Logger),
+          summary: getSummary(apiData),
           details: apiData
         }
       }
@@ -48,14 +81,18 @@ const retryablePolarityResponse = (entity, err) => ({
     summary: [err ? err.message : '! Lookup Limit Reached'],
     details: {
       summaryTag: err ? err.message : ['Lookup Limit Reached'],
+      status: err ? err.status : 'No Status',
+      rateLimitLimit: err && err.meta ? err.meta.rateLimitLimit : null,
+      rateLimitRemaining: err && err.meta ? err.meta.rateLimitRemaining : null,
       errorMessage: err
         ? err.message
-        : 'A temporary Crowdstrike HX API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
+        : 'A temporary CrowdStrike API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
     }
   }
 });
 
-const getSummary = (apiData, Logger) => {
+const getSummary = (apiData) => {
+  const Logger = getLogger();
   let tags = [];
 
   const getPathSize = (path) => flow(get(path), size)(apiData);
@@ -85,10 +122,11 @@ const parseErrorToReadableJSON = (err) => {
 };
 
 module.exports = {
-  polarityError,
   emptyResponse,
   polarityResponse,
   retryablePolarityResponse,
   parseErrorToReadableJSON,
-  RequestError
+  RequestError,
+  TokenRequestError,
+  RetryRequestError
 };

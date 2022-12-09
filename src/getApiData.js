@@ -1,51 +1,27 @@
-const { includes } = require('lodash');
 const _ = require('lodash');
-const { keys, every, get, flow } = require('lodash/fp');
 const { getDetects } = require('./detects');
 const { getDevices } = require('./devices');
 const { getIocIndicators } = require('./iocs');
 const {
   polarityResponse,
-  polarityError,
   retryablePolarityResponse,
-  parseErrorToReadableJSON
+  RetryRequestError
 } = require('./responses');
+const { getLogger } = require('./logger');
 
-const getApiData = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  entity,
-  options,
-  Logger
-) => {
+const getApiData = async (entity, options) => {
+  const Logger = getLogger();
   try {
-    const detectionData = await getDetects(
-      authenticatedRequest,
-      requestWithDefaults,
-      entity,
-      options,
-      Logger
-    );
+    const detectionData = await getDetects(entity, options);
     Logger.trace({ detectionData }, 'detectionData API data');
 
-    const deviceData = await getDevices(
-      authenticatedRequest,
-      requestWithDefaults,
-      entity,
-      options,
-      Logger
-    );
+    const deviceData = await getDevices(entity, options);
     Logger.trace({ deviceData }, 'devices API data');
 
     let iocData = { indicators: null, statusCode: 400 };
+
     if (options.searchIoc) {
-      iocData = await getIocIndicators(
-        authenticatedRequest,
-        requestWithDefaults,
-        entity,
-        options,
-        Logger
-      );
+      iocData = await getIocIndicators(entity, options);
       Logger.trace({ iocData }, 'IOC API data');
     }
 
@@ -61,35 +37,14 @@ const getApiData = async (
   }
 };
 
-const buildResponse = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  entity,
-  options,
-  Logger
-) => {
+const buildResponse = async (entity, options) => {
+  const Logger = getLogger();
   try {
-    const apiData = await getApiData(
-      authenticatedRequest,
-      requestWithDefaults,
-      entity,
-      options,
-      Logger
-    );
+    const apiData = await getApiData(entity, options);
     Logger.trace({ apiData }, 'api result');
-
-    const allStatusCodesAreSuccessful = flow(
-      keys,
-      every((dataKey) => [200, 400].includes(get([dataKey, 'statusCode'], apiData)))
-    )(apiData);
-
-    return allStatusCodesAreSuccessful
-      ? polarityResponse(entity, apiData, Logger)
-      : retryablePolarityResponse(entity);
+    return polarityResponse(entity, apiData);
   } catch (err) {
-    const isConnectionTimeout = _.get(err, 'code', '') === 'ETIMEDOUT';
-    const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
-    if (isConnectionReset || isConnectionTimeout) {
+    if (err instanceof RetryRequestError) {
       return retryablePolarityResponse(entity, err);
     } else {
       throw err;
