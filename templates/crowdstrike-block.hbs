@@ -1,3 +1,8 @@
+{{#if details.noResults}}
+  <div>
+    No results were found.
+  </div>
+{{/if}}
 {{#if details.errorMessage}}
   <div class='mt-2'>
     <div class='alert alert-danger'>
@@ -29,42 +34,44 @@
     {{/if}}
   </div>
 {{else}}
-  <ul class='nav nav-tabs'>
-    {{#if details.events.detections.length}}
-      <li class='nav-item'>
-        <a
-          {{action 'changeTab' 'crowdstrike'}}
-          class='nav-link
-            {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
-          href='#'
-        >
-          Detections
-        </a>
-      </li>
-    {{/if}}
-    {{#if (and block.userOptions.searchIoc details.iocs.indicators.length)}}
-      <li class='nav-item'>
-        <a
-          {{action 'changeTab' 'crowdstrikeIoc'}}
-          class='nav-link {{if (eq activeTab "crowdstrikeIoc") "active"}}'
-          href='#'
-        >
-          IOC Management
-        </a>
-      </li>
-    {{/if}}
-    {{#if details.hosts.devices.length}}
-      <li class='nav-item'>
-        <a
-          {{action 'changeTab' 'hosts'}}
-          class='nav-link {{if (or (eq activeTab "hosts") (not activeTab)) "active"}}'
-          href='#'
-        >
-          Host Management
-        </a>
-      </li>
-    {{/if}}
-  </ul>
+  {{#unless details.noResults}}
+    <ul class='nav nav-tabs'>
+      {{#if details.events.detections.length}}
+        <li class='nav-item'>
+          <a
+            {{action 'changeTab' 'crowdstrike'}}
+            class='nav-link
+              {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
+            href='#'
+          >
+            Detections
+          </a>
+        </li>
+      {{/if}}
+      {{#if (and block.userOptions.searchIoc details.iocs.indicators.length)}}
+        <li class='nav-item'>
+          <a
+            {{action 'changeTab' 'crowdstrikeIoc'}}
+            class='nav-link {{if (eq activeTab "crowdstrikeIoc") "active"}}'
+            href='#'
+          >
+            IOC Management
+          </a>
+        </li>
+      {{/if}}
+      {{#if details.hosts.devices.length}}
+        <li class='nav-item'>
+          <a
+            {{action 'changeTab' 'hosts'}}
+            class='nav-link {{if (or (eq activeTab "hosts") (not activeTab)) "active"}}'
+            href='#'
+          >
+            Host Management
+          </a>
+        </li>
+      {{/if}}
+    </ul>
+  {{/unless}}
   {{#if (eq activeTab 'crowdstrike')}}
     {{#if details.events.detections.length}}
       <div class="mt-2">

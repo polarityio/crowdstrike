@@ -228,6 +228,16 @@ module.exports = {
       adminOnly: false
     },
     {
+      key: 'showNoResults',
+      name: 'Show No Results',
+      description:
+          'If checked, the integration will return a summary tag indicating a lookup was performed and that there are no results.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'maxConcurrent',
       name: 'Max Concurrent Requests',
       description:

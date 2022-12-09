@@ -6,6 +6,16 @@ const emptyResponse = (entity) => ({
   data: null
 });
 
+const noResultsResponse = (entity) => ({
+  entity,
+  data: {
+    summary: ['No results'],
+    details: {
+      noResults: true
+    }
+  }
+});
+
 /**
  * Generic error for REST requests
  */
@@ -52,7 +62,7 @@ class RetryRequestError extends Error {
   }
 }
 
-const polarityResponse = (entity, apiData) => {
+const polarityResponse = (entity, apiData, options) => {
   const Logger = getLogger();
   const someDataHasContent = flow(
     keys,
@@ -63,15 +73,19 @@ const polarityResponse = (entity, apiData) => {
     })
   )(apiData);
 
-  return someDataHasContent
-    ? {
-        entity,
-        data: {
-          summary: getSummary(apiData),
-          details: apiData
-        }
+  if (someDataHasContent) {
+    return {
+      entity,
+      data: {
+        summary: getSummary(apiData),
+        details: apiData
       }
-    : emptyResponse(entity);
+    };
+  } else if (options.showNoResults) {
+    return noResultsResponse(entity);
+  } else {
+    return emptyResponse(entity);
+  }
 };
 
 const retryablePolarityResponse = (entity, err) => ({

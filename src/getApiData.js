@@ -42,7 +42,7 @@ const buildResponse = async (entity, options) => {
   try {
     const apiData = await getApiData(entity, options);
     Logger.trace({ apiData }, 'api result');
-    return polarityResponse(entity, apiData);
+    return polarityResponse(entity, apiData, options);
   } catch (err) {
     if (err instanceof RetryRequestError) {
       return retryablePolarityResponse(entity, err);
