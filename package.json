@@ -1,7 +1,7 @@
 {
-  "main": "./integration.js",
   "name": "crowdstrike",
-  "version": "3.4.2-beta",
+  "version": "3.4.3-beta",
+  "main": "./integration.js",
   "private": true,
   "license": "MIT",
   "author": "Polarity",
