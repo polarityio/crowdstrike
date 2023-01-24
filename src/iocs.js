@@ -1,26 +1,15 @@
-const { parseErrorToReadableJSON } = require('./responses');
 const { get, size } = require('lodash/fp');
-const { SEVERITY_LEVELS_FOR_INDICATORS } = require('./constants');
+const authenticatedRequest = require('./authenticatedRequest');
+const { getLogger } = require('./logger');
 
-const getIocIndicators = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  entity,
-  options,
-  Logger
-) => {
+const getIocIndicators = async (entity, options) => {
+  const Logger = getLogger();
   try {
     if (entity.type === 'custom') {
       return { indicators: null, statusCode: 200 };
     }
 
-    const indicatorIds = await getIndicatorIds(
-      authenticatedRequest,
-      requestWithDefaults,
-      entity,
-      options,
-      Logger
-    );
+    const indicatorIds = await getIndicatorIds(entity, options);
     if (!size(indicatorIds)) return { indicators: null, statusCode: 200 }; //handles the case of no data being found for an entity
 
     const requestOptions = {
@@ -33,12 +22,7 @@ const getIocIndicators = async (
     };
     Logger.trace({ requestOptions }, 'request options');
 
-    const response = await authenticatedRequest(
-      requestWithDefaults,
-      requestOptions,
-      options,
-      Logger
-    );
+    const response = await authenticatedRequest(requestOptions, options);
     Logger.trace({ response }, 'response in getIocIndicators');
 
     const requestSuccessfulWithContent =
@@ -73,13 +57,8 @@ const getIocIndicators = async (
   }
 };
 
-const getIndicatorIds = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  entity,
-  options,
-  Logger
-) => {
+const getIndicatorIds = async (entity, options) => {
+  const Logger = getLogger();
   try {
     const requestOptions = {
       method: 'GET',
@@ -94,7 +73,7 @@ const getIndicatorIds = async (
 
     const indicatorIds = get(
       'body.resources',
-      await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger)
+      await authenticatedRequest(requestOptions, options)
     );
     Logger.trace({ indicatorIds }, 'Indicator Ids');
     return indicatorIds;
@@ -104,13 +83,8 @@ const getIndicatorIds = async (
   }
 };
 
-const getIocDevicesIds = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  entity,
-  options,
-  Logger
-) => {
+const getIocDevicesIds = async (entity, options) => {
+  const Logger = getLogger();
   const requestOptions = {
     method: 'GET',
     uri: `${options.url}/indicators/queries/devices/v1`,
@@ -136,12 +110,7 @@ const getIocDevicesIds = async (
   Logger.trace({ requestOptions }, 'searchIOCs request options');
 
   try {
-    const devicesIds = await authenticatedRequest(
-      requestWithDefaults,
-      requestOptions,
-      options,
-      Logger
-    );
+    const devicesIds = await authenticatedRequest(requestOptions, options);
     Logger.trace({ devicesIds }, 'Device Ids');
     return devicesIds;
   } catch (error) {

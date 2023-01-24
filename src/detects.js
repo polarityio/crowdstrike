@@ -1,35 +1,27 @@
-const { parseErrorToReadableJSON } = require('./responses');
 const { get } = require('lodash/fp');
 const _ = require('lodash');
 const { SEVERITY_LEVELS_FOR_DETECTIONS } = require('./constants');
+const authenticatedRequest = require('./authenticatedRequest');
+const { getLogger } = require('./logger');
+
 
 /* 
   getDetects returns devices that were matched with returned id's from searchDetects(). 
   It is possible that searchDetects returns a list of ids that do not have a matching device 
 */
-const getDetectionIds = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  entity,
-  options,
-  Logger
-) => {
+const getDetectionIds = async (entity, options) => {
+  const Logger = getLogger();
   try {
     const requestOptions = {
       method: 'GET',
       uri: `${options.url}/detects/queries/detects/v1`,
-      qs: _getQuery(entity, options, Logger),
+      qs: _getQuery(entity, options),
       json: true
     };
 
     Logger.trace({ requestOptions }, 'searchDetects request options');
 
-    const response = await authenticatedRequest(
-      requestWithDefaults,
-      requestOptions,
-      options,
-      Logger
-    );
+    const response = await authenticatedRequest(requestOptions, options);
     Logger.trace({ response }, 'Response containing detection ids');
 
     return response;
@@ -39,27 +31,16 @@ const getDetectionIds = async (
   }
 };
 
-const getDetects = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  entity,
-  options,
-  Logger
-) => {
+const getDetects = async (entity, options) => {
+  const Logger = getLogger();
   try {
     if (entity.isDomain) {
       return { detections: null, statusCode: 200 };
     }
 
-    const detectionIdsResponse = await getDetectionIds(
-      authenticatedRequest,
-      requestWithDefaults,
-      entity,
-      options,
-      Logger
-    );
+    const detectionIdsResponse = await getDetectionIds(entity, options);
 
-    Logger.trace({ detectionIdsResponse }, 'detections');
+    Logger.trace({ detectionIdsResponse }, 'detectionIdsResponse');
     const ids = _.get(detectionIdsResponse, 'body.resources', []);
     if (Array.isArray(ids) && ids.length === 0) {
       // no detections found so just return
@@ -77,12 +58,7 @@ const getDetects = async (
 
     Logger.trace({ requestOptions }, 'getDetects request options');
 
-    const response = await authenticatedRequest(
-      requestWithDefaults,
-      requestOptions,
-      options,
-      Logger
-    );
+    const response = await authenticatedRequest(requestOptions, options);
     Logger.trace({ response }, 'Response from detects');
 
     if (
@@ -112,6 +88,7 @@ const getDetects = async (
 };
 
 const _getQuery = (entityObj, options) => {
+  const Logger = getLogger();
   const statuses = options.detectionStatuses.reduce((accum, statusObj) => {
     if (statusObj && statusObj.value) {
       accum.push(`"${statusObj.value}"`);

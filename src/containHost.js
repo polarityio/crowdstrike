@@ -1,6 +1,9 @@
 const { getAndUpdateDeviceState } = require('./devices');
+const authenticatedRequest = require('./authenticatedRequest');
+const { getLogger } = require('./logger');
 
-const containHost = async (authenticatedRequest, requestWithDefaults, data, options, Logger) => {
+const containHost = async (data, options) => {
+  const Logger = getLogger();
   const status = data.status;
   const deviceId = data.id;
 
@@ -20,16 +23,10 @@ const containHost = async (authenticatedRequest, requestWithDefaults, data, opti
       };
       Logger.trace({ requestOptions }, 'containHost requestOptions');
 
-      const response = await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger);
+      const response = await authenticatedRequest(requestOptions, options, Logger);
       Logger.trace({ response }, 'devices response');
 
-      const updatedDeviceState = await getAndUpdateDeviceState(
-        authenticatedRequest,
-        requestWithDefaults,
-        deviceId,
-        options,
-        Logger
-      );
+      const updatedDeviceState = await getAndUpdateDeviceState(deviceId, options, Logger);
 
       Logger.trace({ updatedDeviceState }, 'single device response');
       return { response, updatedDeviceState };
@@ -41,4 +38,3 @@ const containHost = async (authenticatedRequest, requestWithDefaults, data, opti
 };
 
 module.exports = { containHost };
-// can return status normal, contain, contained, lift_containment

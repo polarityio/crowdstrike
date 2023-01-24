@@ -1,26 +1,18 @@
-const { parseErrorToReadableJSON } = require('./responses');
 const { get, size, flow, first, last, split, toUpper, getOr } = require('lodash/fp');
+const _ = require('lodash');
+const { RequestError } = require('./responses');
+const authenticatedRequest = require('./authenticatedRequest');
+const { getLogger } = require('./logger');
 
-const getDevices = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  entity,
-  options,
-  Logger
-) => {
+const getDevices = async (entity, options) => {
+  const Logger = getLogger();
   try {
     // this endpoint doesn't support domain lookups
     if (entity.isDomain) {
       return { devices: null, statusCode: 200 };
     }
 
-    const deviceIds = await getDeviceIds(
-      authenticatedRequest,
-      requestWithDefaults,
-      entity,
-      options,
-      Logger
-    );
+    const deviceIds = await getDeviceIds(entity, options);
     if (!size(deviceIds)) return { devices: null, statusCode: 200 }; //handles the case of no data being found for an entity
 
     const requestOptions = {
@@ -33,12 +25,7 @@ const getDevices = async (
     };
     Logger.trace({ requestOptions }, 'request options');
 
-    const response = await authenticatedRequest(
-      requestWithDefaults,
-      requestOptions,
-      options,
-      Logger
-    );
+    const response = await authenticatedRequest(requestOptions, options);
     Logger.trace({ response }, 'response in getDevices');
 
     const requestSuccessfulWithContent =
@@ -78,13 +65,8 @@ const REQUEST_FILTER_BY_TYPE = {
   hostname: (value) => `hostname:"${toUpper(value)}"`
 };
 
-const getDeviceIds = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  entity,
-  options,
-  Logger
-) => {
+const getDeviceIds = async (entity, options) => {
+  const Logger = getLogger();
   try {
     const entityWithType =
       entity.type === 'custom'
@@ -96,6 +78,7 @@ const getDeviceIds = async (
       entityWithType,
       REQUEST_FILTER_BY_TYPE
     )(entity.value);
+
     if (!requestFilter) return;
 
     const requestOptions = {
@@ -109,12 +92,12 @@ const getDeviceIds = async (
 
     Logger.trace(
       { requestOptions, entityWithType, requestFilter },
-      'searchIOCs request options'
+      'getDeviceIds request options'
     );
 
     const devicesIds = get(
       'body.resources',
-      await authenticatedRequest(requestWithDefaults, requestOptions, options, Logger)
+      await authenticatedRequest(requestOptions, options)
     );
     Logger.trace({ devicesIds }, 'Device Ids');
     return devicesIds;
@@ -124,13 +107,8 @@ const getDeviceIds = async (
   }
 };
 
-const getAndUpdateDeviceState = async (
-  authenticatedRequest,
-  requestWithDefaults,
-  deviceId,
-  options,
-  Logger
-) => {
+const getAndUpdateDeviceState = async (deviceId, options) => {
+  const Logger = getLogger();
   try {
     const requestOptions = {
       method: 'GET',
@@ -142,15 +120,22 @@ const getAndUpdateDeviceState = async (
     };
     Logger.trace({ requestOptions }, 'request options in getAndUpdateDeviceState');
 
-    const response = await authenticatedRequest(
-      requestWithDefaults,
-      requestOptions,
-      options,
-      Logger
-    );
+    const response = await authenticatedRequest(requestOptions, options);
     Logger.trace({ response }, 'response in getAndUpdateDeviceState');
 
-    const singleDeviceStatus = response.body.resources[0].status;
+    const singleDeviceStatus = _.get(response, 'body.resources.0.status', null);
+    if (singleDeviceStatus === null) {
+      throw new RequestError(
+        'Failed to fetch device status',
+        response.statusCode,
+        response.body,
+        {
+          ...requestOptions,
+          headers: '********'
+        }
+      );
+    }
+
     Logger.trace({ singleDeviceStatus }, 'single device status');
 
     return singleDeviceStatus;

@@ -1,3 +1,8 @@
+{{#if details.noResults}}
+  <div>
+    No results were found.
+  </div>
+{{/if}}
 {{#if details.errorMessage}}
   <div class='mt-2'>
     <div class='alert alert-danger'>
@@ -17,47 +22,56 @@
       </button>
       <div class='mt-1'>
         <span class='p-footnote'>
-          You can retry your search by pressing the "Retry Search" button.</span>
+          You can retry your search by pressing the "Retry Search" button.
+        </span>
+        {{#if (and details.rateLimitLimit details.rateLimitRemaining)}}
+          <div class="p-footnote">Rate Limit: {{details.rateLimitLimit}} out of {{details.rateLimitRemaining}}</div>
+        {{/if}}
+        {{#if details.status}}
+          <div class="p-footnote mt-1">Status: {{details.status}}</div>
+        {{/if}}
       </div>
     {{/if}}
   </div>
 {{else}}
-  <ul class='nav nav-tabs'>
-    {{#if details.events.detections.length}}
-      <li class='nav-item'>
-        <a
-          {{action 'changeTab' 'crowdstrike'}}
-          class='nav-link
-            {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
-          href='#'
-        >
-          Detections
-        </a>
-      </li>
-    {{/if}}
-    {{#if (and block.userOptions.searchIoc details.iocs.indicators.length)}}
-      <li class='nav-item'>
-        <a
-          {{action 'changeTab' 'crowdstrikeIoc'}}
-          class='nav-link {{if (eq activeTab "crowdstrikeIoc") "active"}}'
-          href='#'
-        >
-          IOC Management
-        </a>
-      </li>
-    {{/if}}
-    {{#if details.hosts.devices.length}}
-      <li class='nav-item'>
-        <a
-          {{action 'changeTab' 'hosts'}}
-          class='nav-link {{if (or (eq activeTab "hosts") (not activeTab)) "active"}}'
-          href='#'
-        >
-          Host Management
-        </a>
-      </li>
-    {{/if}}
-  </ul>
+  {{#unless details.noResults}}
+    <ul class='nav nav-tabs'>
+      {{#if details.events.detections.length}}
+        <li class='nav-item'>
+          <a
+            {{action 'changeTab' 'crowdstrike'}}
+            class='nav-link
+              {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
+            href='#'
+          >
+            Detections
+          </a>
+        </li>
+      {{/if}}
+      {{#if (and block.userOptions.searchIoc details.iocs.indicators.length)}}
+        <li class='nav-item'>
+          <a
+            {{action 'changeTab' 'crowdstrikeIoc'}}
+            class='nav-link {{if (eq activeTab "crowdstrikeIoc") "active"}}'
+            href='#'
+          >
+            IOC Management
+          </a>
+        </li>
+      {{/if}}
+      {{#if details.hosts.devices.length}}
+        <li class='nav-item'>
+          <a
+            {{action 'changeTab' 'hosts'}}
+            class='nav-link {{if (or (eq activeTab "hosts") (not activeTab)) "active"}}'
+            href='#'
+          >
+            Host Management
+          </a>
+        </li>
+      {{/if}}
+    </ul>
+  {{/unless}}
   {{#if (eq activeTab 'crowdstrike')}}
     {{#if details.events.detections.length}}
       <div class="mt-2">
@@ -228,6 +242,14 @@
                   'MM/DD/YYYY HH:mm:ss'
                   timeZone=timezone
                 }}</span>
+            </div>
+          {{/if}}
+          {{#if (gt indicator.platforms.length 0)}}
+            <div>
+              <h1 class='p-title'>{{fa-icon icon="computer-classic" fixedWidth=true}} Platforms</h1>
+              {{#each indicator.platforms as | platform |}}
+                <span class="tag">{{platform}}</span>
+              {{/each}}
             </div>
           {{/if}}
           {{#if (gt indicator.tags.length 0)}}

@@ -35,17 +35,9 @@ polarity.export = PolarityComponent.extend({
   isRunning: false,
   modalDevice: {},
   init() {
-    this.set(
-      'activeTab',
-      this.get('details.events.detections.length')
-        ? 'crowdstrike'
-        : this.get('block.userOptions.searchIoc') &&
-          this.get('details.iocs.indicators.length')
-        ? 'crowdstrikeIoc'
-        : 'hosts'
-    );
-
+    this.initActiveTab();
     // refresh the device status to ensure the containment options are always fresh
+    // and not being served from the cache
     if (this.get('details.hosts.devices')) {
       this.get('details.hosts.devices').forEach((device, index) => {
         this.doGetAndUpdateDeviceState(device, index);
@@ -56,6 +48,17 @@ polarity.export = PolarityComponent.extend({
     this.set('uniqueIdPrefix', window.crypto.getRandomValues(array).join(''));
 
     this._super(...arguments);
+  },
+  initActiveTab() {
+    this.set(
+      'activeTab',
+      this.get('details.events.detections.length')
+        ? 'crowdstrike'
+        : this.get('block.userOptions.searchIoc') &&
+          this.get('details.iocs.indicators.length')
+        ? 'crowdstrikeIoc'
+        : 'hosts'
+    );
   },
   actions: {
     changeTab: function (tabName) {
@@ -69,11 +72,11 @@ polarity.export = PolarityComponent.extend({
         action: 'RETRY_LOOKUP',
         entity: this.get('block.entity')
       };
-
       this.sendIntegrationMessage(payload)
         .then((result) => {
           if (result.data.summary) this.set('summary', result.summary);
           this.set('block.data', result.data);
+          this.initActiveTab();
         })
         .catch((err) => {
           this.set('details.errorMessage', JSON.stringify(err, null, 4));
@@ -98,7 +101,6 @@ polarity.export = PolarityComponent.extend({
     },
     confirmContainmentOrLiftContainment: function () {
       const outerThis = this;
-
       const { device, index } = this.get('modalDevice');
 
       this.setMessages(index, 'getAndUpdateDeviceState', '');
@@ -112,15 +114,11 @@ polarity.export = PolarityComponent.extend({
       })
         .then(({ updatedDeviceState }) => {
           this.set('details.hosts.devices.' + index + '.status', updatedDeviceState);
-          let message = 'Containment successfully started.'
+          let message = 'Containment successfully started.';
           if (device.status === 'lift_containment_pending') {
             message = 'Lift containment successfully started';
           }
-          outerThis.setMessages(
-            index,
-            'getAndUpdateDeviceState',
-            message
-          );
+          outerThis.setMessages(index, 'getAndUpdateDeviceState', message);
         })
         .catch((err) => {
           outerThis.setErrorMessages(index, 'getAndUpdateDeviceState', `Failed ${err}`);
@@ -150,12 +148,10 @@ polarity.export = PolarityComponent.extend({
   },
   setErrorMessages: function (index, prefix, message) {
     if (!this.isDestroyed) {
-      this.set(
-        `${prefix}ErrorMessages`,
-        Object.assign({}, this.get(`${prefix}ErrorMessages`), {
-          [index]: message
-        })
-      );
+      const error = Object.assign({}, this.get(`${prefix}ErrorMessages`), {
+        [index]: message
+      });
+      this.set(`${prefix}ErrorMessages`, error);
     }
   },
   flashElement: function (element, flashCount = 3, flashTime = 280) {
@@ -186,6 +182,7 @@ polarity.export = PolarityComponent.extend({
       data: { id: device.device_id }
     })
       .then(({ deviceStatus }) => {
+        //console.info(`Received updated status: ${deviceStatus}`);
         this.set('details.hosts.devices.' + index + '.status', deviceStatus);
         if (!['normal', 'contained'].includes(deviceStatus)) {
           if (device.status === 'lift_containment_pending') {
@@ -201,7 +198,9 @@ polarity.export = PolarityComponent.extend({
               'Containment Still Pending ...'
             );
           }
-          let element = document.getElementById(`device-${this.get('uniqueIdPrefix')}-${index}`);
+          let element = document.getElementById(
+            `device-${this.get('uniqueIdPrefix')}-${index}`
+          );
           // element can be null here if the user is no on the tab with the device information
           // so we want to guard against that.
           if (element) {
@@ -210,14 +209,21 @@ polarity.export = PolarityComponent.extend({
         }
       })
       .catch((err) => {
-        this.setErrorMessages(index, 'getAndUpdateDeviceState', `${err}`);
+        if (typeof err === 'string') {
+          this.setErrorMessages(index, 'getAndUpdateDeviceState', err);
+        } else {
+          this.setErrorMessages(
+            index,
+            'getAndUpdateDeviceState',
+            `${JSON.stringify(err, null, 4)}`
+          );
+        }
       })
       .finally(() => {
         this.setIsRunning(index, 'getAndUpdateDeviceState', false);
         this.get('block').notifyPropertyChange('data');
         setTimeout(() => {
           this.setMessages(index, 'getAndUpdateDeviceState', '');
-          this.setErrorMessages(index, 'getAndUpdateDeviceState', '');
           this.get('block').notifyPropertyChange('data');
         }, 5000);
       });
