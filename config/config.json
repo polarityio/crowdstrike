@@ -1,4 +1,5 @@
 {
+  "polarityIntegrationUuid": "d4d32a30-cce1-11ed-aeee-075d3490155d",
   "name": "CrowdStrike",
   "acronym": "CSTK",
   "description": "Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).",
