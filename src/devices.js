@@ -17,7 +17,7 @@ const getDevices = async (entity, options) => {
 
     const requestOptions = {
       method: 'GET',
-      uri: `${options.url}/devices/entities/devices/v1`,
+      uri: `${options.url}/devices/entities/devices/v2`,
       body: {
         ids: deviceIds
       },
