@@ -3,12 +3,7 @@
   "name": "CrowdStrike",
   "acronym": "CSTK",
   "description": "Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).",
-  "entityTypes": [
-    "MD5",
-    "SHA256",
-    "IPv4",
-    "domain"
-  ],
+  "entityTypes": ["MD5", "SHA256", "IPv4", "domain"],
   "customTypes": [
     {
       "key": "exeFile",
@@ -17,9 +12,7 @@
   ],
   "onDemandOnly": true,
   "defaultColor": "light-purple",
-  "styles": [
-    "./styles/crowdstrike.less"
-  ],
+  "styles": ["./styles/crowdstrike.less"],
   "block": {
     "component": {
       "file": "./components/crowdstrike-block.js"
@@ -44,6 +37,15 @@
       "name": "CrowdStrike API URL",
       "description": "The REST API URL for your CrowdStrike instance which should include the schema (i.e., http, https) and port if required.",
       "default": "https://api.crowdstrike.com",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "uiUrl",
+      "name": "CrowdStrike UI URL",
+      "description": "The URL for your CrowdStrike UI instance",
+      "default": "https://falcon.crowdstrike.com",
       "type": "text",
       "userCanEdit": false,
       "adminOnly": true

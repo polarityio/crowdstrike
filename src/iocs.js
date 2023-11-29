@@ -30,7 +30,7 @@ const getIocIndicators = async (entity, options) => {
 
     if (requestSuccessfulWithContent) {
       const indicators = response.body.resources.map((resource) => {
-        resource.__url = `https://falcon.crowdstrike.com/iocs/indicators/${resource.id}`;
+        resource.__url = `${options.uiUrl}/iocs/indicators/${resource.id}`;
         return resource;
       });
 
