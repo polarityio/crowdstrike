@@ -24,12 +24,12 @@ module.exports = {
    */
   description:
     'Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).',
-  entityTypes: ['md5', 'sha256', 'IPv4', 'domain'],
+  entityTypes: ['domain', 'MD5', 'SHA256', 'IPv4'],
   customTypes: [
     {
       key: 'exeFile',
       regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|sh)/
-    },
+    }
     // {
     //   key: 'hostname',
     //   regex: /DESKTOP\-[A-Za-z0-9]*/
@@ -76,7 +76,7 @@ module.exports = {
     ca: '',
     // An HTTP proxy to be used. Supports proxy Auth with Basic Auth, identical to support for
     // the url parameter (by embedding the auth info in the uri)
-    proxy: ""
+    proxy: ''
   },
   logging: {
     // directory is relative to the this integrations directory
@@ -108,6 +108,15 @@ module.exports = {
       adminOnly: true
     },
     {
+      key: 'uiUrl',
+      name: 'CrowdStrike UI URL',
+      description: 'The URL for your CrowdStrike UI instance',
+      default: 'https://falcon.crowdstrike.com',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'id',
       name: 'Client ID',
       description: 'The Client ID to use to connect to CrowdStrike.',
@@ -119,7 +128,8 @@ module.exports = {
     {
       key: 'secret',
       name: 'Client Secret',
-      description: 'The secret associated with the Client ID. At a minimum, the API key must have \'Read\' access to the \'Detections\' scope.',
+      description:
+        "The secret associated with the Client ID. At a minimum, the API key must have 'Read' access to the 'Detections' scope.",
       default: '',
       type: 'password',
       userCanEdit: false,
@@ -129,7 +139,7 @@ module.exports = {
       key: 'searchIoc',
       name: 'Search CrowdStrike IOCs',
       description:
-        'If checked, the integration will search IOCs detected in your environment.  IOCs (indicators of compromise) are artifacts that include SHA256, MD5 or domain values.  The provided API key must have \'Read\' access to the \'IOC Manager APIs\' scope for this option to work.',
+        "If checked, the integration will search IOCs detected in your environment.  IOCs (indicators of compromise) are artifacts that include SHA256, MD5 or domain values.  The provided API key must have 'Read' access to the 'IOC Manager APIs' scope for this option to work.",
       default: true,
       type: 'boolean',
       userCanEdit: false,
@@ -138,7 +148,8 @@ module.exports = {
     {
       key: 'allowContainment',
       name: 'Allow Containment Status Change',
-      description: 'If checked, users will be able to change the Containment Status of Devices via the integration.  The provided API key must have \'Read\' and \'Write\' access to the \'Hosts\' scope for this option to work.  This option must be set to "Users can view only".',
+      description:
+        "If checked, users will be able to change the Containment Status of Devices via the integration.  The provided API key must have 'Read' and 'Write' access to the 'Hosts' scope for this option to work.  This option must be set to \"Users can view only\".",
       default: false,
       type: 'boolean',
       userCanEdit: false,
@@ -148,7 +159,7 @@ module.exports = {
       key: 'minimumSeverity',
       name: 'Minimum Severity for Detections',
       description:
-        'The minimum severity level required for Detections to be displayed.  Defaults to \'Low\'.',
+        "The minimum severity level required for Detections to be displayed.  Defaults to 'Low'.",
       default: {
         value: 'Low',
         display: 'Low'
@@ -225,7 +236,7 @@ module.exports = {
       key: 'showNoResults',
       name: 'Show No Results',
       description:
-          'If checked, the integration will return a summary tag indicating a lookup was performed and that there are no results.',
+        'If checked, the integration will return a summary tag indicating a lookup was performed and that there are no results.',
       default: true,
       type: 'boolean',
       userCanEdit: false,
