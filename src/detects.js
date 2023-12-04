@@ -4,7 +4,6 @@ const { SEVERITY_LEVELS_FOR_DETECTIONS } = require('./constants');
 const authenticatedRequest = require('./authenticatedRequest');
 const { getLogger } = require('./logger');
 
-
 /* 
   getDetects returns devices that were matched with returned id's from searchDetects(). 
   It is possible that searchDetects returns a list of ids that do not have a matching device 
@@ -67,7 +66,7 @@ const getDetects = async (entity, options) => {
     ) {
       const detections = response.body.resources.map((resource) => {
         let split = resource.detection_id.split(':');
-        resource.__url = `https://falcon.crowdstrike.com/activity/detections/detail/${split[1]}/${split[2]}`;
+        resource.__url = `${options.uiUrl}/activity/detections/detail/${split[1]}/${split[2]}`;
         return resource;
       });
 

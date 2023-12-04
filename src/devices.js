@@ -33,7 +33,7 @@ const getDevices = async (entity, options) => {
 
     if (requestSuccessfulWithContent) {
       const devices = response.body.resources.map((resource) => {
-        resource.__url = `https://falcon.crowdstrike.com/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
+        resource.__url = `${options.uiUrl}/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=${resource.device_id}&computer=*&customer_tok=*`;
         return resource;
       });
 
