@@ -66,11 +66,6 @@ polarity.export = PolarityComponent.extend({
         'details.events.detections.' + detectionIndex + '.__showAllDeviceInfo'
       );
     },
-    showAllBehaviorInfo: function (detectionIndex) {
-      this.toggleProperty(
-        'details.events.detections.' + detectionIndex + '.__showAllBehaviorInfo'
-      );
-    },
     toggleShowModal: function (device, index) {
       this.toggleProperty('details.hosts.devices.' + index + '.__modalOpen');
       this.set('modalDevice', { device, index });

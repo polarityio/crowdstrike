@@ -119,6 +119,4 @@ const getIocDevicesIds = async (entity, options) => {
   }
 };
 
-module.exports = {
-  getIocIndicators
-};
+module.exports = getIocIndicators;

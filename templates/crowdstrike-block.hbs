@@ -86,62 +86,55 @@
       {{#if (gt detectionIndex 0)}}
         <hr />
       {{/if}}
-      <a
-        href="{{block.userOptions.uiUrl}}/search/alert-epp?term=_all%3A~%27{{lowercase
-          block.entity.value
-        }}%27"
-        class="p-link detection-title"
-      >View in Falcon
+      <a href="{{detection.falcon_host_link}}" class="p-link detection-title">View in
+        Falcon
         {{fa-icon "external-link-square" fixedWidth=true class="external-link"}}</a>
 
       <h2 class="p-title">
         {{fa-icon "search" fixedWidth=true}}
         Summary
       </h2>
-      {{#if detection.behaviors.0.description}}
+      {{#if detection.description}}
         <div>
           <span class="p-key">Description:</span>
-          <span class="p-value">{{detection.behaviors.0.description}}</span>
+          <span class="p-value">{{detection.description}}</span>
         </div>
       {{/if}}
-      {{#if (or detection.max_severity_displayname detection.max_severity)}}
+      {{#if detection.severity_name}}
         <div>
           <span class="p-key">Severity:</span>
-          <span class="p-value">{{or
-              detection.max_severity_displayname
-              detection.max_severity
-            }}</span>
+          <span class="p-value">{{detection.severity_name}}</span>
         </div>
       {{/if}}
-      {{#if detection.behaviors.0.filename}}
+      {{#if detection.filename}}
         <div>
           <span class="p-key">Process:</span>
-          <span class="p-value">{{detection.behaviors.0.filename}}</span>
+          <span class="p-value">{{detection.filename}}</span>
         </div>
       {{/if}}
-      {{#if detection.behaviors.0.tactic}}
+      {{#if detection.tactic}}
         <div>
           <span class="p-key">Tactic & Technique:</span>
-          <span class="p-value">{{detection.behaviors.0.tactic}}{{#if
-              detection.behaviors.0.technique
-            }} via {{detection.behaviors.0.technique}}{{/if}}</span>
+          <span class="p-value">{{detection.tactic}}{{#if detection.technique}}
+              via
+              {{detection.technique}}{{/if}}</span>
         </div>
       {{/if}}
-      {{#if detection.first_behavior}}
+      {{#if detection.timestamp}}
         <div>
           <span class="p-key">Start Time:</span>
           <span class="p-value">{{moment-format
-              detection.first_behavior
+              detection.timestamp
               "MMM. D, YYYY HH:mm:ss"
               timeZone=timezone
             }}</span>
         </div>
       {{/if}}
-      {{#if detection.last_behavior}}
+      {{#if detection.context_timestamp}}
         <div>
           <span class="p-key">End Time:</span>
           <span class="p-value">{{moment-format
-              detection.last_behavior
+              detection.context_timestamp
               "MMM. D, YYYY HH:mm:ss"
               timeZone=timezone
             }}</span>
@@ -153,6 +146,7 @@
           <span class="p-value">{{capitalize detection.status}}</span>
         </div>
       {{/if}}
+      
       {{! Detection Information }}
       {{#if detection.device}}
         <h2 class="p-title">{{fa-icon "laptop" fixedWidth=true}}
@@ -209,97 +203,69 @@
         {{/if}}
       {{/if}}
 
-      {{! Behavior Information }}
-      {{#if detection.behaviors}}
-        <h2 class="p-title">{{fa-icon "brain" fixedWidth=true}}
-          Behavior Information
-          <span class="p-action" {{action "showAllBehaviorInfo" detectionIndex}}>
-            {{#if detection.__showAllBehaviorInfo}}
-              &nbsp;(view compact
-              {{fa-icon "caret-down"}})
-            {{else}}
-              &nbsp;(view all
-              {{fa-icon "caret-up"}})
-            {{/if}}
-          </span>
-        </h2>
-        {{#if detection.__showAllBehaviorInfo}}
-          {{#each detection.behaviors as |behavior behaviorIndex|}}
-            <h3 class="p-title">Behavior: {{behavior.behavior_id}}</h3>
-            {{object-to-table behavior}}
-          {{/each}}
-        {{else}}
-          {{#each detection.behaviors as |behavior behaviorIndex|}}
-            <h3 class="p-title">Behavior: {{behavior.display_name}}</h3>
-            {{#if behavior.description}}
-              <div>
-                <span class="p-key">Description:</span>
-                <span class="p-value">{{behavior.description}}</span>
-              </div>
-            {{/if}}
-            {{#if behavior.filename}}
-              <div>
-                <span class="p-key">FileName:</span>
-                <span class="p-value">{{behavior.filename}}</span>
-              </div>
-            {{/if}}
-            {{#if behavior.scenario}}
-              <div>
-                <span class="p-key">Scenario:</span>
-                <span class="p-value">{{capitalize behavior.scenario}}</span>
-              </div>
-            {{/if}}
-            {{#if behavior.objective}}
-              <div>
-                <span class="p-key">Objective:</span>
-                <span class="p-value">{{behavior.objective}}</span>
-              </div>
-            {{/if}}
-            {{#if (and behavior.tactic behavior.technique)}}
-              <div>
-                <span class="p-key">Tactic via Technique:</span>
-                <span class="p-value">{{behavior.tactic}}
-                  via
-                  {{behavior.technique}}</span>
-              </div>
-            {{/if}}
-            {{#if behavior.timestamp}}
-              <div>
-                <span class="p-key">Execution Time:</span>
-                <span class="p-value">{{moment-format
-                    behavior.timestamp
-                    "MMM. D, YYYY HH:mm:ss"
-                    timeZone=timezone
-                  }}</span>
-              </div>
-            {{/if}}
-            {{#if behavior.sha256}}
-              <div>
-                <span class="p-key">Executable SHA256:</span>
-                <pre class="p-value">{{behavior.sha256}}</pre>
-              </div>
-            {{/if}}
-            {{#if behavior.md5}}
-              <div>
-                <span class="p-key">MD5:</span>
-                <pre class="p-value">{{behavior.md5}}</pre>
-              </div>
-            {{/if}}
-            {{#if behavior.cmdline}}
-              <div>
-                <span class="p-key">Command Line:</span>
-                <pre class="p-value">{{behavior.cmdline}}</pre>
-              </div>
-            {{/if}}
-            {{#if behavior.filepath}}
-              <div>
-                <span class="p-key">File Path:</span>
-                <pre class="p-value">{{behavior.filepath}}</pre>
-              </div>
-            {{/if}}
-
-          {{/each}}
-        {{/if}}
+      {{! Process }}
+      <h2 class="p-title">{{fa-icon "brain" fixedWidth=true}}
+        Process ({{detection.filename}})
+      </h2>
+      {{#if detection.pattern_disposition_description}}
+        <div>
+          <span class="p-key">Actions Taken:</span>
+          <span class="p-value">{{detection.pattern_disposition_description}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.objective}}
+        <div>
+          <span class="p-key">Objective:</span>
+          <span class="p-value">{{detection.objective}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.tactic}}
+        <div>
+          <span class="p-key">Tactic:</span>
+          <span class="p-value">{{detection.tactic}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.technique}}
+        <div>
+          <span class="p-key">Technique:</span>
+          <span class="p-value">{{detection.technique}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.technique_id}}
+        <div>
+          <span class="p-key">Technique ID:</span>
+          <span class="p-value">{{detection.technique_id}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.display_name}}
+        <div>
+          <span class="p-key">IOA Name:</span>
+          <span class="p-value">{{detection.display_name}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.sha256}}
+        <div>
+          <span class="p-key">Executable SHA256:</span>
+          <pre class="p-value">{{detection.sha256}}</pre>
+        </div>
+      {{/if}}
+      {{#if detection.md5}}
+        <div>
+          <span class="p-key">MD5:</span>
+          <pre class="p-value">{{detection.md5}}</pre>
+        </div>
+      {{/if}}
+      {{#if detection.cmdline}}
+        <div>
+          <span class="p-key">Command Line:</span>
+          <pre class="p-value">{{detection.cmdline}}</pre>
+        </div>
+      {{/if}}
+      {{#if detection.filepath}}
+        <div>
+          <span class="p-key">File Path:</span>
+          <pre class="p-value">{{detection.filepath}}</pre>
+        </div>
       {{/if}}
     {{/each}}
   {{/if}}
