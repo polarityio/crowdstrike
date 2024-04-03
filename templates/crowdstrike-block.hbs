@@ -4,28 +4,31 @@
   </div>
 {{/if}}
 {{#if details.errorMessage}}
-  <div class='mt-2'>
-    <div class='alert alert-danger'>
+  <div class="mt-2">
+    <div class="alert alert-danger">
       <pre>{{details.errorMessage}}</pre>
     </div>
     {{#if (not (eq details.allowRetry false))}}
       <button
-        type='button'
-        class='p-btn btn btn-sm btn-secondary retry-btn mt-2'
-        {{action 'retryLookup'}}
+        type="button"
+        class="p-btn btn btn-sm btn-secondary retry-btn mt-2"
+        {{action "retryLookup"}}
       >
         {{#if running}}
-          {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+          {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
         {{else}}
           Retry Search
         {{/if}}
       </button>
-      <div class='mt-1'>
-        <span class='p-footnote'>
+      <div class="mt-1">
+        <span class="p-footnote">
           You can retry your search by pressing the "Retry Search" button.
         </span>
         {{#if (and details.rateLimitLimit details.rateLimitRemaining)}}
-          <div class="p-footnote">Rate Limit: {{details.rateLimitLimit}} out of {{details.rateLimitRemaining}}</div>
+          <div class="p-footnote">Rate Limit:
+            {{details.rateLimitLimit}}
+            out of
+            {{details.rateLimitRemaining}}</div>
         {{/if}}
         {{#if details.status}}
           <div class="p-footnote mt-1">Status: {{details.status}}</div>
@@ -35,36 +38,33 @@
   </div>
 {{else}}
   {{#unless details.noResults}}
-    <ul class='nav nav-tabs'>
+    <ul class="nav nav-tabs">
       {{#if details.events.detections.length}}
-        <li class='nav-item'>
+        <li class="nav-item">
           <a
-            {{action 'changeTab' 'crowdstrike'}}
-            class='nav-link
-              {{if (or (eq activeTab "crowdstrike") (not activeTab)) "active"}}'
-            href='#'
+            {{action "changeTab" "crowdstrike"}}
+            class="nav-link
+              {{if (or (eq activeTab 'crowdstrike') (not activeTab)) 'active'}}"
           >
-            Detections
+            Endpoint Detections
           </a>
         </li>
       {{/if}}
       {{#if (and block.userOptions.searchIoc details.iocs.indicators.length)}}
-        <li class='nav-item'>
+        <li class="nav-item">
           <a
-            {{action 'changeTab' 'crowdstrikeIoc'}}
-            class='nav-link {{if (eq activeTab "crowdstrikeIoc") "active"}}'
-            href='#'
+            {{action "changeTab" "crowdstrikeIoc"}}
+            class="nav-link {{if (eq activeTab 'crowdstrikeIoc') 'active'}}"
           >
             IOC Management
           </a>
         </li>
       {{/if}}
       {{#if details.hosts.devices.length}}
-        <li class='nav-item'>
+        <li class="nav-item">
           <a
-            {{action 'changeTab' 'hosts'}}
-            class='nav-link {{if (or (eq activeTab "hosts") (not activeTab)) "active"}}'
-            href='#'
+            {{action "changeTab" "hosts"}}
+            class="nav-link {{if (or (eq activeTab 'hosts') (not activeTab)) 'active'}}"
           >
             Host Management
           </a>
@@ -72,7 +72,7 @@
       {{/if}}
     </ul>
   {{/unless}}
-  {{#if (eq activeTab 'crowdstrike')}}
+  {{#if (eq activeTab "crowdstrike")}}
     {{#if details.events.detections.length}}
       <div class="mt-2">
         Displaying
@@ -86,85 +86,192 @@
       {{#if (gt detectionIndex 0)}}
         <hr />
       {{/if}}
-      <div class='p-title'>
-        {{fa-icon 'search' fixedWidth=true}}
-        Detection&nbsp;
-        <a href='{{detection.__url}}' class='p-link detection-title'>View in Falcon
-          {{fa-icon 'external-link-square' fixedWidth=true class='external-link'}}</a>
-      </div>
-      {{#each detectionProperties as |prop|}}
-        <div>
-          <span class='p-key'>{{titleize (humanize (dasherize prop))}}:</span>
-          <span class='p-value'>{{get detection prop}}</span>
-        </div>
-      {{/each}}
+      <a href="{{detection.falcon_host_link}}" class="p-link detection-title">View in
+        Falcon
+        {{fa-icon "external-link-square" fixedWidth=true class="external-link"}}</a>
 
+      <h2 class="p-title">
+        {{fa-icon "search" fixedWidth=true}}
+        Summary
+      </h2>
+      {{#if detection.description}}
+        <div>
+          <span class="p-key">Description:</span>
+          <span class="p-value">{{detection.description}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.severity_name}}
+        <div>
+          <span class="p-key">Severity:</span>
+          <span class="p-value">{{detection.severity_name}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.filename}}
+        <div>
+          <span class="p-key">Process:</span>
+          <span class="p-value">{{detection.filename}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.tactic}}
+        <div>
+          <span class="p-key">Tactic & Technique:</span>
+          <span class="p-value">{{detection.tactic}}{{#if detection.technique}}
+              via
+              {{detection.technique}}{{/if}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.timestamp}}
+        <div>
+          <span class="p-key">Start Time:</span>
+          <span class="p-value">{{moment-format
+              detection.timestamp
+              "MMM. D, YYYY HH:mm:ss"
+              timeZone=timezone
+            }}</span>
+        </div>
+      {{/if}}
+      {{#if detection.context_timestamp}}
+        <div>
+          <span class="p-key">End Time:</span>
+          <span class="p-value">{{moment-format
+              detection.context_timestamp
+              "MMM. D, YYYY HH:mm:ss"
+              timeZone=timezone
+            }}</span>
+        </div>
+      {{/if}}
+      {{#if detection.status}}
+        <div>
+          <span class="p-key">Status:</span>
+          <span class="p-value">{{capitalize detection.status}}</span>
+        </div>
+      {{/if}}
+      
       {{! Detection Information }}
       {{#if detection.device}}
-        <div class='p-title'>{{fa-icon 'laptop' fixedWidth=true}}
-          Device Information
-          <span class='p-action' {{action 'showAllDeviceInfo' detectionIndex}}>
+        <h2 class="p-title">{{fa-icon "laptop" fixedWidth=true}}
+          Host
+          <span class="p-action" {{action "showAllDeviceInfo" detectionIndex}}>
             {{#if detection.__showAllDeviceInfo}}
               &nbsp;(view compact
-              {{fa-icon 'caret-down'}})
+              {{fa-icon "caret-down"}})
             {{else}}
               &nbsp;(view all
-              {{fa-icon 'caret-up'}})
+              {{fa-icon "caret-up"}})
             {{/if}}
           </span>
-        </div>
+        </h2>
         {{#if detection.__showAllDeviceInfo}}
           {{object-to-table detection.device}}
         {{else}}
-          {{#each compactDeviceProperties as |prop|}}
-            {{#if (get detection.device prop)}}
-              <div>
-                <span class='p-key'>{{humanize prop}}:</span>
-                <span class='p-value'>{{get detection.device prop}}</span>
-              </div>
-            {{/if}}
-          {{/each}}
+          {{#if detection.device.hostname}}
+            <div>
+              <span class="p-key">Host Name:</span>
+              <span class="p-value">{{detection.device.hostname}}</span>
+            </div>
+          {{/if}}
+          {{#if detection.device.status}}
+            <div>
+              <span class="p-key">Containment Status:</span>
+              <span class="p-value">{{capitalize detection.device.status}}</span>
+            </div>
+          {{/if}}
+          {{#if detection.device.product_type_desc}}
+            <div>
+              <span class="p-key">Host Type:</span>
+              <span class="p-value">{{detection.device.product_type_desc}}</span>
+            </div>
+          {{/if}}
+          {{#if detection.device.os_version}}
+            <div>
+              <span class="p-key">OS:</span>
+              <span class="p-value">{{detection.device.os_version}}</span>
+            </div>
+          {{/if}}
+          {{#if detection.device.system_manufacturer}}
+            <div>
+              <span class="p-key">Manufacturer:</span>
+              <span class="p-value">{{detection.device.system_manufacturer}}</span>
+            </div>
+          {{/if}}
+          {{#if detection.device.system_product_name}}
+            <div>
+              <span class="p-key">Model:</span>
+              <span class="p-value">{{detection.device.system_product_name}}</span>
+            </div>
+          {{/if}}
         {{/if}}
       {{/if}}
 
-      {{! Behavior Information }}
-      {{#if detection.behaviors}}
-        <div class='p-title'>{{fa-icon 'brain' fixedWidth=true}}
-          Behavior Information
-          <span class='p-action' {{action 'showAllBehaviorInfo' detectionIndex}}>
-            {{#if detection.__showAllBehaviorInfo}}
-              &nbsp;(view compact
-              {{fa-icon 'caret-down'}})
-            {{else}}
-              &nbsp;(view all
-              {{fa-icon 'caret-up'}})
-            {{/if}}
-          </span>
+      {{! Process }}
+      <h2 class="p-title">{{fa-icon "brain" fixedWidth=true}}
+        Process ({{detection.filename}})
+      </h2>
+      {{#if detection.pattern_disposition_description}}
+        <div>
+          <span class="p-key">Actions Taken:</span>
+          <span class="p-value">{{detection.pattern_disposition_description}}</span>
         </div>
-        {{#if detection.__showAllBehaviorInfo}}
-          {{#each detection.behaviors as |behavior behaviorIndex|}}
-            <div class='p-title'>Behavior ID: {{behavior.behavior_id}}</div>
-            {{object-to-table behavior}}
-          {{/each}}
-        {{else}}
-          {{#each detection.behaviors as |behavior behaviorIndex|}}
-            <div class='p-title'>Behavior: {{behavior.behavior_id}}</div>
-            {{#each compactBehaviorProperties as |prop|}}
-              {{#if (get behavior prop)}}
-                <div>
-                  <span class='p-key'>{{humanize prop}}:</span>
-                  <span class='p-value'>{{get behavior prop}}</span>
-                </div>
-              {{/if}}
-            {{/each}}
-          {{/each}}
-        {{/if}}
+      {{/if}}
+      {{#if detection.objective}}
+        <div>
+          <span class="p-key">Objective:</span>
+          <span class="p-value">{{detection.objective}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.tactic}}
+        <div>
+          <span class="p-key">Tactic:</span>
+          <span class="p-value">{{detection.tactic}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.technique}}
+        <div>
+          <span class="p-key">Technique:</span>
+          <span class="p-value">{{detection.technique}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.technique_id}}
+        <div>
+          <span class="p-key">Technique ID:</span>
+          <span class="p-value">{{detection.technique_id}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.display_name}}
+        <div>
+          <span class="p-key">IOA Name:</span>
+          <span class="p-value">{{detection.display_name}}</span>
+        </div>
+      {{/if}}
+      {{#if detection.sha256}}
+        <div>
+          <span class="p-key">Executable SHA256:</span>
+          <pre class="p-value">{{detection.sha256}}</pre>
+        </div>
+      {{/if}}
+      {{#if detection.md5}}
+        <div>
+          <span class="p-key">MD5:</span>
+          <pre class="p-value">{{detection.md5}}</pre>
+        </div>
+      {{/if}}
+      {{#if detection.cmdline}}
+        <div>
+          <span class="p-key">Command Line:</span>
+          <pre class="p-value">{{detection.cmdline}}</pre>
+        </div>
+      {{/if}}
+      {{#if detection.filepath}}
+        <div>
+          <span class="p-key">File Path:</span>
+          <pre class="p-value">{{detection.filepath}}</pre>
+        </div>
       {{/if}}
     {{/each}}
   {{/if}}
 
   {{! crowdstrikeIOC }}
-  {{#if (eq activeTab 'crowdstrikeIoc')}}
+  {{#if (eq activeTab "crowdstrikeIoc")}}
     {{#if details.iocs.indicators.length}}
       <div class="mt-2">
         Displaying
@@ -174,88 +281,90 @@
         results.
       </div>
       {{#each details.iocs.indicators as |indicator|}}
-        <div class='devices-container'>
+        <div class="devices-container">
           {{#if indicator.value}}
-            <h1>{{fa-icon 'info-circle' fixedWidth=true}}
-              Indicator: {{indicator.value}}
+            <h1>{{fa-icon "info-circle" fixedWidth=true}}
+              Indicator:
+              {{indicator.value}}
             </h1>
           {{/if}}
-          <div class='mb-1 mt-1'>
-            <a class='p-link' href='{{indicator.__url}}'>
+          <div class="mb-1 mt-1">
+            <a class="p-link" href="{{indicator.__url}}">
               View Full Details
-              {{fa-icon icon='external-link-square' class='external-link-icon'}}
+              {{fa-icon icon="external-link-square" class="external-link-icon"}}
             </a>
           </div>
           {{#if indicator.description}}
             <div>
-              <span class='p-key'>Description:</span>
-              <span class='p-block'>{{indicator.description}}</span>
+              <span class="p-key">Description:</span>
+              <span class="p-block">{{indicator.description}}</span>
             </div>
           {{/if}}
           {{#if indicator.action}}
             <div>
-              <span class='p-key'>Action:</span>
-              <span class='p-value'>{{capitalize indicator.action}}</span>
+              <span class="p-key">Action:</span>
+              <span class="p-value">{{capitalize indicator.action}}</span>
             </div>
           {{/if}}
           {{#if indicator.severity}}
             <div>
-              <span class='p-key'>Severity:</span>
-              <span class='p-value'>{{capitalize indicator.severity}}</span>
+              <span class="p-key">Severity:</span>
+              <span class="p-value">{{capitalize indicator.severity}}</span>
             </div>
           {{/if}}
           <div>
-            <span class='p-key'>Is Expired:</span>
-            <span class='p-value'>{{indicator.expired}}</span>
+            <span class="p-key">Is Expired:</span>
+            <span class="p-value">{{indicator.expired}}</span>
           </div>
           <div>
-            <span class='p-key'>Is Deleted:</span>
-            <span class='p-value'>{{indicator.deleted}}</span>
+            <span class="p-key">Is Deleted:</span>
+            <span class="p-value">{{indicator.deleted}}</span>
           </div>
           {{#if indicator.created_by}}
             <div>
-              <span class='p-key'>Created By:</span>
-              <span class='p-value'>{{indicator.created_by}}</span>
+              <span class="p-key">Created By:</span>
+              <span class="p-value">{{indicator.created_by}}</span>
             </div>
           {{/if}}
           {{#if indicator.created_on}}
             <div>
-              <span class='p-key'>Created On:</span>
-              <span class='p-value'>{{moment-format
+              <span class="p-key">Created On:</span>
+              <span class="p-value">{{moment-format
                   indicator.created_on
-                  'MM/DD/YYYY HH:mm:ss'
+                  "MMM. D, YYYY HH:mm:ss"
                   timeZone=timezone
                 }}</span>
             </div>
           {{/if}}
           {{#if indicator.modified_by}}
             <div>
-              <span class='p-key'>Modified By:</span>
-              <span class='p-value'>{{indicator.modified_by}}</span>
+              <span class="p-key">Modified By:</span>
+              <span class="p-value">{{indicator.modified_by}}</span>
             </div>
           {{/if}}
           {{#if indicator.modified_on}}
             <div>
-              <span class='p-key'>Modified On:</span>
-              <span class='p-value'>{{moment-format
+              <span class="p-key">Modified On:</span>
+              <span class="p-value">{{moment-format
                   indicator.modified_on
-                  'MM/DD/YYYY HH:mm:ss'
+                  "MMM. D, YYYY HH:mm:ss"
                   timeZone=timezone
                 }}</span>
             </div>
           {{/if}}
           {{#if (gt indicator.platforms.length 0)}}
             <div>
-              <h1 class='p-title'>{{fa-icon icon="computer-classic" fixedWidth=true}} Platforms</h1>
-              {{#each indicator.platforms as | platform |}}
+              <h1 class="p-title">{{fa-icon icon="computer-classic" fixedWidth=true}}
+                Platforms</h1>
+              {{#each indicator.platforms as |platform|}}
                 <span class="tag">{{platform}}</span>
               {{/each}}
             </div>
           {{/if}}
           {{#if (gt indicator.tags.length 0)}}
             <div>
-              <h1 class='p-title'>{{fa-icon icon="tags" fixedWidth=true}} Tags</h1>
-              {{#each indicator.tags as | tag |}}
+              <h1 class="p-title">{{fa-icon icon="tags" fixedWidth=true}} Tags</h1>
+              {{#each indicator.tags as |tag|}}
                 <span class="tag">{{tag}}</span>
               {{/each}}
             </div>
@@ -266,7 +375,7 @@
   {{/if}}
 
   {{! hosts tab }}
-  {{#if (eq activeTab 'hosts')}}
+  {{#if (eq activeTab "hosts")}}
     {{#if details.hosts}}
       <div class="mt-2">
         Displaying
@@ -276,64 +385,70 @@
         results
       </div>
 
-      <div class='containment-info'>
+      <div class="containment-info">
         {{#each details.hosts.devices as |device index|}}
-          <div class='devices-container'>
+          <div class="devices-container">
             {{#if device.hostname}}
-              <h1 class=''>{{fa-icon 'laptop' fixedWidth=true}}
+              <h1 class="">{{fa-icon "laptop" fixedWidth=true}}
                 {{device.hostname}}
               </h1>
             {{/if}}
-            <div class='mb-1 mt-1'>
+            <div class="mb-1 mt-1">
               <a
-                class='p-link'
-                id='device-{{uniqueIdPrefix}}-{{index}}'
-                href='https://falcon.crowdstrike.com/hosts/hosts/host/{{device.device_id}}'
+                class="p-link"
+                id="device-{{uniqueIdPrefix}}-{{index}}"
+                href="{{block.userOptions.uiUrl}}/hosts/hosts/host/{{device.device_id}}"
               >
-                View {{if (or (eq device.status 'normal') (eq device.status 'contained')) "Host" "Containment"}} Information
-                {{fa-icon icon='external-link-square' class='external-link-icon'}}
+                View
+                {{if
+                  (or (eq device.status "normal") (eq device.status "contained"))
+                  "Host"
+                  "Containment"
+                }}
+                Information
+                {{fa-icon icon="external-link-square" class="external-link-icon"}}
               </a>
             </div>
             {{#if device.external_ip}}
               <div>
-                <span class='p-key'>External IP:</span>
-                <span class='p-value'>{{device.external_ip}}</span>
+                <span class="p-key">External IP:</span>
+                <span class="p-value">{{device.external_ip}}</span>
               </div>
             {{/if}}
             {{#if device.local_ip}}
               <div>
-                <span class='p-key'>Local IP:</span>
-                <span class='p-value'>{{device.local_ip}}</span>
+                <span class="p-key">Local IP:</span>
+                <span class="p-value">{{device.local_ip}}</span>
               </div>
             {{/if}}
             {{#if device.product_type_desc}}
               <div>
-                <span class='p-key'>Host Type:</span>
-                <span class='p-value'>{{device.product_type_desc}}</span>
+                <span class="p-key">Host Type:</span>
+                <span class="p-value">{{device.product_type_desc}}</span>
               </div>
             {{/if}}
             {{#if device.system_manufacturer}}
               <div>
-                <span class='p-key'>Manufacturer:</span>
-                <span class='p-value'>{{device.system_manufacturer}}</span>
+                <span class="p-key">Manufacturer:</span>
+                <span class="p-value">{{device.system_manufacturer}}</span>
               </div>
             {{/if}}
             {{#if device.system_product_name}}
               <div>
-                <span class='p-key'>Model:</span>
-                <span class='p-value'>{{device.system_product_name}}</span>
+                <span class="p-key">Model:</span>
+                <span class="p-value">{{device.system_product_name}}</span>
               </div>
             {{/if}}
             {{#if device.os_version}}
               <div>
-                <span class='p-key'>OS Version:</span>
-                <span class='p-value'>{{device.os_version}}</span>
+                <span class="p-key">OS Version:</span>
+                <span class="p-value">{{device.os_version}}</span>
               </div>
             {{/if}}
             {{#if device.first_seen}}
               <div>
-                <span class='p-key'>First Seen:</span>
-                <span class='p-value'>{{moment-format
+                <span class="p-key">First Seen:</span>
+                <span class="p-value">{{moment-format
                     device.first_seen
                     timeZone=timezone
                   }}</span>
@@ -341,76 +456,82 @@
             {{/if}}
             {{#if device.last_seen}}
               <div>
-                <span class='p-key'>Last Seen:</span>
-                <span class='p-value'>{{moment-format
+                <span class="p-key">Last Seen:</span>
+                <span class="p-value">{{moment-format
                     device.last_seen
                     timeZone=timezone
                   }}</span>
               </div>
             {{/if}}
             {{#each device.policies as |policy|}}
-              {{#if (eq policy.policy_type 'prevention')}}
+              {{#if (eq policy.policy_type "prevention")}}
                 <div>
-                  <span class='p-key'>Prevention Policy Applied:</span>
-                  <span class='p-value'>{{policy.applied}}</span>
+                  <span class="p-key">Prevention Policy Applied:</span>
+                  <span class="p-value">{{policy.applied}}</span>
                 </div>
               {{/if}}
             {{/each}}
 
             {{#if device.status}}
-              <div class='mt-1'>
-                <span class='p-key'>Containment Status:</span>
-                <span class='p-value'>{{titleize
+              <div class="mt-1">
+                <span class="p-key">Containment Status:</span>
+                <span class="p-value">{{titleize
                     (humanize (dasherize device.status))
                   }}</span>
               </div>
             {{/if}}
 
             {{#if block.userOptions.allowContainment}}
-              {{#if (eq device.status 'normal')}}
+              {{#if (eq device.status "normal")}}
                 <button
-                  {{action 'toggleShowModal' device index}}
-                  class='p-btn btn btn-secondary mt-1'
-                  disabled={{or (get getAndUpdateDeviceStateIsRunning index) device.__modalOpen}}
+                  {{action "toggleShowModal" device index}}
+                  class="p-btn btn btn-secondary mt-1"
+                  disabled={{or
+                    (get getAndUpdateDeviceStateIsRunning index)
+                    device.__modalOpen
+                  }}
                 >
                   {{#if (get getAndUpdateDeviceStateIsRunning index)}}
-                    {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+                    {{fa-icon "spinner-third" fixedWidth=true spin=true}}
                   {{/if}}
                   Network Contain
                 </button>
-              {{else if (eq device.status 'contained')}}
+              {{else if (eq device.status "contained")}}
                 <button
-                  {{action 'toggleShowModal' device index}}
-                  class='p-btn btn btn-secondary mt-1'
-                  disabled={{or (get getAndUpdateDeviceStateIsRunning index) device.__modalOpen}}
+                  {{action "toggleShowModal" device index}}
+                  class="p-btn btn btn-secondary mt-1"
+                  disabled={{or
+                    (get getAndUpdateDeviceStateIsRunning index)
+                    device.__modalOpen
+                  }}
                 >
                   {{#if (get getAndUpdateDeviceStateIsRunning index)}}
-                    {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+                    {{fa-icon "spinner-third" fixedWidth=true spin=true}}
                   {{/if}}
                   Lift Containment
                 </button>
               {{else}}
-                <div class='d-flex flex-row justify-content-between align-items-center'>
+                <div class="d-flex flex-row justify-content-between align-items-center">
                   <button
-                    {{action 'getAndUpdateDeviceState' device index}}
-                    class='p-btn btn btn-secondary mt-1'
+                    {{action "getAndUpdateDeviceState" device index}}
+                    class="p-btn btn btn-secondary mt-1"
                     disabled={{get getAndUpdateDeviceStateIsRunning index}}
                   >
                     {{#if (get getAndUpdateDeviceStateIsRunning index)}}
-                      {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+                      {{fa-icon "spinner-third" fixedWidth=true spin=true}}
                     {{/if}}
-                    Check{{if (get getAndUpdateDeviceStateIsRunning index) 'ing'}}
+                    Check{{if (get getAndUpdateDeviceStateIsRunning index) "ing"}}
                     Containment Status
                   </button>
                 </div>
                 {{#if (get getAndUpdateDeviceStateMessages index)}}
-                  <div class='alert alert-info mt-1'>
+                  <div class="alert alert-info mt-1">
                     {{get getAndUpdateDeviceStateMessages index}}
                   </div>
                 {{/if}}
               {{/if}}
               {{#if (get getAndUpdateDeviceStateErrorMessages index)}}
-                <div class='alert alert-danger mt-1'>
+                <div class="alert alert-danger mt-1">
                   {{get getAndUpdateDeviceStateErrorMessages index}}
                 </div>
               {{/if}}
@@ -418,24 +539,27 @@
           </div>
 
           {{#if device.__modalOpen}}
-            <div class='containment-modal'>
-              <div class='modal-container'>
-                <div class='modal-text'>
+            <div class="containment-modal">
+              <div class="modal-container">
+                <div class="modal-text">
                   <span>
                     Are you sure you want to
-                    {{if (eq device.status 'contained') 'lift containment on' 'contain'}}
+                    {{if (eq device.status "contained") "lift containment on" "contain"}}
                     this host:
-                    <span class='bold'>{{device.hostname}}</span>?
+                    <span class="bold">{{device.hostname}}</span>?
                   </span>
                 </div>
-                <div class='modal-options'>
+                <div class="modal-options">
                   <div>
-                    <button {{action 'toggleShowModal' device index}} class='p-btn btn btn-light'>Cancel</button>
+                    <button
+                      {{action "toggleShowModal" device index}}
+                      class="p-btn btn btn-light"
+                    >Cancel</button>
                   </div>
                   <div>
                     <button
-                      {{action 'confirmContainmentOrLiftContainment'}}
-                      class='p-btn btn btn-secondary'
+                      {{action "confirmContainmentOrLiftContainment"}}
+                      class="p-btn btn btn-secondary"
                     >Confirm</button>
                   </div>
                 </div>

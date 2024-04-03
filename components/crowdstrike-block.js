@@ -3,34 +3,10 @@ polarity.export = PolarityComponent.extend({
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
-  detectionProperties: [
-    'status',
-    'max_confidence',
-    'max_severity',
-    'first_behavior',
-    'last_behavior'
-  ],
   activeTab: 'crowdstrike',
-  compactDeviceProperties: [
-    'platform_name',
-    'os_version',
-    'product_type_desc',
-    'system_manufacturer',
-    'hostname',
-    'machine_domain'
-  ],
   containOrUncontainMessages: {},
   containOrUncontainErrorMessages: {},
   containOrUncontainIsRunning: {},
-  compactBehaviorProperties: [
-    'scenario',
-    'objective',
-    'filename',
-    'tactic',
-    'technique',
-    'severity',
-    'confidence'
-  ],
   containmentStatus: '',
   isRunning: false,
   modalDevice: {},
@@ -88,11 +64,6 @@ polarity.export = PolarityComponent.extend({
     showAllDeviceInfo: function (detectionIndex) {
       this.toggleProperty(
         'details.events.detections.' + detectionIndex + '.__showAllDeviceInfo'
-      );
-    },
-    showAllBehaviorInfo: function (detectionIndex) {
-      this.toggleProperty(
-        'details.events.detections.' + detectionIndex + '.__showAllBehaviorInfo'
       );
     },
     toggleShowModal: function (device, index) {

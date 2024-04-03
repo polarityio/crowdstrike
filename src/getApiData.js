@@ -1,7 +1,7 @@
 const _ = require('lodash');
-const { getDetects } = require('./detects');
+const getAlerts = require('./getAlerts');
 const { getDevices } = require('./devices');
-const { getIocIndicators } = require('./iocs');
+const getIocIndicators = require('./iocs');
 const {
   polarityResponse,
   retryablePolarityResponse,
@@ -12,8 +12,8 @@ const { getLogger } = require('./logger');
 const getApiData = async (entity, options) => {
   const Logger = getLogger();
   try {
-    const detectionData = await getDetects(entity, options);
-    Logger.trace({ detectionData }, 'detectionData API data');
+    const alertData = await getAlerts(entity, options);
+    Logger.trace({ alertData }, 'alertData API data');
 
     const deviceData = await getDevices(entity, options);
     Logger.trace({ deviceData }, 'devices API data');
@@ -25,13 +25,11 @@ const getApiData = async (entity, options) => {
       Logger.trace({ iocData }, 'IOC API data');
     }
 
-    const apiData = {
+    return {
       hosts: deviceData,
-      events: detectionData,
+      events: alertData,
       iocs: iocData
     };
-
-    return apiData;
   } catch (error) {
     throw error;
   }
