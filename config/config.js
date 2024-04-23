@@ -226,6 +226,10 @@ module.exports = {
         {
           value: 'new',
           display: 'New'
+        },
+        {
+          value: 'closed',
+          display: 'Closed'
         }
       ],
       multiple: true,
