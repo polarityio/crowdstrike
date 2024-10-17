@@ -6,6 +6,12 @@ const { containHost } = require('./src/containHost');
 const { getAndUpdateDeviceState } = require('./src/devices');
 const { setLogger } = require('./src/logger');
 const { logToken } = require('./src/tokenCache');
+const {
+  maybeCacheRealTimeResponseScripts,
+  getRtrSession,
+  deleteRtrSession,
+  runScript
+} = require('./src/realTimeResponse');
 
 let limiter = null;
 let Logger;
@@ -27,7 +33,10 @@ const _setupLimiter = (options) => {
 const doLookup = async (entities, options, callback) => {
   if (!limiter) _setupLimiter(options);
 
+  Logger.trace({ entities, options }, 'doLookup');
+
   try {
+    await maybeCacheRealTimeResponseScripts(options);
     const lookupResults = await Promise.all(
       map(async (entity) => await buildResponse(entity, options), entities)
     );
@@ -45,27 +54,75 @@ const onMessage = async (payload, options, callback) => {
   const data = payload.data;
 
   switch (payload.action) {
+    case 'GET_RTR_SESSION':
+      try {
+        const { deviceId } = payload;
+        const sessionId = await getRtrSession(deviceId, options);
+        Logger.trace({ sessionId }, 'Retrieved RTR Session Id');
+        callback(null, {
+          sessionId
+        });
+      } catch (error) {
+        const err = parseErrorToReadableJSON(error);
+        Logger.error(err, 'onMessage GET_RTR_SESSION Error');
+        callback(err);
+      }
+      break;
+    case 'DELETE_RTR_SESSION':
+      try {
+        const { sessionId } = payload;
+        await deleteRtrSession(sessionId, options);
+        callback(null, {
+          disconnected: true
+        });
+      } catch (error) {
+        const err = parseErrorToReadableJSON(error);
+        Logger.error(err, 'onMessage GET_RTR_SESSION Error');
+        callback(err);
+        return;
+      }
+      break;
+    case 'RUN_SCRIPT':
+      try {
+        const { sessionId, deviceId, baseCommand, commandString } = payload;
+        const cloudRequestId = await runScript(
+          sessionId,
+          deviceId,
+          baseCommand,
+          commandString,
+          options
+        );
+        Logger.trace({ cloudRequestId }, 'Retrieved cloudRequestId from RUN_SCRIPT');
+        callback(null, {
+          cloudRequestId
+        });
+      } catch (error) {
+        const err = parseErrorToReadableJSON(error);
+        Logger.error(err, 'onMessage RUN_SCRIPT Error');
+        callback(err);
+      }
+      break;
     case 'containOrUncontain':
       try {
         const containedHost = await containHost(data, options);
-        return callback(null, containedHost);
+        callback(null, containedHost);
       } catch (containError) {
         const err = parseErrorToReadableJSON(containError);
         Logger.error(err, 'onMessage containOrUncontain Error');
         callback(err);
-        return;
       }
+      break;
     case 'getAndUpdateDeviceState':
       try {
         const deviceId = payload.data.id;
         const deviceStatus = await getAndUpdateDeviceState(deviceId, options);
-        return callback(null, { deviceStatus });
+        callback(null, { deviceStatus });
       } catch (deviceStateError) {
         const err = parseErrorToReadableJSON(deviceStateError);
         Logger.error(err, 'onMessage getAndUpdateDeviceState Error');
         callback(err);
-        return;
       }
+      break;
     case 'RETRY_LOOKUP': {
       doLookup([payload.entity], options, (err, lookupResults) => {
         if (err) {
@@ -80,6 +137,7 @@ const onMessage = async (payload, options, callback) => {
           );
         }
       });
+      break;
     }
     default:
       return;

@@ -17,11 +17,13 @@ Before using the Polarity CrowdStrike Integration you will need to create a Clie
 4. A dialog will appear, enter the name of the integration (e.g. `Polarity`) and a description (optional).
 5. Polarity will need the following permissions:
    
-| Scope | Permission | Description |
-| ------ | ------ | ------ |
-| Detections | Read | Required to search detections |
-| Hosts | Read, Write | Read access is required to search hosts by IP Address. Write permission is required if the "Allow Containment Status Change" option is checked |
-| IOC Manager APIs | Read | Required if the "Search CrowdStrike IOCs" option is enabled | 
+| Scope            | Permission  | Description                                                                                                                                    |
+|------------------|-------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| Alerts           | Read        | Required to search alerts                                                                                                                      |
+| Detections       | Read        | Required to search detections                                                                                                                  |
+| Hosts            | Read, Write | Read access is required to search hosts by IP Address. Write permission is required if the "Allow Containment Status Change" option is checked |
+| IOC Manager APIs | Read        | Required if the "Search CrowdStrike IOCs" option is enabled                                                                                    | 
+| Workflow         | Read, Write | Required for execution of On-Demand Playbooks                                                                                                  | 
 
 6. Click `Add`. Record the Client ID and Client Secret (Client secret will only be shown once for security purpose, so make sure to store it in a secure place).
 

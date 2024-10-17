@@ -1,3 +1,12 @@
+@red: #FF4559;
+@green: #7bc942;
+@dark-green: #63a830;
+@border-color: rgb(222, 222, 222);
+@border-color: #dee2e6;
+@danger-color: #ff4559;
+@success-color: #5cb85c;
+@warning-color: #ff8f00;
+
 pre {
   overflow-y: scroll;
   overflow-x: hidden;
@@ -10,17 +19,18 @@ table {
   th {
     display: none;
   }
-  td:first-child{
+
+  td:first-child {
     min-width: 150px;
   }
 }
 
-.external-link-icon{
+.external-link-icon {
   font-size: 9px;
   margin-bottom: 1px;
 }
 
-h1{
+h1 {
   word-break: break-all;
 }
 
@@ -33,7 +43,8 @@ h1{
   padding-bottom: 3px;
 }
 
-.p-block{
+.p-block {
+  word-wrap: break-word;
   word-break: break-word;
 }
 
@@ -119,6 +130,7 @@ button {
       display: flex;
       justify-content: center;
       margin-bottom: 0px;
+
       & > * {
         margin-right: 5px;
       }
@@ -129,6 +141,7 @@ button {
 .bold {
   font-weight: bold;
 }
+
 .p-link {
   border-radius: 3px;
   padding: 2px;
@@ -141,11 +154,287 @@ button {
 .p-title {
   font-weight: 500;
 }
+
 h2.p-title {
   font-size: 13px;
 }
+
 h3.p-title {
   color: #3c3c3c;
   font-size: 12px;
   font-style: italic;
+}
+
+// IFTA STYLING
+
+.ui-description {
+  margin: -10px 0 10px 3px;
+
+  &.error {
+    color: @red;
+  }
+}
+
+.info-bar {
+  display: flex;
+  flex-direction: column;
+  border-radius: 3px;
+  border: 1px solid #eee;
+
+  .info-bar-row {
+    display: flex;
+    border-bottom: 1px dashed #eee;
+
+    &.even-width {
+      justify-content: space-between;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .info-bar-pill {
+    display: inline-block;
+
+    width: 33%;
+
+    &.two-wide {
+      width: 50%;
+    }
+
+    &.three-wide {
+      width: 33%;
+    }
+
+    padding: 3px 5px 3px 5px;
+
+    .info-bar-key {
+      width: 100%;
+      display: inline-block;
+      font-size: 10px;
+    }
+
+    .info-bar-value {
+      display: inline-block;
+      width: 100%;
+      font-weight: 500;
+    }
+  }
+}
+
+.p-red {
+  color: @danger-color;
+}
+
+.p-yellow {
+  color: @warning-color;
+}
+
+.p-green {
+  color: @success-color;
+}
+
+.rtr {
+  .console {
+    height: 250px;
+    border: 1px solid @border-color;
+    padding: 5px;
+    border-radius: 4px;
+    resize: vertical;
+    font-family: Monaco, monospace;
+    overflow-y: scroll;
+    background-color: #efefef;
+
+    .console-message {
+      &.system {
+        font-style: italic;
+      }
+    }
+    
+  }
+
+  .fa-rotate-45 {
+    transform: rotate(45deg);
+  }
+
+  .connect-button {
+    width: 100px;
+  }
+}
+
+.copy-btn {
+  font-size: 12px;
+  padding: 0px;
+  height: 20px;
+  color: #b6b6b6;
+
+  &:active {
+    color: darken(#b6b6b6, 5%);
+  }
+
+  &:hover {
+    color: darken(#b6b6b6, 5%);
+  }
+}
+
+.card-header {
+  padding: 5px 10px 5px 10px;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+}
+
+.card-body {
+  padding: 0px;
+
+  .script-container {
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+
+    &:last-child {
+      border-bottom: 0px;
+    }
+
+    .script-name {
+      font-weight: 500;
+    }
+  }
+}
+
+.input-container {
+  width: 100%;
+  position: relative;
+
+  &.text-area-container {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    z-index: 1;
+
+    &:focus-within {
+      -webkit-appearance: none;
+      outline: none;
+      color: #000000;
+      border-color: @green;
+      box-shadow: 0 0 0 0.2rem rgba(123, 201, 66, 0.25);
+    }
+
+    &.error {
+      border-color: @red;
+
+      &:focus-within {
+        border-color: @green !important;
+      }
+    }
+
+    textarea, select {
+      margin: 0px 10px 10px 10px;
+      border: none;
+      outline: none;
+      box-shadow: none;
+      padding: 0px;
+      width: calc(100% - 20px);
+
+      &.ifta-field:focus {
+        -webkit-appearance: none;
+        outline: none;
+        box-shadow: none;
+      }
+    }
+
+    label {
+      padding: 3px 10px 5px;
+      margin: 0px;
+    }
+  }
+
+  label {
+    display: block;
+
+    .required {
+      color: @red;
+    }
+  }
+
+  textarea::placeholder, input::placeholder {
+    color: #dfdfdf;
+  }
+
+  textarea:focus::placeholder, input:focus::placeholder {
+    color: transparent;
+  }
+
+  input {
+    cursor: text;
+  }
+
+  button {
+    height: 38px;
+    border: 1px solid #ccc;
+    line-height: 12px;
+    height: 38px;
+    margin: 0 0 15px;
+    border-radius: 0px 4px 4px 0px;
+  }
+
+  .ifta-label {
+    margin-bottom: -15px;
+    z-index: 1;
+    position: relative;
+    padding: 0px 10px 0 10px;
+    pointer-events: none;
+  }
+
+  .ifta-field {
+    border: 0;
+    border-radius: 6px;
+    padding: 15px 10px 5px;
+    margin: 0 0 15px;
+    width: 100%;
+    border: 1px solid #ccc;
+    line-height: 12px;
+    height: 38px;
+
+    &.with-button {
+      border-radius: 4px 0px 0px 4px;
+    }
+
+    &.no-label {
+      padding: 5px 10px 5px;
+    }
+
+    &.error {
+      border-color: @red;
+    }
+  }
+
+  .ifta-field:focus {
+    -webkit-appearance: none;
+    outline: none;
+    color: #000000;
+    border-color: @green;
+    box-shadow: 0 0 0 0.2rem rgba(123, 201, 66, 0.25);
+  }
+
+  select.ifta-field {
+    -webkit-appearance: none;
+    outline: none;
+    line-height: 16px;
+  }
+
+  &:focus-within label {
+    color: @dark-green !important;
+  }
+
+  .select-arrow {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+  }
+
+  input:disabled, select:disabled, textarea:disabled, &.text-area-container.disabled {
+    background-color: #f6f6f3 !important;
+  }
 }

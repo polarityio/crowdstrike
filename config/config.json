@@ -29,7 +29,7 @@
     "proxy": ""
   },
   "logging": {
-    "level": "info"
+    "level": "trace"
   },
   "options": [
     {
@@ -81,6 +81,15 @@
       "key": "allowContainment",
       "name": "Allow Containment Status Change",
       "description": "If checked, users will be able to change the Containment Status of Devices via the integration.  The provided API key must have 'Read' and 'Write' access to the 'Hosts' scope for this option to work.  This option must be set to \"Users can view only\".",
+      "default": false,
+      "type": "boolean",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "enableRealTimeResponse",
+      "name": "Enable Real Time Response",
+      "description": "If checked, users will be able to connect to hosts and run custom and Falcon Real Time Response scripts.",
       "default": false,
       "type": "boolean",
       "userCanEdit": false,

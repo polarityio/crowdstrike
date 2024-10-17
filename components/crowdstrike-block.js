@@ -1,5 +1,6 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
+  state: Ember.computed.alias('block._state'),
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
@@ -18,6 +19,18 @@ polarity.export = PolarityComponent.extend({
       this.get('details.hosts.devices').forEach((device, index) => {
         this.doGetAndUpdateDeviceState(device, index);
       });
+    }
+
+    if (!this.get('block._state')) {
+      this.set('block._state', {});
+      this.set('state.rtr', {});
+      this.set('state.rtr.consoleMessages', Ember.A());
+      this.get('state.rtr.consoleMessages').pushObject({
+        type: 'system',
+        value: '/> Not connected to host'
+      });
+      this.set('state.rtr.connectionStatus', 'Disconnected');
+      this.set('state.rtr.isConnected', false);
     }
 
     let array = new Uint32Array(5);
@@ -39,6 +52,95 @@ polarity.export = PolarityComponent.extend({
   actions: {
     changeTab: function (tabName) {
       this.set('activeTab', tabName);
+    },
+    changeScriptTab: function (tabName) {
+      if (this.get('activeScriptTab') === tabName) {
+        this.set('activeScriptTab', '');
+      } else {
+        this.set('activeScriptTab', tabName);
+      }
+    },
+    viewFalconScriptDetails: function (falconScriptIndex) {
+      this.toggleProperty(`details.falconScripts.${falconScriptIndex}.__viewDetails`);
+    },
+    viewCustomScriptDetails: function (customScriptIndex) {
+      this.toggleProperty(`details.customScripts.${customScriptIndex}.__viewDetails`);
+    },
+    // Triggered when the user selects a device in the device drop down of the RTR tab
+    deviceSelected: function () {
+      const selectedDeviceId = this.get('state.rtr.selectedDeviceId');
+      const selectedDevice = this.get('details.hosts.devices').find(
+        (device) => device.device_id === selectedDeviceId
+      );
+      this.set('state.rtr.selectedDevice', selectedDevice);
+    },
+    // Triggered when the user selects a FalconScript to populate into the command input
+    populateFalconScript: function (falconScriptIndex) {
+      const script = this.get(`details.falconScripts.${falconScriptIndex}`);
+      this.set('state.rtr.selectedFalconScriptId', falconScriptIndex);
+      this.set('state.rtr.selectedCustomScriptId', '');
+      this.set(
+        'state.rtr.command',
+        `falconscript -Name=${script.name} -JsonInput=\`\`\`''\`\`\``
+      );
+    },
+    // Triggered when the user selects a CustomScript to populate into the command input
+    populateCustomScript: function (customScriptIndex) {
+      const script = this.get(`details.customScripts.${customScriptIndex}`);
+      this.set('state.rtr.selectedCustomScriptId', customScriptIndex);
+      this.set('state.rtr.selectedFalconScriptId', '');
+      this.set(
+        'state.rtr.command',
+        `customscript -Name=${script.name} -JsonInput=\`\`\`''\`\`\``
+      );
+    },
+    connectToDevice(deviceId) {
+      this.set('state.rtr.isConnecting', true);
+      const payload = {
+        action: 'GET_RTR_SESSION',
+        deviceId
+      };
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          console.info('Connect to Device', result);
+          this.set('state.rtr.sessionId', result.sessionId);
+          this.set('state.rtr.connectionStatus', 'Connected');
+          this.set('state.rtr.isConnected', true);
+        })
+        .catch((err) => {
+          console.error(err);
+          this.set('state.rtr.connectionStatus', 'Disconnected');
+          this.set('state.rtr.isConnected', false);
+        })
+        .finally(() => {
+          this.set('state.rtr.isConnecting', false);
+        });
+    },
+    disconnectFromDevice(sessionId) {
+      if (!sessionId) {
+        console.warn('No session id provided when calling `disconnectFromDevice` action');
+        return;
+      }
+
+      this.set('state.rtr.isDisconnecting', true);
+      const payload = {
+        action: 'DELETE_RTR_SESSION',
+        sessionId
+      };
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          this.set('state.rtr.sessionId', undefined);
+          this.set('state.rtr.connectionStatus', 'Disconnected');
+          this.set('state.rtr.isConnected', false);
+        })
+        .catch((err) => {
+          console.error(err);
+          this.set('state.rtr.connectionStatus', 'Disconnected');
+          this.set('state.rtr.isConnected', false);
+        })
+        .finally(() => {
+          this.set('state.rtr.isDisconnecting', false);
+        });
     },
     retryLookup: function () {
       this.set('running', true);

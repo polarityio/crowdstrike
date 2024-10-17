@@ -69,6 +69,14 @@
             Host Management
           </a>
         </li>
+        <li class="nav-item">
+          <a
+            {{action "changeTab" "rtr"}}
+                  class="nav-link {{if (or (eq activeTab 'rtr') (not activeTab)) 'active'}}"
+          >
+            Real Time Response
+          </a>
+        </li>
       {{/if}}
     </ul>
   {{/unless}}
@@ -569,5 +577,250 @@
         {{/each}}
       </div>
     {{/if}}
+  {{/if}}
+  
+  {{#if (eq activeTab "rtr")}}
+    <div class="rtr">
+      <div class="input-container mt-1 mb-2">
+        <label class="small ifta-label">
+            Hosts
+        </label>
+        <select
+          class="ifta-field m-0"
+          {{on "change" (pipe-action (pick "target.value" (set this "state.rtr.selectedDeviceId"))(action "deviceSelected"))}}
+          disabled={{or state.rtr.isConnected state.rtr.isConnecting}}
+        >
+          <option selected value="">-- Select a Host --</option>
+          {{#each details.hosts.devices as |device|}}
+            <option value="{{device.device_id}}">{{device.hostname}}</option>
+          {{/each}}
+        </select>
+        {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
+        {{#if state.rtr.isConnected}}
+          {{bs-tooltip title="Disconnect before selecting a new host"}}
+        {{/if}}
+      </div>
+
+      <div class="info-bar device-information">
+        <div class="info-bar-row even-width">
+          <div class="info-bar-pill">
+            <span class="info-bar-key">Hostname</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.hostname}}
+              {{else}}
+                No selected host
+              {{/if}}
+            </span>
+          </div>
+          <div class="info-bar-pill">
+            <span class="info-bar-key">Platform</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.platform_name}}
+              {{else}}
+                No selected host
+              {{/if}}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-bar session-information mt-2">
+        <div class="info-bar-row even-width">
+          <div class="info-bar-pill">
+            <span class="info-bar-key">Connection Status</span>
+            <span class="info-bar-value d-flex align-items-center justify-content-start">
+              {{#if state.rtr.isConnected}}
+                {{fa-icon icon="check" fixedWidth=true class="mr-1 p-green"}}
+              {{else}}
+                {{fa-icon icon="times" fixedWidth=true class="mr-1"}}
+              {{/if}}
+              {{state.rtr.connectionStatus}}
+              {{#if state.rtr.isConnected}}
+                {{bs-tooltip title=(concat "Your session id is " state.rtr.sessionId)}}
+              {{/if}}
+            </span>
+          </div>
+          <div class="info-bar-pill">
+            <span class="info-bar-value">
+              <div>
+                {{#if state.rtr.isConnected}}
+                  <button
+                    {{action "disconnectFromDevice" state.rtr.sessionId}}
+                        class="p-btn btn btn-secondary mt-1 connect-button"
+                        disabled={{not state.rtr.selectedDevice}}
+                  >
+                    {{#if (or state.rtr.isConnecting state.rtr.isDisconnecting)}}
+                      {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                    {{else}}
+                      Disconnect
+                    {{/if}}
+                  </button>
+                {{else}}
+                  <button
+                    {{action "connectToDevice" state.rtr.selectedDeviceId}}
+                          class="p-btn btn btn-secondary mt-1 connect-button"
+                          disabled={{not state.rtr.selectedDevice}}
+                  >
+                    {{#if (or state.rtr.isConnecting state.rtr.isDisconnecting)}}
+                      {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                    {{else}}
+                      Connect
+                    {{/if}}
+                  </button>
+                {{/if}}
+                {{#unless state.rtr.selectedDevice}}
+                  {{bs-tooltip title="Select a host"}}
+                {{/unless}}
+              </div>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="console mt-2 d-flex align-items-end justify-content-between">
+        {{#each rtr.state.consoleMessages as | message |}}
+          <div>
+            <span class="console-message {{message.type}}">{{message.value}}</span>
+          </div>  
+        {{/each}}        
+      </div>
+      
+      <div class="input-container mt-2 d-flex align-items-center justify-content-between">
+        {{input
+          class="ifta-field no-label with-button"
+          value=state.rtr.command
+          placeholder="Enter command"
+          disabled=(or state.rtr.isRunning (not state.rtr.isConnected))
+        }}
+        <div>
+          <button type="button" class="p-btn btn btn-sm btn-secondary" disabled={{or state.rtr.isRunning (not state.rtr.isConnected)}}>
+            Run
+          </button>
+          {{#unless state.rtr.isConnected}}
+            {{bs-tooltip title="Select and connect to a host"}}
+          {{/unless}}
+        </div>
+      </div>      
+
+      <div class="accordion mt-2">
+        <div class="card">
+          <div {{action "changeScriptTab" "falconScripts"}} class="card-header d-flex align-items-center justify-content-between">
+            <div>
+              Falcon Scripts
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="mr-2">
+                {{details.falconScripts.length}}
+              </div>
+              {{#if (eq activeScriptTab 'falconScripts')}}
+                {{fa-icon icon="chevron-up" fixedWidth=true}}
+              {{else}}
+                {{fa-icon icon="chevron-down" fixedWidth=true}}
+              {{/if}}
+            </div>
+          </div>
+          <div class="collapse {{if (eq activeScriptTab 'falconScripts') 'show'}}">
+            <div class="card-body">
+              {{#each details.falconScripts as | script falconScriptIndex|}}
+                <div class="script-container">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="script-name" {{action "populateFalconScript" falconScriptIndex}}>
+                      {{#if (eq falconScriptIndex state.rtr.selectedFalconScriptId)}}
+                        {{fa-icon icon="check" fixedWidth=true}}
+                      {{else}}
+                        {{fa-icon icon="arrow-down" fixedWidth=true class="fa-rotate-45"}}  
+                      {{/if}}                       
+                      {{script.name}}
+                      {{bs-tooltip title="Populate command line with script"}}
+                    </div>
+                    <button {{action "viewFalconScriptDetails" falconScriptIndex}} class="btn copy-btn p-action">
+                      {{#if script.__viewDetails}}
+                        {{fa-icon icon="caret-up" fixedWidth=true}}
+                      {{else}}
+                        {{fa-icon icon="caret-down" fixedWidth=true}}
+                      {{/if}}                      
+                    </button>
+                  </div>
+                  {{#if script.__viewDetails}}
+                    <div class="mt-1">
+                      <span class="p-key">Platform:</span>
+                      <span class="p-value">{{script.platform}}</span>
+                    </div>
+                    <div class="mt-1">
+                      <div class="p-key">Description</div>
+                      <div class="p-value p-block">{{script.description}}</div>
+                    </div>
+                    <div class="mt-1">
+                      <div class="p-key">Use Case</div>
+                      <div class="p-value p-block">{{script.use_case}}</div>
+                    </div>
+                  {{/if}}
+                </div>
+              {{/each}}
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div {{action "changeScriptTab" "customScripts"}} class="card-header d-flex align-items-center justify-content-between">
+            <div>
+              Custom Scripts
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="mr-2">
+                {{details.customScripts.length}}
+              </div>
+              {{#if (eq activeScriptTab 'customScripts')}}
+                {{fa-icon icon="chevron-up" fixedWidth=true}}
+              {{else}}
+                {{fa-icon icon="chevron-down" fixedWidth=true}}
+              {{/if}}
+            </div>
+          </div>
+          <div class="collapse {{if (eq activeScriptTab 'customScripts') 'show'}}">
+            <div class="card-body">
+              {{#each details.customScripts as | script customScriptIndex|}}
+                <div class="script-container">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="script-name" {{action "populateCustomScript" customScriptIndex}}>
+                      {{#if (eq customScriptIndex state.rtr.selectedCustomScriptId)}}
+                        {{fa-icon icon="check" fixedWidth=true}}
+                      {{else}}
+                        {{fa-icon icon="arrow-down" fixedWidth=true class="fa-rotate-45"}}
+                      {{/if}}
+                      {{script.name}}
+                      {{bs-tooltip title="Populate command line with script"}}
+                    </div>
+                    <button {{action "viewCustomScriptDetails" customScriptIndex}} class="btn copy-btn p-action">
+                      {{#if script.__viewDetails}}
+                        {{fa-icon icon="caret-up" fixedWidth=true}}
+                      {{else}}
+                        {{fa-icon icon="caret-down" fixedWidth=true}}
+                      {{/if}}
+                    </button>
+                  </div>
+                  {{#if script.__viewDetails}}
+                    <div class="mt-1">
+                      <span class="p-key">Platform:</span>
+                      <span class="p-value">{{script.platform}}</span>
+                    </div>
+                    <div class="mt-1">
+                      <div class="p-key">Description</div>
+                      <div class="p-value p-block">{{script.description}}</div>
+                    </div>
+                    <div class="mt-1">
+                      <div class="p-key">Use Case</div>
+                      <div class="p-value p-block">{{script.use_case}}</div>
+                    </div>
+                  {{/if}}
+                </div>
+              {{/each}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   {{/if}}
 {{/if}}
