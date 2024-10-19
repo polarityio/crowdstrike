@@ -10,7 +10,8 @@ const {
   maybeCacheRealTimeResponseScripts,
   getRtrSession,
   deleteRtrSession,
-  runScript
+  runScript,
+  getRtrResult
 } = require('./src/realTimeResponse');
 
 let limiter = null;
@@ -99,6 +100,30 @@ const onMessage = async (payload, options, callback) => {
       } catch (error) {
         const err = parseErrorToReadableJSON(error);
         Logger.error(err, 'onMessage RUN_SCRIPT Error');
+        callback(err);
+      }
+      break;
+    case 'GET_RTR_RESULT':
+      try {
+        const { cloudRequestId, sequenceId } = payload;
+        const { stdout, stderr, complete, sequenceId: responseSequenceId } = await getRtrResult(
+          cloudRequestId,
+          sequenceId,
+          options
+        );
+        Logger.trace(
+          { stdout, stderr, complete },
+          'Retrieved result from GET_RTR_RESULT'
+        );
+        callback(null, {
+          stdout,
+          stderr,
+          complete,
+          sequenceId: responseSequenceId
+        });
+      } catch (error) {
+        const err = parseErrorToReadableJSON(error);
+        Logger.error(err, 'onMessage GET_RTR_RESULT Error');
         callback(err);
       }
       break;

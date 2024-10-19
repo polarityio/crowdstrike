@@ -6,6 +6,7 @@
 @danger-color: #ff4559;
 @success-color: #5cb85c;
 @warning-color: #ff8f00;
+@console-result-bg: #ececec;
 
 pre {
   overflow-y: scroll;
@@ -235,6 +236,21 @@ h3.p-title {
   color: @success-color;
 }
 
+.footer-gradient {
+  height: 50px;
+  background: white;
+  background: linear-gradient(0deg, @console-result-bg 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  left: 0px;
+  bottom: 0px;
+}
+
+.fixed-bottom {
+  position: absolute;
+  right: 0;
+  z-index: 1030;
+}
+
 .rtr {
   .console {
     height: 250px;
@@ -244,14 +260,55 @@ h3.p-title {
     resize: vertical;
     font-family: Monaco, monospace;
     overflow-y: scroll;
-    background-color: #efefef;
+    background-color: #f8f8f8;
+
+    .console-message-container {
+      position: relative;
+      margin-bottom: 5px;
+      
+      .expand-button {
+        position:absolute;
+        bottom: 0px;
+        z-index: 1300;
+        width: 80px;
+        left: 0;
+        right: 0;
+        margin-inline: auto;
+        width: fit-content;
+        margin-bottom: 5px;
+      }
+    }
 
     .console-message {
       &.system {
         font-style: italic;
       }
+      
+      &.command{
+        color: blue;
+      }
+
+      &.result {
+        background-color: @console-result-bg;
+        padding: 5px;
+        border-radius: 4px;
+        overflow: auto;
+        
+        &.expanded {
+          padding-bottom: 40px;
+        }
+        
+        &.collapsed {
+          max-height: 150px;
+          overflow-y: hidden;
+        }
+        
+        &.pre {
+          white-space: pre-wrap;
+        }
+      }
     }
-    
+
   }
 
   .fa-rotate-45 {
@@ -260,6 +317,10 @@ h3.p-title {
 
   .connect-button {
     width: 100px;
+  }
+
+  .run-button {
+    width: 50px;
   }
 }
 

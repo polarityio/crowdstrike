@@ -232,6 +232,45 @@ const getCachedCustomScripts = () => {
   return cachedCustomScripts;
 };
 
+const getRtrResult = async (cloudRequestId, sequenceId, options) => {
+  const Logger = getLogger();
+
+  const requestOptions = {
+    method: 'GET',
+    uri: `${options.url}/real-time-response/entities/admin-command/v1`,
+    qs: {
+      cloud_request_id: cloudRequestId,
+      sequence_id: sequenceId
+    },
+    json: true
+  };
+
+  const { body } = await authenticatedRequest(requestOptions, options);
+
+  if (Array.isArray(body.errors) && body.errors.length > 0) {
+    // handle possible error
+    Logger.error({ errors: body.errors }, 'Error encountered in runScript');
+    throw new Error('Unexpected response from getRtrResult.');
+  } else if (
+    Array.isArray(body.resources) &&
+    body.resources.length > 0 &&
+    typeof body.resources[0].stdout === 'string' &&
+    typeof body.resources[0].stderr === 'string' &&
+    typeof body.resources[0].complete === 'boolean'
+  ) {
+    return {
+      stdout: body.resources[0].stdout,
+      stderr: body.resources[0].stderr,
+      complete: body.resources[0].complete,
+      sequenceId: body.resources[0].sequence_id
+    };
+  } else {
+    // some other failure
+    Logger.error({ body }, 'getRtrResult invalid response body received');
+    throw new Error('Unexpected response from getRtrResult');
+  }
+};
+
 const refreshRtrSession = async (options) => {};
 
 const deleteRtrSession = async (sessionId, options) => {
@@ -272,7 +311,7 @@ module.exports = {
   runScript,
   refreshRtrSession,
   deleteRtrSession,
-  //getRtrResult,
+  getRtrResult,
   maybeCacheRealTimeResponseScripts,
   getCachedFalconScripts,
   getCachedCustomScripts

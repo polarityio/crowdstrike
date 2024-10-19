@@ -679,10 +679,50 @@
         </div>
       </div>
       
-      <div class="console mt-2 d-flex align-items-end justify-content-between">
-        {{#each rtr.state.consoleMessages as | message |}}
-          <div>
-            <span class="console-message {{message.type}}">{{message.value}}</span>
+      <div class="console mt-2 d-flex flex-column-reverse">
+        {{#each state.rtr.consoleMessages as | message |}}
+          <div class="console-message-container">
+            {{#if (and (eq message.type "result")(not (is-empty message.data)))}}
+              <div class="console-message result {{if message.isCollapsed "collapsed" "expanded"}}">
+                <div class="mb-2">
+                  Results: {{message.data.result.length}}
+                </div>
+                {{#each message.data.result as | dataResult |}}
+                  <div class="mb-2">
+                    {{#each-in dataResult as | key value |}}
+                      <div>
+                        <span class="p-key">{{key}}:</span>
+                        <span class="p-value">{{value}}</span>
+                      </div>
+                    {{/each-in}}
+                  </div>
+                {{/each}}
+                <button
+                  {{action (toggle "isCollapsed" message)}}
+                        class="p-btn btn btn-secondary mt-1 expand-button"
+                        disabled={{not state.rtr.selectedDevice}}
+                >
+                  {{#if message.isCollapsed}}
+                    Expand
+                  {{else}}
+                    Collapse
+                  {{/if}}
+                </button>
+              </div>
+
+              {{#if message.isCollapsed}}
+                <div class="footer-gradient fixed-bottom"></div>
+              {{/if}}
+            {{else if (eq message.type "result")}}
+              <div class="console-message result pre">{{message.message}}</div>
+            {{else}}
+              <span class="console-message {{message.type}}">
+                {{#if (eq message.type "system")}}
+                  />
+                {{/if}}
+                {{message.message}}
+              </span>  
+            {{/if}}
           </div>  
         {{/each}}        
       </div>
@@ -692,11 +732,20 @@
           class="ifta-field no-label with-button"
           value=state.rtr.command
           placeholder="Enter command"
-          disabled=(or state.rtr.isRunning (not state.rtr.isConnected))
+          disabled=(or state.rtr.isRunningCommand (not state.rtr.isConnected))
         }}
         <div>
-          <button type="button" class="p-btn btn btn-sm btn-secondary" disabled={{or state.rtr.isRunning (not state.rtr.isConnected)}}>
-            Run
+          <button 
+            {{action "runScript" state.rtr.sessionId state.rtr.selectedDeviceId state.rtr.command}} 
+            type="button" 
+            class="p-btn btn btn-sm btn-secondary run-button" 
+            disabled={{or state.rtr.isRunningCommand (not state.rtr.isConnected)}}
+          >
+            {{#if state.rtr.isRunningCommand}}
+              {{fa-icon icon="spinner-third" spin=true}}
+            {{else}}
+              Run  
+            {{/if}}            
           </button>
           {{#unless state.rtr.isConnected}}
             {{bs-tooltip title="Select and connect to a host"}}

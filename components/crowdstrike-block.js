@@ -25,10 +25,7 @@ polarity.export = PolarityComponent.extend({
       this.set('block._state', {});
       this.set('state.rtr', {});
       this.set('state.rtr.consoleMessages', Ember.A());
-      this.get('state.rtr.consoleMessages').pushObject({
-        type: 'system',
-        value: '/> Not connected to host'
-      });
+      this.addConsoleMessage('system', 'Not connected to host');
       this.set('state.rtr.connectionStatus', 'Disconnected');
       this.set('state.rtr.isConnected', false);
     }
@@ -141,6 +138,52 @@ polarity.export = PolarityComponent.extend({
         .finally(() => {
           this.set('state.rtr.isDisconnecting', false);
         });
+    },
+    runScript: async function (sessionId, deviceId, commandString) {
+      if (!sessionId) {
+        console.warn('No session id provided when calling `runScript` action');
+        return;
+      }
+
+      if (!deviceId) {
+        console.warn('No device id available when calling `runScript` action');
+      }
+
+      if (!commandString) {
+        console.warn('No command string provided when calling `runScript` action');
+      }
+
+      this.set('state.rtr.isRunningCommand', true);
+
+      this.addConsoleMessage('command', commandString);
+
+      try {
+        const cloudRequestId = await this.getCloudRequestId(
+          sessionId,
+          deviceId,
+          commandString
+        );
+
+        this.addConsoleMessage(
+          'system',
+          `Command initiated.  Cloud Request Id: ${cloudRequestId}`
+        );
+
+        let result = await this.getRtrResult(cloudRequestId);
+
+        console.info('In runScript after getRtrResult Completes', result);
+        let parsedResult;
+        try {
+          parsedResult = JSON.parse(result.stdout);
+          this.addConsoleMessage('result', result.stdout, parsedResult);
+        } catch (parseError) {
+          this.addConsoleMessage('result', result.stdout);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        this.set('state.rtr.isRunningCommand', false);
+      }
     },
     retryLookup: function () {
       this.set('running', true);
@@ -300,5 +343,87 @@ polarity.export = PolarityComponent.extend({
           this.get('block').notifyPropertyChange('data');
         }, 5000);
       });
+  },
+  getCloudRequestId: function (sessionId, deviceId, commandString) {
+    return new Ember.RSVP.Promise((resolve, reject) => {
+      if (!sessionId) {
+        return reject('No session id provided when calling `runScript` action');
+      }
+
+      if (!deviceId) {
+        return reject('No device id available when calling `runScript` action');
+      }
+
+      if (!commandString) {
+        return reject('No command string provided when calling `runScript` action');
+      }
+
+      this.set('state.rtr.isRunningCommand', true);
+
+      const payload = {
+        action: 'RUN_SCRIPT',
+        sessionId,
+        deviceId,
+        baseCommand: 'falconScript',
+        commandString
+      };
+
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          resolve(result.cloudRequestId);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  getRtrResult: async function (
+    cloudRequestId,
+    stdout = '',
+    stderr = '',
+    sequenceId = 0
+  ) {
+    const result = await this.pollRtrResult(cloudRequestId, sequenceId);
+
+    stdout += result.stdout;
+    stderr += result.stderr;
+
+    if (result.complete) {
+      return {
+        stdout,
+        stderr
+      };
+    }
+
+    // wait 2 seconds, then repeat our request
+    await this.sleep(2000);
+    return await this.getRtrResult(cloudRequestId, stdout, stderr, result.sequenceId);
+  },
+  pollRtrResult: async function (cloudRequestId, sequenceId) {
+    if (!cloudRequestId) {
+      throw new Error('No cloud request id provided when calling `pollRtrResult` action');
+    }
+
+    const payload = {
+      action: 'GET_RTR_RESULT',
+      sequenceId,
+      cloudRequestId
+    };
+
+    const result = await this.sendIntegrationMessage(payload);
+
+    return result;
+  },
+  sleep: async function (ms) {
+    return new Promise((res) => Ember.run.later(res, ms));
+  },
+  addConsoleMessage(type, message, data) {
+    const payload = {
+      type,
+      message,
+      data,
+      isCollapsed: true
+    };
+    this.get('state.rtr.consoleMessages').unshiftObject(payload);
   }
 });
