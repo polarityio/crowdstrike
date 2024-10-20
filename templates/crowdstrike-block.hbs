@@ -619,7 +619,95 @@
               {{#if state.rtr.selectedDevice}}
                 {{state.rtr.selectedDevice.platform_name}}
               {{else}}
-                No selected host
+                --
+              {{/if}}
+            </span>
+          </div>
+        </div>
+        <div class="info-bar-row even-width">
+          <div class="info-bar-pill">
+            <span class="info-bar-key">Host Type</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.product_type_desc}}
+              {{else}}
+                --
+              {{/if}}
+            </span>
+          </div>
+          <div class="info-bar-pill">
+            <span class="info-bar-key">OS Version</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.os_version}}
+              {{else}}
+                --
+              {{/if}}
+            </span>
+          </div>
+        </div>
+        <div class="info-bar-row even-width">
+          <div class="info-bar-pill">
+            <span class="info-bar-key">First Seen</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.first_seen}}
+              {{else}}
+                --
+              {{/if}}
+            </span>
+          </div>
+          <div class="info-bar-pill">
+            <span class="info-bar-key">Last Seen</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.last_seen}}
+              {{else}}
+                --
+              {{/if}}
+            </span>
+          </div>
+        </div>
+        <div class="info-bar-row even-width">
+          <div class="info-bar-pill">
+            <span class="info-bar-key">Domain</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.machine_domain}}
+              {{else}}
+                --
+              {{/if}}
+            </span>
+          </div>
+          <div class="info-bar-pill">
+            <span class="info-bar-key">Local IP</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.local_ip}}
+              {{else}}
+                --
+              {{/if}}
+            </span>
+          </div>
+        </div>
+        <div class="info-bar-row even-width">
+          <div class="info-bar-pill">
+            <span class="info-bar-key">Manufacturer</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.system_manufacturer}}
+              {{else}}
+                --
+              {{/if}}
+            </span>
+          </div>
+          <div class="info-bar-pill">
+            <span class="info-bar-key">Model</span>
+            <span class="info-bar-value">
+              {{#if state.rtr.selectedDevice}}
+                {{state.rtr.selectedDevice.system_product_name}}
+              {{else}}
+                --
               {{/if}}
             </span>
           </div>
@@ -680,6 +768,14 @@
       </div>
       
       <div class="console mt-2 d-flex flex-column-reverse">
+        {{#if state.rtr.showConsolePwd}}
+          <div class="console-message command">{{state.rtr.pwd}}</div>
+        {{/if}}
+        {{#if state.rtr.isRunningCommand}}
+          <div class="console-message system p-footnote">
+            {{fa-icon icon="spinner-third" spin=true fixedWidth=true}} {{state.rtr.commandStatus}}
+          </div>
+        {{/if}}
         {{#each state.rtr.consoleMessages as | message |}}
           <div class="console-message-container">
             {{#if (and (eq message.type "result")(not (is-empty message.data)))}}
@@ -691,8 +787,22 @@
                   <div class="mb-2">
                     {{#each-in dataResult as | key value |}}
                       <div>
-                        <span class="p-key">{{key}}:</span>
-                        <span class="p-value">{{value}}</span>
+                        {{#if (is-array value)}}
+                          <div class="p-key">{{key}}</div>
+                          <div class="p-key">------------</div>
+                          {{#each value as | nestedValue |}}
+                            {{#each-in nestedValue as | subKey subValue|}}
+                              <div>
+                                <span class="p-key">{{subKey}}:</span>
+                                <span class="p-value">{{subValue}}</span>
+                              </div>
+                            {{/each-in}}
+                            <div class="mb-3"></div>
+                          {{/each}} 
+                        {{else}}
+                          <span class="p-key">{{key}}:</span>
+                          <span class="p-value">{{value}}</span>
+                        {{/if}}                        
                       </div>
                     {{/each-in}}
                   </div>
@@ -715,16 +825,18 @@
               {{/if}}
             {{else if (eq message.type "result")}}
               <div class="console-message result pre">{{message.message}}</div>
-            {{else}}
+            {{else if (eq message.type "system")}}
               <span class="console-message {{message.type}}">
                 {{#if (eq message.type "system")}}
                   />
                 {{/if}}
                 {{message.message}}
               </span>  
+            {{else if (eq message.type "command")}}
+              <div class="console-message command">{{message.message}}</div>
             {{/if}}
           </div>  
-        {{/each}}        
+        {{/each}}
       </div>
       
       <div class="input-container mt-2 d-flex align-items-center justify-content-between">

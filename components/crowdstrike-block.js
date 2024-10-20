@@ -25,7 +25,6 @@ polarity.export = PolarityComponent.extend({
       this.set('block._state', {});
       this.set('state.rtr', {});
       this.set('state.rtr.consoleMessages', Ember.A());
-      this.addConsoleMessage('system', 'Not connected to host');
       this.set('state.rtr.connectionStatus', 'Disconnected');
       this.set('state.rtr.isConnected', false);
     }
@@ -101,8 +100,10 @@ polarity.export = PolarityComponent.extend({
         .then((result) => {
           console.info('Connect to Device', result);
           this.set('state.rtr.sessionId', result.sessionId);
+          this.set('state.rtr.pwd', result.pwd);
           this.set('state.rtr.connectionStatus', 'Connected');
           this.set('state.rtr.isConnected', true);
+          this.set('state.rtr.showConsolePwd', true);
         })
         .catch((err) => {
           console.error(err);
@@ -154,8 +155,11 @@ polarity.export = PolarityComponent.extend({
       }
 
       this.set('state.rtr.isRunningCommand', true);
+      this.set('state.rtr.commandStatus', 'Sending command');
 
-      this.addConsoleMessage('command', commandString);
+      this.set('state.rtr.showConsolePwd', false);
+      this.set('state.rtr.command', '');
+      this.addConsoleMessage('command', `${this.get('state.rtr.pwd')} ${commandString}`);
 
       try {
         const cloudRequestId = await this.getCloudRequestId(
@@ -164,10 +168,12 @@ polarity.export = PolarityComponent.extend({
           commandString
         );
 
-        this.addConsoleMessage(
-          'system',
-          `Command initiated.  Cloud Request Id: ${cloudRequestId}`
-        );
+        this.set('state.rtr.commandStatus', `Command initiated: ${cloudRequestId}`);
+
+        // this.addConsoleMessage(
+        //   'system',
+        //   `Command initiated.  Cloud Request Id: ${cloudRequestId}`
+        // );
 
         let result = await this.getRtrResult(cloudRequestId);
 
@@ -183,6 +189,8 @@ polarity.export = PolarityComponent.extend({
         console.error(error);
       } finally {
         this.set('state.rtr.isRunningCommand', false);
+        this.set('state.rtr.showConsolePwd', true);
+        this.set('state.rtr.commandStatus', '');
       }
     },
     retryLookup: function () {

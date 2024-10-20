@@ -143,7 +143,11 @@ const getRtrSession = async (deviceId, options) => {
     body.resources[0].session_id
   ) {
     sessionId = body.resources[0].session_id;
-    return sessionId;
+    
+    return {
+      sessionId,
+      pwd: body.resources[0].pwd
+    };
   } else {
     Logger.error({ body }, 'getRtrSession invalid response body received');
     throw new Error('Unexpected response from getRtrSession.  Missing session_id field');

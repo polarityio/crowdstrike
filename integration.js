@@ -58,10 +58,11 @@ const onMessage = async (payload, options, callback) => {
     case 'GET_RTR_SESSION':
       try {
         const { deviceId } = payload;
-        const sessionId = await getRtrSession(deviceId, options);
+        const { sessionId, pwd } = await getRtrSession(deviceId, options);
         Logger.trace({ sessionId }, 'Retrieved RTR Session Id');
         callback(null, {
-          sessionId
+          sessionId,
+          pwd
         });
       } catch (error) {
         const err = parseErrorToReadableJSON(error);
