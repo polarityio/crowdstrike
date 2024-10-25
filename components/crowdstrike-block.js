@@ -10,9 +10,11 @@ polarity.export = PolarityComponent.extend({
   containOrUncontainIsRunning: {},
   containmentStatus: '',
   isRunning: false,
+  uniqueIfPrefix: '',
   modalDevice: {},
   init() {
     this.initActiveTab();
+
     // refresh the device status to ensure the containment options are always fresh
     // and not being served from the cache
     if (this.get('details.hosts.devices')) {
@@ -87,11 +89,12 @@ polarity.export = PolarityComponent.extend({
       this.set('state.rtr.selectedFalconScriptId', '');
       this.set(
         'state.rtr.command',
-        `customscript -Name=${script.name} -JsonInput=\`\`\`''\`\`\``
+        `runscript -CloudFile="${script.name}"  -CommandLine=""`
       );
     },
     connectToDevice(deviceId) {
       this.set('state.rtr.isConnecting', true);
+      this.get('state.rtr.consoleMessages').clear();
       const payload = {
         action: 'GET_RTR_SESSION',
         deviceId
@@ -114,6 +117,11 @@ polarity.export = PolarityComponent.extend({
           this.set('state.rtr.isConnecting', false);
         });
     },
+    copyMessageValue: function (elementId, messageIndex) {
+      Ember.run.scheduleOnce('afterRender', this, this.copyElementToClipboard, elementId);
+
+      Ember.run.scheduleOnce('destroy', this, this.restoreCopyState, messageIndex);
+    },
     disconnectFromDevice(sessionId) {
       if (!sessionId) {
         console.warn('No session id provided when calling `disconnectFromDevice` action');
@@ -130,6 +138,11 @@ polarity.export = PolarityComponent.extend({
           this.set('state.rtr.sessionId', undefined);
           this.set('state.rtr.connectionStatus', 'Disconnected');
           this.set('state.rtr.isConnected', false);
+          this.set('state.rtr.showConsolePwd', false);
+          this.addConsoleMessage(
+            'system',
+            `Disconnected from host ${this.get('state.rtr.selectedDevice.hostname')}`
+          );
         })
         .catch((err) => {
           console.error(err);
@@ -141,6 +154,11 @@ polarity.export = PolarityComponent.extend({
         });
     },
     runScript: async function (sessionId, deviceId, commandString) {
+      if (this.get('state.rtr.isRunningCommand')) {
+        // a command is already running
+        return;
+      }
+
       if (!sessionId) {
         console.warn('No session id provided when calling `runScript` action');
         return;
@@ -154,6 +172,10 @@ polarity.export = PolarityComponent.extend({
         console.warn('No command string provided when calling `runScript` action');
       }
 
+      this.scrollToEndOfConsole();
+
+      commandString = commandString.trim();
+
       this.set('state.rtr.isRunningCommand', true);
       this.set('state.rtr.commandStatus', 'Sending command');
 
@@ -162,34 +184,93 @@ polarity.export = PolarityComponent.extend({
       this.addConsoleMessage('command', `${this.get('state.rtr.pwd')} ${commandString}`);
 
       try {
-        const cloudRequestId = await this.getCloudRequestId(
+        let baseCommand = commandString;
+
+        if (commandString.startsWith('runscript')) {
+          baseCommand = 'runscript';
+        } else if (commandString.startsWith('falconscript')) {
+          baseCommand = 'falconScript';
+        }
+
+        const getCloudRequestIdResult = await this.getCloudRequestId(
           sessionId,
           deviceId,
+          baseCommand,
           commandString
         );
 
-        this.set('state.rtr.commandStatus', `Command initiated: ${cloudRequestId}`);
-
-        // this.addConsoleMessage(
-        //   'system',
-        //   `Command initiated.  Cloud Request Id: ${cloudRequestId}`
-        // );
-
-        let result = await this.getRtrResult(cloudRequestId);
-
-        console.info('In runScript after getRtrResult Completes', result);
-        let parsedResult;
-        try {
-          parsedResult = JSON.parse(result.stdout);
-          this.addConsoleMessage('result', result.stdout, parsedResult);
-        } catch (parseError) {
-          this.addConsoleMessage('result', result.stdout);
+        if (getCloudRequestIdResult.sessionExpired) {
+          this.addConsoleMessage(
+            'error',
+            'Your session has expired.  You must connect to the host again.'
+          );
+          this.set('state.rtr.isRunningCommand', false);
+          this.set('state.rtr.isConnected', false);
+          this.set('state.rtr.showConsolePwd', false);
+          this.addConsoleMessage(
+            'system',
+            `Disconnected from host ${this.get('state.rtr.selectedDevice.hostname')}`
+          );
+          return;
         }
+
+        this.set(
+          'state.rtr.commandStatus',
+          `Waiting for result: ${getCloudRequestIdResult.cloudRequestId}`
+        );
+
+        let result = await this.getRtrResult(getCloudRequestIdResult.cloudRequestId);
+
+        if (result.sessionExpired) {
+          this.addConsoleMessage(
+            'error',
+            'Your session has expired.  You must connect to the host again.'
+          );
+          this.set('state.rtr.isRunningCommand', false);
+          this.set('state.rtr.isConnected', false);
+          this.set('state.rtr.showConsolePwd', false);
+          this.addConsoleMessage(
+            'system',
+            `Disconnected from host ${this.get('state.rtr.selectedDevice.hostname')}`
+          );
+          return;
+        }
+
+        let resultType = 'commandResult';
+        if (baseCommand === 'falconscript' || baseCommand === 'runscript') {
+          resultType = 'scriptResult';
+        }
+        let parsedResult;
+        let resultText = result.stdout;
+        if (result.stderr) {
+          resultText = result.stderr;
+          resultType = 'error';
+        }
+        try {
+          // Some commands return results as JSON.  We try to parse the result as JSON and if that
+          // fails we treat the result as a string.
+          parsedResult = JSON.parse(resultText);
+          if (Array.isArray(parsedResult.result)) {
+            // Most falcon scripts return a `result` array which we check for here
+            this.addConsoleMessage(resultType, parsedResult.result);
+          } else {
+            // This is our backup where we can't determine the format of the returned data but we know its JSON
+            this.addConsoleMessage(resultType, JSON.stringify(parsedResult, null, 2));
+          }
+        } catch (parseError) {
+          // Finally, we couldn't parse the result as JSON so we just treat it as a string
+          this.addConsoleMessage(resultType, resultText);
+        }
+        this.set('state.rtr.showConsolePwd', true);
       } catch (error) {
         console.error(error);
+        this.addConsoleMessage(
+          'error',
+          error.message ? error.message : JSON.stringify(error, null, 2)
+        );
+        this.set('state.rtr.showConsolePwd', true);
       } finally {
         this.set('state.rtr.isRunningCommand', false);
-        this.set('state.rtr.showConsolePwd', true);
         this.set('state.rtr.commandStatus', '');
       }
     },
@@ -261,6 +342,26 @@ polarity.export = PolarityComponent.extend({
     getAndUpdateDeviceState: function (device, index) {
       this.doGetAndUpdateDeviceState(device, index);
     }
+  },
+  copyElementToClipboard(element) {
+    window.getSelection().removeAllRanges();
+    let range = document.createRange();
+
+    range.selectNode(
+      typeof element === 'string' ? document.getElementById(element) : element
+    );
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+  },
+  restoreCopyState(messageIndex) {
+    this.set(`state.rtr.consoleMessages.${messageIndex}.showCopyMessage`, true);
+
+    setTimeout(() => {
+      if (!this.isDestroyed) {
+        this.set(`state.rtr.consoleMessages.${messageIndex}.showCopyMessage`, false);
+      }
+    }, 2000);
   },
   setMessages: function (index, prefix, message) {
     if (!this.isDestroyed) {
@@ -352,18 +453,20 @@ polarity.export = PolarityComponent.extend({
         }, 5000);
       });
   },
-  getCloudRequestId: function (sessionId, deviceId, commandString) {
+  getCloudRequestId: function (sessionId, deviceId, baseCommand, commandString) {
     return new Ember.RSVP.Promise((resolve, reject) => {
       if (!sessionId) {
-        return reject('No session id provided when calling `runScript` action');
+        return reject('No session id provided when calling `getCloudRequestId` action');
       }
 
       if (!deviceId) {
-        return reject('No device id available when calling `runScript` action');
+        return reject('No device id available when calling `getCloudRequestId` action');
       }
 
       if (!commandString) {
-        return reject('No command string provided when calling `runScript` action');
+        return reject(
+          'No command string provided when calling `getCloudRequestId` action'
+        );
       }
 
       this.set('state.rtr.isRunningCommand', true);
@@ -372,13 +475,14 @@ polarity.export = PolarityComponent.extend({
         action: 'RUN_SCRIPT',
         sessionId,
         deviceId,
-        baseCommand: 'falconScript',
+        baseCommand,
         commandString
       };
 
       this.sendIntegrationMessage(payload)
         .then((result) => {
-          resolve(result.cloudRequestId);
+          console.info(`Result from getCloudRequestId`, result);
+          resolve(result);
         })
         .catch((err) => {
           reject(err);
@@ -395,6 +499,12 @@ polarity.export = PolarityComponent.extend({
 
     stdout += result.stdout;
     stderr += result.stderr;
+
+    if (result.sessionExpired) {
+      return {
+        sessionExpired: true
+      };
+    }
 
     if (result.complete) {
       return {
@@ -425,13 +535,53 @@ polarity.export = PolarityComponent.extend({
   sleep: async function (ms) {
     return new Promise((res) => Ember.run.later(res, ms));
   },
-  addConsoleMessage(type, message, data) {
+  /**
+   *
+   * @param type
+   *  system -- for system messages (status, etc.)
+   *  error -- for any error messages
+   *  command -- any command that is issued by the user (e.g., a falconscript, ls, cd etc.)
+   *  commandResult -- the result a command (e.g., ls, cd).  Commands always return formatted (pre) strings
+   *  scriptResult -- the result from a script (falconscript)
+   * @param value
+   * String or Array content to be displayed
+   * Array of objects
+   * The following formats are supported which are formats returned by tested
+   * Falcon Scripts
+   * ```
+   * [
+   *   {
+   *     key1: 'value1',
+   *     key2: 'value2'
+   *   }
+   * ]
+   * ```
+   * or
+   * ```
+   *   {
+   *       key1: [
+   *           {
+   *               subKey1: 'value1'
+   *               subKey2: 'value2'
+   *           },
+   *           {
+   *               subKey3: 'value3'
+   *           }
+   *       ]
+   *   }
+   */
+  addConsoleMessage(type, value) {
     const payload = {
       type,
-      message,
-      data,
+      value,
       isCollapsed: true
     };
     this.get('state.rtr.consoleMessages').unshiftObject(payload);
+  },
+  scrollToEndOfConsole() {
+    const objDiv = document.getElementById(
+      `crowdstrike-console-${this.get('uniqueIdPrefix')}`
+    );
+    objDiv.scrollTop = objDiv.scrollHeight;
   }
 });

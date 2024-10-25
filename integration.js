@@ -78,10 +78,12 @@ const onMessage = async (payload, options, callback) => {
           disconnected: true
         });
       } catch (error) {
-        const err = parseErrorToReadableJSON(error);
-        Logger.error(err, 'onMessage GET_RTR_SESSION Error');
-        callback(err);
-        return;
+        // specifically look for a session timeout error
+        if (!handleExpiredRtrSession(error, callback)) {
+          const err = parseErrorToReadableJSON(error);
+          Logger.error(err, 'onMessage DELETE_RTR_SESSION Error');
+          callback(err);
+        }
       }
       break;
     case 'RUN_SCRIPT':
@@ -96,22 +98,27 @@ const onMessage = async (payload, options, callback) => {
         );
         Logger.trace({ cloudRequestId }, 'Retrieved cloudRequestId from RUN_SCRIPT');
         callback(null, {
+          expiredSession: false,
           cloudRequestId
         });
       } catch (error) {
-        const err = parseErrorToReadableJSON(error);
-        Logger.error(err, 'onMessage RUN_SCRIPT Error');
-        callback(err);
+        // specifically look for a session timeout error
+        if (!handleExpiredRtrSession(error, callback)) {
+          const err = parseErrorToReadableJSON(error);
+          Logger.error(err, 'onMessage RUN_SCRIPT Error');
+          callback(err);
+        }
       }
       break;
     case 'GET_RTR_RESULT':
       try {
         const { cloudRequestId, sequenceId } = payload;
-        const { stdout, stderr, complete, sequenceId: responseSequenceId } = await getRtrResult(
-          cloudRequestId,
-          sequenceId,
-          options
-        );
+        const {
+          stdout,
+          stderr,
+          complete,
+          sequenceId: responseSequenceId
+        } = await getRtrResult(cloudRequestId, sequenceId, options);
         Logger.trace(
           { stdout, stderr, complete },
           'Retrieved result from GET_RTR_RESULT'
@@ -123,9 +130,12 @@ const onMessage = async (payload, options, callback) => {
           sequenceId: responseSequenceId
         });
       } catch (error) {
-        const err = parseErrorToReadableJSON(error);
-        Logger.error(err, 'onMessage GET_RTR_RESULT Error');
-        callback(err);
+        // specifically look for a session timeout error
+        if (!handleExpiredRtrSession(error, callback)) {
+          const err = parseErrorToReadableJSON(error);
+          Logger.error(err, 'onMessage GET_RTR_RESULT Error');
+          callback(err);
+        }
       }
       break;
     case 'containOrUncontain':
@@ -167,6 +177,28 @@ const onMessage = async (payload, options, callback) => {
     }
     default:
       return;
+  }
+};
+
+const handleExpiredRtrSession = (error, callback) => {
+  if (
+    error.status === 400 &&
+    (error.message === 'Could not find existing session' ||
+      (typeof error.description === 'object' &&
+        Array.isArray(error.description.errors) &&
+        error.description.errors.find(
+          (error) =>
+            error.message === 'Session ID is invalid' ||
+            error.message === 'Could not find existing session'
+        )))
+  ) {
+    Logger.trace(error, 'Session is expired or invalid');
+    callback(null, {
+      sessionExpired: true
+    });
+    return true;
+  } else {
+    return false;
   }
 };
 

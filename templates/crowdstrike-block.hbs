@@ -614,7 +614,16 @@
             </span>
           </div>
           <div class="info-bar-pill">
-            <span class="info-bar-key">Platform</span>
+            <span class="info-bar-key d-flex align-items-center justify-content-between">
+              Platform
+              <div {{action (toggle "rtr.viewDeviceDetails" state)}}>
+              {{#if state.rtr.viewDeviceDetails}}
+                {{fa-icon icon="chevron-up" fixedWidth=true}}
+              {{else}}
+                {{fa-icon icon="chevron-down" fixedWidth=true}}
+              {{/if}}
+              </div>
+            </span>
             <span class="info-bar-value">
               {{#if state.rtr.selectedDevice}}
                 {{state.rtr.selectedDevice.platform_name}}
@@ -624,94 +633,96 @@
             </span>
           </div>
         </div>
-        <div class="info-bar-row even-width">
-          <div class="info-bar-pill">
-            <span class="info-bar-key">Host Type</span>
-            <span class="info-bar-value">
-              {{#if state.rtr.selectedDevice}}
-                {{state.rtr.selectedDevice.product_type_desc}}
-              {{else}}
-                --
-              {{/if}}
-            </span>
+        {{#if state.rtr.viewDeviceDetails}}
+          <div class="info-bar-row even-width">
+            <div class="info-bar-pill">
+              <span class="info-bar-key">Host Type</span>
+              <span class="info-bar-value">
+                {{#if state.rtr.selectedDevice}}
+                  {{state.rtr.selectedDevice.product_type_desc}}
+                {{else}}
+                  --
+                {{/if}}
+              </span>
+            </div>
+            <div class="info-bar-pill">
+              <span class="info-bar-key">OS Version</span>
+              <span class="info-bar-value">
+                {{#if state.rtr.selectedDevice}}
+                  {{state.rtr.selectedDevice.os_version}}
+                {{else}}
+                  --
+                {{/if}}
+              </span>
+            </div>
           </div>
-          <div class="info-bar-pill">
-            <span class="info-bar-key">OS Version</span>
-            <span class="info-bar-value">
-              {{#if state.rtr.selectedDevice}}
-                {{state.rtr.selectedDevice.os_version}}
-              {{else}}
-                --
-              {{/if}}
-            </span>
+          <div class="info-bar-row even-width">
+            <div class="info-bar-pill">
+              <span class="info-bar-key">First Seen</span>
+              <span class="info-bar-value">
+                {{#if state.rtr.selectedDevice}}
+                  {{state.rtr.selectedDevice.first_seen}}
+                {{else}}
+                  --
+                {{/if}}
+              </span>
+            </div>
+            <div class="info-bar-pill">
+              <span class="info-bar-key">Last Seen</span>
+              <span class="info-bar-value">
+                {{#if state.rtr.selectedDevice}}
+                  {{state.rtr.selectedDevice.last_seen}}
+                {{else}}
+                  --
+                {{/if}}
+              </span>
+            </div>
           </div>
-        </div>
-        <div class="info-bar-row even-width">
-          <div class="info-bar-pill">
-            <span class="info-bar-key">First Seen</span>
-            <span class="info-bar-value">
-              {{#if state.rtr.selectedDevice}}
-                {{state.rtr.selectedDevice.first_seen}}
-              {{else}}
-                --
-              {{/if}}
-            </span>
+          <div class="info-bar-row even-width">
+            <div class="info-bar-pill">
+              <span class="info-bar-key">Domain</span>
+              <span class="info-bar-value">
+                {{#if state.rtr.selectedDevice}}
+                  {{state.rtr.selectedDevice.machine_domain}}
+                {{else}}
+                  --
+                {{/if}}
+              </span>
+            </div>
+            <div class="info-bar-pill">
+              <span class="info-bar-key">Local IP</span>
+              <span class="info-bar-value">
+                {{#if state.rtr.selectedDevice}}
+                  {{state.rtr.selectedDevice.local_ip}}
+                {{else}}
+                  --
+                {{/if}}
+              </span>
+            </div>
           </div>
-          <div class="info-bar-pill">
-            <span class="info-bar-key">Last Seen</span>
-            <span class="info-bar-value">
-              {{#if state.rtr.selectedDevice}}
-                {{state.rtr.selectedDevice.last_seen}}
-              {{else}}
-                --
-              {{/if}}
-            </span>
+          <div class="info-bar-row even-width">
+            <div class="info-bar-pill">
+              <span class="info-bar-key">Manufacturer</span>
+              <span class="info-bar-value">
+                {{#if state.rtr.selectedDevice}}
+                  {{state.rtr.selectedDevice.system_manufacturer}}
+                {{else}}
+                  --
+                {{/if}}
+              </span>
+            </div>
+            <div class="info-bar-pill">
+              <span class="info-bar-key">Model</span>
+              <span class="info-bar-value">
+                {{#if state.rtr.selectedDevice}}
+                  {{state.rtr.selectedDevice.system_product_name}}
+                {{else}}
+                  --
+                {{/if}}
+              </span>
+            </div>
           </div>
-        </div>
-        <div class="info-bar-row even-width">
-          <div class="info-bar-pill">
-            <span class="info-bar-key">Domain</span>
-            <span class="info-bar-value">
-              {{#if state.rtr.selectedDevice}}
-                {{state.rtr.selectedDevice.machine_domain}}
-              {{else}}
-                --
-              {{/if}}
-            </span>
-          </div>
-          <div class="info-bar-pill">
-            <span class="info-bar-key">Local IP</span>
-            <span class="info-bar-value">
-              {{#if state.rtr.selectedDevice}}
-                {{state.rtr.selectedDevice.local_ip}}
-              {{else}}
-                --
-              {{/if}}
-            </span>
-          </div>
-        </div>
-        <div class="info-bar-row even-width">
-          <div class="info-bar-pill">
-            <span class="info-bar-key">Manufacturer</span>
-            <span class="info-bar-value">
-              {{#if state.rtr.selectedDevice}}
-                {{state.rtr.selectedDevice.system_manufacturer}}
-              {{else}}
-                --
-              {{/if}}
-            </span>
-          </div>
-          <div class="info-bar-pill">
-            <span class="info-bar-key">Model</span>
-            <span class="info-bar-value">
-              {{#if state.rtr.selectedDevice}}
-                {{state.rtr.selectedDevice.system_product_name}}
-              {{else}}
-                --
-              {{/if}}
-            </span>
-          </div>
-        </div>
+        {{/if}}
       </div>
 
       <div class="info-bar session-information mt-2">
@@ -767,7 +778,7 @@
         </div>
       </div>
       
-      <div class="console mt-2 d-flex flex-column-reverse">
+      <div class="console mt-2 d-flex flex-column-reverse" id={{concat "crowdstrike-console-" uniqueIdPrefix}}>
         {{#if state.rtr.showConsolePwd}}
           <div class="console-message command">{{state.rtr.pwd}}</div>
         {{/if}}
@@ -776,14 +787,28 @@
             {{fa-icon icon="spinner-third" spin=true fixedWidth=true}} {{state.rtr.commandStatus}}
           </div>
         {{/if}}
-        {{#each state.rtr.consoleMessages as | message |}}
-          <div class="console-message-container">
-            {{#if (and (eq message.type "result")(not (is-empty message.data)))}}
-              <div class="console-message result {{if message.isCollapsed "collapsed" "expanded"}}">
-                <div class="mb-2">
-                  Results: {{message.data.result.length}}
+        {{#each state.rtr.consoleMessages as | message messageIndex|}}
+          <div class="console-message-container" id={{concat "crowdstrike-message-container-" uniqueIdPrefix "-" messageIndex}}>
+            {{#if (or (eq message.type "commandResult")(eq message.type "scriptResult"))}}
+              <div class="d-flex align-items-center justify-content-end copy-btn-container {{if (eq message.type "commandResult") "command-result"}}">
+                <button class="btn copy-btn p-action" 
+                  {{action "copyMessageValue" (concat "crowdstrike-message-container-" uniqueIdPrefix "-" messageIndex) messageIndex}}
+                  title="Copy to clipboard"                        
+                >
+                  {{fa-icon icon="clipboard" fixedWidth=true}}
+                </button>
+                <div class="copy-success-message {{if message.showCopyMessage "visible" "hidden"}}">
+                  {{fa-icon icon="check" fixedWidth=true class="copy-success-icon"}}
+                  Copied output to clipboard.
                 </div>
-                {{#each message.data.result as | dataResult |}}
+              </div>
+            {{/if}}
+            {{#if (and (eq message.type "scriptResult")(is-array message.value))}}
+              <div class="console-message script-result {{if message.isCollapsed "collapsed" "expanded"}}">
+                <div class="mb-2">
+                  Results: {{message.value.length}}
+                </div>
+                {{#each message.value as | dataResult |}}
                   <div class="mb-2">
                     {{#each-in dataResult as | key value |}}
                       <div>
@@ -819,21 +844,19 @@
                   {{/if}}
                 </button>
               </div>
-
               {{#if message.isCollapsed}}
                 <div class="footer-gradient fixed-bottom"></div>
               {{/if}}
-            {{else if (eq message.type "result")}}
-              <div class="console-message result pre">{{message.message}}</div>
+            {{else if (eq message.type "commandResult")}}
+              <div class="console-message command-result pre">{{message.value}}</div>
             {{else if (eq message.type "system")}}
-              <span class="console-message {{message.type}}">
-                {{#if (eq message.type "system")}}
-                  />
-                {{/if}}
-                {{message.message}}
-              </span>  
+              <div class="console-message system">
+                /> {{message.value}}
+              </div>  
             {{else if (eq message.type "command")}}
-              <div class="console-message command">{{message.message}}</div>
+              <div class="console-message command">{{message.value}}</div>
+            {{else if (eq message.type "error")}}
+              <div class="console-message error">{{message.value}}</div>
             {{/if}}
           </div>  
         {{/each}}
@@ -843,15 +866,15 @@
         {{input
           class="ifta-field no-label with-button"
           value=state.rtr.command
-          placeholder="Enter command"
-          disabled=(or state.rtr.isRunningCommand (not state.rtr.isConnected))
+          placeholder="Enter command"          
+          enter=(action "runScript" state.rtr.sessionId state.rtr.selectedDeviceId state.rtr.command)
         }}
         <div>
           <button 
             {{action "runScript" state.rtr.sessionId state.rtr.selectedDeviceId state.rtr.command}} 
             type="button" 
             class="p-btn btn btn-sm btn-secondary run-button" 
-            disabled={{or state.rtr.isRunningCommand (not state.rtr.isConnected)}}
+            disabled={{or state.rtr.isRunningCommand (not state.rtr.isConnected) (eq state.rtr.command.length 0)}}
           >
             {{#if state.rtr.isRunningCommand}}
               {{fa-icon icon="spinner-third" spin=true}}
@@ -896,7 +919,7 @@
                       {{script.name}}
                       {{bs-tooltip title="Populate command line with script"}}
                     </div>
-                    <button {{action "viewFalconScriptDetails" falconScriptIndex}} class="btn copy-btn p-action">
+                    <button {{action "viewFalconScriptDetails" falconScriptIndex}} class="btn icon-btn p-action">
                       {{#if script.__viewDetails}}
                         {{fa-icon icon="caret-up" fixedWidth=true}}
                       {{else}}
@@ -954,7 +977,7 @@
                       {{script.name}}
                       {{bs-tooltip title="Populate command line with script"}}
                     </div>
-                    <button {{action "viewCustomScriptDetails" customScriptIndex}} class="btn copy-btn p-action">
+                    <button {{action "viewCustomScriptDetails" customScriptIndex}} class="btn icon-btn p-action">
                       {{#if script.__viewDetails}}
                         {{fa-icon icon="caret-up" fixedWidth=true}}
                       {{else}}

@@ -143,7 +143,7 @@ const getRtrSession = async (deviceId, options) => {
     body.resources[0].session_id
   ) {
     sessionId = body.resources[0].session_id;
-    
+
     return {
       sessionId,
       pwd: body.resources[0].pwd
