@@ -79,7 +79,7 @@ polarity.export = PolarityComponent.extend({
       this.set('state.rtr.selectedCustomScriptId', '');
       this.set(
         'state.rtr.command',
-        `falconscript -Name=${script.name} -JsonInput=\`\`\`''\`\`\``
+        `falconscript -Name="${script.name}" -JsonInput=\`\`\`''\`\`\``
       );
     },
     // Triggered when the user selects a CustomScript to populate into the command input
@@ -189,7 +189,7 @@ polarity.export = PolarityComponent.extend({
         if (commandString.startsWith('runscript')) {
           baseCommand = 'runscript';
         } else if (commandString.startsWith('falconscript')) {
-          baseCommand = 'falconScript';
+          baseCommand = 'falconscript';
         }
 
         const getCloudRequestIdResult = await this.getCloudRequestId(
