@@ -11,7 +11,9 @@ const {
   getRtrSession,
   deleteRtrSession,
   runScript,
-  getRtrResult
+  getRtrResult,
+  getCachedFalconScripts,
+  getCachedCustomScripts
 } = require('./src/realTimeResponse');
 
 let limiter = null;
@@ -51,18 +53,99 @@ const doLookup = async (entities, options, callback) => {
   }
 };
 
+const falconScriptRegex = /falconscript -Name="(.+?)"/i;
+const customScriptRegex = /runscript -CloudFile="(.+?)"/i;
+
+/**
+ * Checks to see if the provided `commandString` is an enabled command (based on the integration settings)
+ *
+ * @param commandString the command the user is trying to run
+ * @param options user options
+ * @returns {*|boolean} true if the command is enabled, false is not
+ */
+const isEnabledScriptOrCommand = (commandString, options) => {
+  // Only enabled scripts are cached
+  const cachedFalconScripts = getCachedFalconScripts().map((script) => script.name);
+  const cachedCustomScripts = getCachedCustomScripts().map((script) => script.name);
+  const supportedCommands = options.enabledCommands
+    .split(',')
+    .map((command) => command.trim().toLowerCase());
+
+  const commandTokens = commandString.split(' ').map((token) => token.trim());
+
+  if (commandTokens.length === 0) {
+    return false;
+  }
+
+  const command = commandTokens[0];
+
+  Logger.trace(
+    {
+      commandString,
+      commandTokens,
+      supportedCommands,
+      command,
+      cachedCustomScripts,
+      cachedFalconScripts
+    },
+    'isEnabledScriptOrCommand'
+  );
+
+  if (command === 'falconscript') {
+    // Falcon scripts are in this format:
+    // falconscript -Name="LocalUser" -JsonInput=```''```
+    const matches = falconScriptRegex.exec(commandString);
+    if (matches && matches.length >= 2) {
+      return cachedFalconScripts.includes(matches[1]);
+    } else {
+      return false;
+    }
+  } else if (command === 'runscript') {
+    // Custom scripts are in this format:
+    // runscript -CloudFile="Custom Process Script"  -CommandLine=""
+    const matches = customScriptRegex.exec(commandString);
+    if (matches && matches.length >= 2) {
+      return cachedCustomScripts.includes(matches[1]);
+    } else {
+      return false;
+    }
+  } else {
+    // this is a command (versus a script)
+    return supportedCommands.includes(command);
+  }
+};
+
 const onMessage = async (payload, options, callback) => {
   const data = payload.data;
+
+  // Possibly required if the integration was restarted but a user already had
+  // a result in their overlay window and run an action that causes an `onMessage`
+  // request.
+  await maybeCacheRealTimeResponseScripts(options);
 
   switch (payload.action) {
     case 'GET_RTR_SESSION':
       try {
-        const { deviceId } = payload;
+        const { deviceId, platform } = payload;
         const { sessionId, pwd } = await getRtrSession(deviceId, options);
+
+        // Only send back scripts that are for the supported platform
+        const falconScripts = getCachedFalconScripts().filter((script) =>
+          Array.isArray(script.platform)
+            ? script.platform.includes(platform.toLowerCase())
+            : script.platform.toLowerCase() === platform.toLowerCase()
+        );
+        const customScripts = getCachedCustomScripts().filter((script) =>
+          Array.isArray(script.platform)
+            ? script.platform.includes(platform.toLowerCase())
+            : script.platform.toLowerCase() === platform.toLowerCase()
+        );
         Logger.trace({ sessionId }, 'Retrieved RTR Session Id');
         callback(null, {
           sessionId,
-          pwd
+          pwd,
+          falconScripts,
+          customScripts
         });
       } catch (error) {
         const err = parseErrorToReadableJSON(error);
@@ -89,6 +172,14 @@ const onMessage = async (payload, options, callback) => {
     case 'RUN_SCRIPT':
       try {
         const { sessionId, deviceId, baseCommand, commandString } = payload;
+
+        if (!isEnabledScriptOrCommand(commandString, options)) {
+          callback(null, {
+            unsupportedScriptOrCommand: true
+          });
+          return;
+        }
+
         const cloudRequestId = await runScript(
           sessionId,
           deviceId,
@@ -96,7 +187,9 @@ const onMessage = async (payload, options, callback) => {
           commandString,
           options
         );
+
         Logger.trace({ cloudRequestId }, 'Retrieved cloudRequestId from RUN_SCRIPT');
+
         callback(null, {
           expiredSession: false,
           cloudRequestId
@@ -180,6 +273,23 @@ const onMessage = async (payload, options, callback) => {
   }
 };
 
+/**
+ * Checks for an expired or invalid session error and runs back an expired session payload rather than
+ * an error.
+ * ```
+ * {
+ *     "errors": [
+ *         {
+ *             "code": 400,
+ *             "message": "Could not find existing session"
+ *         }
+ *     ]
+ * }
+ * ```
+ * @param error
+ * @param callback
+ * @returns {boolean}
+ */
 const handleExpiredRtrSession = (error, callback) => {
   if (
     error.status === 400 &&

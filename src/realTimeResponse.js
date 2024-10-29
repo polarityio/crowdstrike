@@ -3,6 +3,7 @@ const { getLogger } = require('./logger');
 
 let cachedFalconScripts;
 let cachedCustomScripts;
+let previousRtrOptionsFingerPrint = '';
 /**
  * Sample response from `queries/falcon-scripts`
  * ```
@@ -61,11 +62,46 @@ const getFalconScripts = async (options) => {
 
     Logger.trace({ scriptContentResponse }, 'Response containing script content');
 
-    return scriptContentResponse.body.resources;
+    if (Array.isArray(scriptContentResponse.body.resources)) {
+      scriptContentResponse.body.resources.forEach((resource) => {
+        if (typeof resource.workflow_input_schema) {
+          try {
+            resource.__workflow_input_schema_json = JSON.parse(
+              resource.workflow_input_schema
+            );
+          } catch (parseError) {
+            Logger.warn(
+              { resource },
+              'Unable to parse scripts `workflow_input_schema` property into JSON object'
+            );
+            resource.__workflow_input_schema_json = {};
+          }
+        }
+      });
+    }
+
+    return removeInvalidScripts(
+      scriptContentResponse.body.resources,
+      options.enabledFalconScripts
+    );
   } else {
     // No Falcon Scripts available
     return [];
   }
+};
+
+const removeInvalidScripts = (scripts, enabledScriptsOption) => {
+  const enabledScriptsList = enabledScriptsOption
+    .split(',')
+    .map((script) => script.trim().toLowerCase());
+
+  getLogger().info({ enabledScriptsList }, 'Enabled Scripts');
+
+  const enabledScripts = scripts.filter((script) => {
+    return enabledScriptsList.includes(script.name.toLowerCase());
+  });
+
+  return enabledScripts;
 };
 
 /**
@@ -119,7 +155,7 @@ const getCustomScripts = async (options) => {
 
   Logger.trace({ body }, 'getCustomScripts');
 
-  return body.resources;
+  return removeInvalidScripts(body.resources, options.enabledCustomScripts);
 };
 
 const getRtrSession = async (deviceId, options) => {
@@ -221,8 +257,22 @@ const runScript = async (sessionId, deviceId, baseCommand, commandString, option
   }
 };
 
+const didRtrOptionsChange = (options) => {
+  const optionsFingerPrint =
+    options.enableRealTimeResponse +
+    options.enabledCommands +
+    options.enabledFalconScripts +
+    options.enabledCustomScripts;
+  if (optionsFingerPrint !== previousRtrOptionsFingerPrint) {
+    previousRtrOptionsFingerPrint = optionsFingerPrint;
+    return true;
+  }
+
+  return false;
+};
+
 const maybeCacheRealTimeResponseScripts = async (options) => {
-  if (options.enableRealTimeResponse && !cachedFalconScripts && !cachedCustomScripts) {
+  if (didRtrOptionsChange(options)) {
     cachedFalconScripts = await getFalconScripts(options);
     cachedCustomScripts = await getCustomScripts(options);
   }
@@ -294,15 +344,7 @@ const deleteRtrSession = async (sessionId, options) => {
   try {
     await authenticatedRequest(requestOptions, options);
   } catch (error) {
-    // check for 400 in case the session was not found we want to just catch this
-    //{
-    //     "errors": [
-    //         {
-    //             "code": 400,
-    //             "message": "Could not find existing session"
-    //         }
-    //     ]
-    // }
+
     Logger.error(error, 'Error when deleting session');
     throw error;
   }

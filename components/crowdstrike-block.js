@@ -59,10 +59,14 @@ polarity.export = PolarityComponent.extend({
       }
     },
     viewFalconScriptDetails: function (falconScriptIndex) {
-      this.toggleProperty(`details.falconScripts.${falconScriptIndex}.__viewDetails`);
+      if(this.get('state.rtr.falconScripts')){
+        this.toggleProperty(`state.rtr.falconScripts.${falconScriptIndex}.__viewDetails`);  
+      }      
     },
     viewCustomScriptDetails: function (customScriptIndex) {
-      this.toggleProperty(`details.customScripts.${customScriptIndex}.__viewDetails`);
+      if(this.get('state.rtr.customScripts')){
+        this.toggleProperty(`state.rtr.customScripts.${customScriptIndex}.__viewDetails`);  
+      }      
     },
     // Triggered when the user selects a device in the device drop down of the RTR tab
     deviceSelected: function () {
@@ -74,7 +78,7 @@ polarity.export = PolarityComponent.extend({
     },
     // Triggered when the user selects a FalconScript to populate into the command input
     populateFalconScript: function (falconScriptIndex) {
-      const script = this.get(`details.falconScripts.${falconScriptIndex}`);
+      const script = this.get(`state.rtr.falconScripts.${falconScriptIndex}`);
       this.set('state.rtr.selectedFalconScriptId', falconScriptIndex);
       this.set('state.rtr.selectedCustomScriptId', '');
       this.set(
@@ -84,7 +88,7 @@ polarity.export = PolarityComponent.extend({
     },
     // Triggered when the user selects a CustomScript to populate into the command input
     populateCustomScript: function (customScriptIndex) {
-      const script = this.get(`details.customScripts.${customScriptIndex}`);
+      const script = this.get(`state.rtr.customScripts.${customScriptIndex}`);
       this.set('state.rtr.selectedCustomScriptId', customScriptIndex);
       this.set('state.rtr.selectedFalconScriptId', '');
       this.set(
@@ -92,18 +96,21 @@ polarity.export = PolarityComponent.extend({
         `runscript -CloudFile="${script.name}"  -CommandLine=""`
       );
     },
-    connectToDevice(deviceId) {
+    connectToDevice(deviceId, platform) {
       this.set('state.rtr.isConnecting', true);
       this.get('state.rtr.consoleMessages').clear();
       const payload = {
         action: 'GET_RTR_SESSION',
-        deviceId
+        deviceId,
+        platform
       };
       this.sendIntegrationMessage(payload)
         .then((result) => {
           console.info('Connect to Device', result);
           this.set('state.rtr.sessionId', result.sessionId);
           this.set('state.rtr.pwd', result.pwd);
+          this.set('state.rtr.falconScripts', result.falconScripts);
+          this.set('state.rtr.customScripts', result.customScripts);
           this.set('state.rtr.connectionStatus', 'Connected');
           this.set('state.rtr.isConnected', true);
           this.set('state.rtr.showConsolePwd', true);
@@ -175,6 +182,12 @@ polarity.export = PolarityComponent.extend({
       this.scrollToEndOfConsole();
 
       commandString = commandString.trim();
+      
+      if(commandString === 'clear'){
+        this.get('state.rtr.consoleMessages').clear();
+        this.set('state.rtr.command', '');
+        return;
+      }
 
       this.set('state.rtr.isRunningCommand', true);
       this.set('state.rtr.commandStatus', 'Sending command');
@@ -211,6 +224,13 @@ polarity.export = PolarityComponent.extend({
             'system',
             `Disconnected from host ${this.get('state.rtr.selectedDevice.hostname')}`
           );
+          return;
+        } else if (getCloudRequestIdResult.unsupportedScriptOrCommand) {
+          this.addConsoleMessage(
+            'error',
+            'An invalid or unsupported command or script was provided. Scripts and commands are case sensitive. Contact your Polarity admin if you believe this is a valid command or script.'
+          );
+          this.set('state.rtr.isRunningCommand', false);
           return;
         }
 

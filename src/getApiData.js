@@ -30,8 +30,9 @@ const getApiData = async (entity, options) => {
       hosts: deviceData,
       events: alertData,
       iocs: iocData,
-      falconScripts: getCachedFalconScripts(),
-      customScripts: getCachedCustomScripts()
+      // Send empty array for scripts until user connects to a host
+      falconScripts: [],
+      customScripts: []
     };
   } catch (error) {
     throw error;

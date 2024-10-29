@@ -758,7 +758,7 @@
                   </button>
                 {{else}}
                   <button
-                    {{action "connectToDevice" state.rtr.selectedDeviceId}}
+                    {{action "connectToDevice" state.rtr.selectedDeviceId state.rtr.selectedDevice.platform_name}}
                           class="p-btn btn btn-secondary mt-1 connect-button"
                           disabled={{not state.rtr.selectedDevice}}
                   >
@@ -887,16 +887,17 @@
           {{/unless}}
         </div>
       </div>      
-
+      
       <div class="accordion mt-2">
-        <div class="card">
+        {{#if (and (gt state.rtr.falconScripts.length 0) state.rtr.isConnected)}}
+          <div class="card">
           <div {{action "changeScriptTab" "falconScripts"}} class="card-header d-flex align-items-center justify-content-between">
             <div>
               Falcon Scripts
             </div>
             <div class="d-flex align-items-center justify-content-between">
               <div class="mr-2">
-                {{details.falconScripts.length}}
+                {{state.rtr.falconScripts.length}}
               </div>
               {{#if (eq activeScriptTab 'falconScripts')}}
                 {{fa-icon icon="chevron-up" fixedWidth=true}}
@@ -907,7 +908,7 @@
           </div>
           <div class="collapse {{if (eq activeScriptTab 'falconScripts') 'show'}}">
             <div class="card-body">
-              {{#each details.falconScripts as | script falconScriptIndex|}}
+              {{#each state.rtr.falconScripts as | script falconScriptIndex|}}
                 <div class="script-container">
                   <div class="d-flex align-items-center justify-content-between">
                     <div class="script-name" {{action "populateFalconScript" falconScriptIndex}}>
@@ -946,15 +947,17 @@
             </div>
           </div>
         </div>
+        {{/if}}
         
-        <div class="card">
+        {{#if (and (gt state.rtr.customScripts.length 0) state.rtr.isConnected)}}
+          <div class="card">
           <div {{action "changeScriptTab" "customScripts"}} class="card-header d-flex align-items-center justify-content-between">
             <div>
               Custom Scripts
             </div>
             <div class="d-flex align-items-center justify-content-between">
               <div class="mr-2">
-                {{details.customScripts.length}}
+                {{state.rtr.customScripts.length}}
               </div>
               {{#if (eq activeScriptTab 'customScripts')}}
                 {{fa-icon icon="chevron-up" fixedWidth=true}}
@@ -965,7 +968,7 @@
           </div>
           <div class="collapse {{if (eq activeScriptTab 'customScripts') 'show'}}">
             <div class="card-body">
-              {{#each details.customScripts as | script customScriptIndex|}}
+              {{#each state.rtr.customScripts as | script customScriptIndex|}}
                 <div class="script-container">
                   <div class="d-flex align-items-center justify-content-between">
                     <div class="script-name" {{action "populateCustomScript" customScriptIndex}}>
@@ -986,24 +989,31 @@
                     </button>
                   </div>
                   {{#if script.__viewDetails}}
-                    <div class="mt-1">
-                      <span class="p-key">Platform:</span>
-                      <span class="p-value">{{script.platform}}</span>
-                    </div>
-                    <div class="mt-1">
-                      <div class="p-key">Description</div>
-                      <div class="p-value p-block">{{script.description}}</div>
-                    </div>
-                    <div class="mt-1">
-                      <div class="p-key">Use Case</div>
-                      <div class="p-value p-block">{{script.use_case}}</div>
-                    </div>
+                    {{#if script.platform}}
+                      <div class="mt-1">
+                        <span class="p-key">Platform:</span>
+                        <span class="p-value">{{script.platform}}</span>
+                      </div>
+                    {{/if}}
+                    {{#if script.description}}
+                      <div class="mt-1">
+                        <div class="p-key">Description</div>
+                        <div class="p-value p-block">{{script.description}}</div>
+                      </div>
+                    {{/if}}`
+                    {{#if script.user_case}}
+                      <div class="mt-1">
+                        <div class="p-key">Use Case</div>
+                        <div class="p-value p-block">{{script.use_case}}</div>
+                      </div>
+                    {{/if}}
                   {{/if}}
                 </div>
               {{/each}}
             </div>
           </div>
         </div>
+        {{/if}}
       </div>
     </div>
   {{/if}}

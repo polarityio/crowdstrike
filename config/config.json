@@ -3,7 +3,12 @@
   "name": "CrowdStrike",
   "acronym": "CSTK",
   "description": "Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).",
-  "entityTypes": ["MD5", "SHA256", "IPv4", "domain"],
+  "entityTypes": [
+    "MD5",
+    "SHA256",
+    "IPv4",
+    "domain"
+  ],
   "customTypes": [
     {
       "key": "exeFile",
@@ -12,7 +17,9 @@
   ],
   "onDemandOnly": true,
   "defaultColor": "light-purple",
-  "styles": ["./styles/crowdstrike.less"],
+  "styles": [
+    "./styles/crowdstrike.less"
+  ],
   "block": {
     "component": {
       "file": "./components/crowdstrike-block.js"
@@ -29,7 +36,7 @@
     "proxy": ""
   },
   "logging": {
-    "level": "trace"
+    "level": "info"
   },
   "options": [
     {
@@ -94,6 +101,33 @@
       "type": "boolean",
       "userCanEdit": false,
       "adminOnly": false
+    },
+    {
+      "key": "enabledCommands",
+      "name": "Enabled Real Time Response Commands",
+      "description": "Comma delimited list of enabled RTR commands by command name.  Listed commands must be accessible to the configured Client ID. Command names are case sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.",
+      "default": "cat, cd, env, getsid, ipconfig, ls, netstat, ps",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "enabledFalconScripts",
+      "name": "Enabled Falcon Real Time Response Scripts",
+      "description": "Comma delimited list of enabled Falcon scripts by script name.  Listed Falcon scripts must be accessible to the configured Client ID. Script names are case sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect.  This setting must be locked for all users.",
+      "default": "LocalUser, RegisteredAV, PowerShellEnv, Monitor, LocalGroup, LastBootUpTime, FirewallRule, EventSource, EventLog, BitLocker, FileInfo, ScheduledTask, Service, SSID, Printer, NetworkShare, Process, RegistryKey, Prefetch, InstalledProgram",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "enabledCustomScripts",
+      "name": "Enabled Custom Real Time Response Scripts",
+      "description": "Comma delimited list of enabled Custom scripts by script name. Listed Custom scripts must be accessible to the configured Client ID. Script names are case sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
     },
     {
       "key": "minimumSeverity",
