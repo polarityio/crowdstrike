@@ -95,7 +95,7 @@ module.exports = {
       key: 'enableRealTimeResponse',
       name: 'Enable Real Time Response',
       description:
-        'If checked, users will be able to connect to hosts and run custom and Falcon Real Time Response scripts.',
+        'If checked, users will be able to connect to hosts and run commands, and Custom and Falcon Real Time Response scripts.',
       default: false,
       type: 'boolean',
       userCanEdit: false,
@@ -105,7 +105,7 @@ module.exports = {
       key: 'enabledCommands',
       name: 'Enabled Real Time Response Commands',
       description:
-        'Comma delimited list of enabled RTR commands by command name.  Listed commands must be accessible to the configured Client ID. Command names are case sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.',
+        'Comma delimited list of enabled RTR commands by command name.  Listed commands must be accessible to the configured Client ID. Command names are case-sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.',
       default: 'cat, cd, env, getsid, ipconfig, ls, netstat, ps',
       type: 'text',
       userCanEdit: false,
@@ -115,7 +115,7 @@ module.exports = {
       key: 'enabledFalconScripts',
       name: 'Enabled Falcon Real Time Response Scripts',
       description:
-        'Comma delimited list of enabled Falcon scripts by script name.  Listed Falcon scripts must be accessible to the configured Client ID. Script names are case sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect.  This setting must be locked for all users.',
+        'Comma delimited list of enabled Falcon scripts by script name.  Listed Falcon scripts must be accessible to the configured Client ID. Script names are case-sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect.  This setting must be locked for all users.',
       default:
         'LocalUser, RegisteredAV, PowerShellEnv, Monitor, LocalGroup, LastBootUpTime, FirewallRule, EventSource, EventLog, BitLocker, FileInfo, ScheduledTask, Service, SSID, Printer, NetworkShare, Process, RegistryKey, Prefetch, InstalledProgram',
       type: 'text',
@@ -126,7 +126,7 @@ module.exports = {
       key: 'enabledCustomScripts',
       name: 'Enabled Custom Real Time Response Scripts',
       description:
-        'Comma delimited list of enabled Custom scripts by script name. Listed Custom scripts must be accessible to the configured Client ID. Script names are case sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.',
+        'Comma delimited list of enabled Custom scripts by script name. Listed Custom scripts must be accessible to the configured Client ID. Script names are case-sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.',
       default: '',
       type: 'text',
       userCanEdit: false,
