@@ -1,58 +1,19 @@
 module.exports = {
-  /**
-   * Name of the integration which is displayed in the Polarity integrations user interface
-   *
-   * @type String
-   * @required
-   */
+  polarityIntegrationUuid: 'd4d32a30-cce1-11ed-aeee-075d3490155d',
   name: 'CrowdStrike',
-  /**
-   * The acronym that appears in the notification window when information from this integration
-   * is displayed.  Note that the acronym is included as part of each "tag" in the summary information
-   * for the integration.  As a result, it is best to keep it to 4 or less characters.  The casing used
-   * here will be carried forward into the notification window.
-   *
-   * @type String
-   * @required
-   */
   acronym: 'CSTK',
-  /**
-   * Description for this integration which is displayed in the Polarity integrations user interface
-   *
-   * @type String
-   * @optional
-   */
   description:
     'Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).',
-  entityTypes: ['domain', 'MD5', 'SHA256', 'IPv4'],
+  entityTypes: ['MD5', 'SHA256', 'IPv4', 'domain'],
   customTypes: [
     {
       key: 'exeFile',
-      regex: /[\w-]{2,}\.(?:exe|dll|dmg|doc|pdf|csv|sh)/
+      regex: '[\\w-]{2,}\\.(?:exe|dll|dmg|doc|pdf|csv|sh)'
     }
-    // {
-    //   key: 'hostname',
-    //   regex: /DESKTOP\-[A-Za-z0-9]*/
-    // }
   ],
   onDemandOnly: true,
   defaultColor: 'light-purple',
-  /**
-   * An array of style files (css or less) that will be included for your integration. Any styles specified in
-   * the below files can be used in your custom template.
-   *
-   * @type Array
-   * @optional
-   */
   styles: ['./styles/crowdstrike.less'],
-  /**
-   * Provide custom component logic and template for rendering the integration details block.  If you do not
-   * provide a custom template and/or component then the integration will display data as a table of key value
-   * pairs.
-   *
-   * @type Object
-   * @optional
-   */
   block: {
     component: {
       file: './components/crowdstrike-block.js'
@@ -62,40 +23,15 @@ module.exports = {
     }
   },
   request: {
-    // Provide the path to your certFile. Leave an empty string to ignore this option.
-    // Relative paths are relative to the integration's root directory
     cert: '',
-    // Provide the path to your private key. Leave an empty string to ignore this option.
-    // Relative paths are relative to the integration's root directory
     key: '',
-    // Provide the key passphrase if required.  Leave an empty string to ignore this option.
-    // Relative paths are relative to the integration's root directory
     passphrase: '',
-    // Provide the Certificate Authority. Leave an empty string to ignore this option.
-    // Relative paths are relative to the integration's root directory
     ca: '',
-    // An HTTP proxy to be used. Supports proxy Auth with Basic Auth, identical to support for
-    // the url parameter (by embedding the auth info in the uri)
     proxy: ''
   },
   logging: {
-    // directory is relative to the this integrations directory
-    // e.g., if the integration is in /app/polarity-server/integrations/virustotal
-    // and you set directoryPath to be `integration-logs` then your logs will go to
-    // `/app/polarity-server/integrations/integration-logs`
-    // You can also set an absolute path.  If you set an absolute path you must ensure that
-    // the directory you specify is writable by the `polarityd:polarityd` user and group.
-
-    //directoryPath: '/var/log/polarity-integrations',
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'info'
   },
-  /**
-   * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
-   * as an array of option objects.
-   *
-   * @type Array
-   * @optional
-   */
   options: [
     {
       key: 'url',
@@ -154,6 +90,47 @@ module.exports = {
       type: 'boolean',
       userCanEdit: false,
       adminOnly: false
+    },
+    {
+      key: 'enableRealTimeResponse',
+      name: 'Enable Real Time Response',
+      description:
+        'If checked, users will be able to connect to hosts and run commands, and Custom and Falcon Real Time Response scripts.',
+      default: false,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
+      key: 'enabledCommands',
+      name: 'Enabled Real Time Response Commands',
+      description:
+        'Comma delimited list of enabled RTR commands by command name.  Listed commands must be accessible to the configured Client ID. Command names are case-sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.',
+      default: 'cat, cd, env, getsid, ipconfig, ls, netstat, ps',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'enabledFalconScripts',
+      name: 'Enabled Falcon Real Time Response Scripts',
+      description:
+        'Comma delimited list of enabled Falcon scripts by script name.  Listed Falcon scripts must be accessible to the configured Client ID. Script names are case-sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect.  This setting must be locked for all users.',
+      default:
+        'LocalUser, RegisteredAV, PowerShellEnv, Monitor, LocalGroup, LastBootUpTime, FirewallRule, EventSource, EventLog, BitLocker, FileInfo, ScheduledTask, Service, SSID, Printer, NetworkShare, Process, RegistryKey, Prefetch, InstalledProgram',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'enabledCustomScripts',
+      name: 'Enabled Custom Real Time Response Scripts',
+      description:
+        'Comma delimited list of enabled Custom scripts by script name. Listed Custom scripts must be accessible to the configured Client ID. Script names are case-sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.',
+      default: '',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'minimumSeverity',
@@ -226,21 +203,15 @@ module.exports = {
         {
           value: 'new',
           display: 'New'
+        },
+        {
+          value: 'closed',
+          display: 'Closed'
         }
       ],
       multiple: true,
       userCanEdit: true,
       adminOnly: false
-    },
-    {
-      key: 'showNoResults',
-      name: 'Show No Results',
-      description:
-        'If checked, the integration will return a summary tag indicating a lookup was performed and that there are no results.',
-      default: true,
-      type: 'boolean',
-      userCanEdit: false,
-      adminOnly: true
     },
     {
       key: 'maxConcurrent',

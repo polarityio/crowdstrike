@@ -8,6 +8,7 @@ const {
   RetryRequestError
 } = require('./responses');
 const { getLogger } = require('./logger');
+const { getCachedFalconScripts, getCachedCustomScripts } = require('./realTimeResponse');
 
 const getApiData = async (entity, options) => {
   const Logger = getLogger();
@@ -28,7 +29,10 @@ const getApiData = async (entity, options) => {
     return {
       hosts: deviceData,
       events: alertData,
-      iocs: iocData
+      iocs: iocData,
+      // Send empty array for scripts until user connects to a host
+      falconScripts: [],
+      customScripts: []
     };
   } catch (error) {
     throw error;

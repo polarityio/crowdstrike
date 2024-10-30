@@ -17,11 +17,14 @@ Before using the Polarity CrowdStrike Integration you will need to create a Clie
 4. A dialog will appear, enter the name of the integration (e.g. `Polarity`) and a description (optional).
 5. Polarity will need the following permissions:
    
-| Scope | Permission | Description |
-| ------ | ------ | ------ |
-| Detections | Read | Required to search detections |
-| Hosts | Read, Write | Read access is required to search hosts by IP Address. Write permission is required if the "Allow Containment Status Change" option is checked |
-| IOC Manager APIs | Read | Required if the "Search CrowdStrike IOCs" option is enabled | 
+| Scope            | Permission  | Description                                                                                                                                    |
+|------------------|-------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| Alerts           | Read        | Required to search alerts                                                                                                                      |
+| Detections       | Read        | Required to search detections                                                                                                                  |
+| Hosts            | Read, Write | Read access is required to search hosts by IP Address. Write permission is required if the "Allow Containment Status Change" option is checked |
+| IOC Manager APIs | Read        | Required if the "Search CrowdStrike IOCs" option is enabled                                                                                    | 
+| Real time response (admin) | Write | Required to fetch RTR Script Information                                                                                                       |
+ | Real time response | Read | Required to execute RTR scripts                                                                                                        
 
 6. Click `Add`. Record the Client ID and Client Secret (Client secret will only be shown once for security purpose, so make sure to store it in a secure place).
 
@@ -64,6 +67,25 @@ If checked, the integration will search IOCs detected in your environment. IOCs 
 
 ### Allow Containment Status Change
 If checked, users will be able to change the Containment Status of Devices via the integration. The provided API key must have 'Read' and 'Write' access to the 'Hosts' scope for this option to work.
+
+### Enable Real Time Response
+If checked, users will be able to connect to hosts and run commands, and Custom and Falcon Real Time Response scripts.
+
+### Enabled Real Time Response Commands
+Comma delimited list of enabled RTR commands by command name.  Listed commands must be accessible to the configured Client ID. Command names are case-sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.
+
+### Enabled Falcon Real Time Response Scripts
+Comma delimited list of enabled Falcon scripts by script name.  Listed Falcon scripts must be accessible to the configured Client ID. Script names are case-sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect.  This setting must be locked for all users.
+
+Default Value:
+
+```
+LocalUser, RegisteredAV, PowerShellEnv, Monitor, LocalGroup, LastBootUpTime, FirewallRule, EventSource, EventLog, BitLocker, FileInfo, ScheduledTask, Service, SSID, Printer, NetworkShare, Process, RegistryKey, Prefetch, InstalledProgram
+```
+
+### Enabled Custom Real Time Response Scripts
+Comma delimited list of enabled Custom scripts by script name. Listed Custom scripts must be accessible to the configured Client ID. Script names are case-sensitive. The `Enable Real Time Response` option must be checked for this setting to have an effect. This setting must be locked for all users.
+
 
 ### Max Concurrent Search Requests
 Maximum number of concurrent search requests (defaults to 20). Integration must be restarted after changing this option.
