@@ -856,7 +856,7 @@
             {{else if (eq message.type "command")}}
               <div class="console-message command">{{message.value}}</div>
             {{else if (eq message.type "error")}}
-              <div class="console-message error">{{message.value}}</div>
+              <div class="console-message error pre">{{message.value}}</div>
             {{/if}}
           </div>  
         {{/each}}
@@ -1027,6 +1027,27 @@
                       <div class="mt-1">
                         <div class="p-key">Use Case</div>
                         <div class="p-value p-block">{{script.use_case}}</div>
+                      </div>
+                    {{/if}}
+                    {{#if script.__workflow_input_schema_json.properties}}
+                      <div class="p-title">Input Arguments</div>
+                      <div>
+                        {{#each-in script.__workflow_input_schema_json.properties as | key value |}}
+                          <div class="mb-2">
+                            <div class="p-sub-title">
+                              {{key}}
+                              {{#each script.__workflow_input_schema_json.required as | requiredKey |}}
+                                {{#if (eq requiredKey key)}}
+                                  <span class="p-footnote ml-1">*required</span>
+                                {{/if}}
+                              {{/each}}
+                            </div>
+                            <div>
+                              <span class="p-key">Type:</span>
+                              <span class="p-value">{{value.type}}</span>
+                            </div>
+                          </div>
+                        {{/each-in}}
                       </div>
                     {{/if}}
                   {{/if}}

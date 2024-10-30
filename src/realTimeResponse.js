@@ -62,32 +62,10 @@ const getFalconScripts = async (options) => {
 
     Logger.trace({ scriptContentResponse }, 'Response containing script content');
 
-    if (Array.isArray(scriptContentResponse.body.resources)) {
-      scriptContentResponse.body.resources.forEach((resource) => {
-        if (typeof resource.workflow_input_schema) {
-          try {
-            resource.__workflow_input_schema_json = JSON.parse(
-              resource.workflow_input_schema
-            );
+    scriptContentResponse.body.resources = formatScriptInputArguments(
+      scriptContentResponse.body.resources
+    );
 
-            // For some reason some of scripts don't have valid JSON and some scripts have a JSON scheme with empty properties
-            // In both cases this means there are no input arguments and we normalize this to `null` to make it easier for the
-            // component to test for non-existence.
-            if (
-              resource.__workflow_input_schema_json &&
-              typeof resource.__workflow_input_schema_json.properties === 'object' &&
-              Object.keys(resource.__workflow_input_schema_json.properties).length === 0
-            ) {
-              resource.__workflow_input_schema_json = null;
-            }
-          } catch (parseError) {
-            // Set to null to make it easier for component to test for non-existence
-            resource.__workflow_input_schema_json = null;
-          }
-        }
-      });
-    }
-    
     return removeInvalidScripts(
       scriptContentResponse.body.resources,
       options.enabledFalconScripts
@@ -161,9 +139,45 @@ const getCustomScripts = async (options) => {
 
   const { body } = await authenticatedRequest(requestOptions, options);
 
+  body.resources = formatScriptInputArguments(body.resources);
+
   Logger.trace({ body }, 'getCustomScripts');
 
   return removeInvalidScripts(body.resources, options.enabledCustomScripts);
+};
+
+/**
+ * Checks for input arugments on a script and generates a JSON version of the JSON schema
+ * used to represent those arugments.
+ * This method mutates the provided scripts
+ * @param scripts
+ */
+const formatScriptInputArguments = (scripts) => {
+  if (Array.isArray(scripts)) {
+    scripts.forEach((script) => {
+      if (typeof script.workflow_input_schema) {
+        try {
+          script.__workflow_input_schema_json = JSON.parse(script.workflow_input_schema);
+
+          // For some reason some of scripts don't have valid JSON and some scripts have a JSON scheme with empty properties
+          // In both cases this means there are no input arguments and we normalize this to `null` to make it easier for the
+          // component to test for non-existence.
+          if (
+            script.__workflow_input_schema_json &&
+            typeof script.__workflow_input_schema_json.properties === 'object' &&
+            Object.keys(script.__workflow_input_schema_json.properties).length === 0
+          ) {
+            script.__workflow_input_schema_json = null;
+          }
+        } catch (parseError) {
+          // Set to null to make it easier for component to test for non-existence
+          script.__workflow_input_schema_json = null;
+        }
+      }
+    });
+  }
+
+  return scripts;
 };
 
 const getRtrSession = async (deviceId, options) => {

@@ -48,12 +48,6 @@ class RequestWithDefaults {
         if (err) return reject(err);
         Logger.trace({ response, requestOptions }, 'Response in requestWithDefaults');
 
-        // try {
-        //   checkForStatusError(response, requestOptions);
-        // } catch (err) {
-        //   reject(err);
-        // }
-
         resolve(response);
       });
     });

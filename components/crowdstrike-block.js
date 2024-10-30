@@ -59,14 +59,14 @@ polarity.export = PolarityComponent.extend({
       }
     },
     viewFalconScriptDetails: function (falconScriptIndex) {
-      if(this.get('state.rtr.falconScripts')){
-        this.toggleProperty(`state.rtr.falconScripts.${falconScriptIndex}.__viewDetails`);  
-      }      
+      if (this.get('state.rtr.falconScripts')) {
+        this.toggleProperty(`state.rtr.falconScripts.${falconScriptIndex}.__viewDetails`);
+      }
     },
     viewCustomScriptDetails: function (customScriptIndex) {
-      if(this.get('state.rtr.customScripts')){
-        this.toggleProperty(`state.rtr.customScripts.${customScriptIndex}.__viewDetails`);  
-      }      
+      if (this.get('state.rtr.customScripts')) {
+        this.toggleProperty(`state.rtr.customScripts.${customScriptIndex}.__viewDetails`);
+      }
     },
     // Triggered when the user selects a device in the device drop down of the RTR tab
     deviceSelected: function () {
@@ -182,8 +182,8 @@ polarity.export = PolarityComponent.extend({
       this.scrollToEndOfConsole();
 
       commandString = commandString.trim();
-      
-      if(commandString === 'clear'){
+
+      if (commandString === 'clear') {
         this.get('state.rtr.consoleMessages').clear();
         this.set('state.rtr.command', '');
         return;
@@ -283,11 +283,8 @@ polarity.export = PolarityComponent.extend({
         }
         this.set('state.rtr.showConsolePwd', true);
       } catch (error) {
-        console.error(error);
-        this.addConsoleMessage(
-          'error',
-          error.message ? error.message : JSON.stringify(error, null, 2)
-        );
+        let errorMessage = error.message ? error.message : JSON.stringify(error, null, 2);
+        this.addConsoleMessage('error', errorMessage);
         this.set('state.rtr.showConsolePwd', true);
       } finally {
         this.set('state.rtr.isRunningCommand', false);
