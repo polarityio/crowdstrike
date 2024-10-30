@@ -69,17 +69,25 @@ const getFalconScripts = async (options) => {
             resource.__workflow_input_schema_json = JSON.parse(
               resource.workflow_input_schema
             );
+
+            // For some reason some of scripts don't have valid JSON and some scripts have a JSON scheme with empty properties
+            // In both cases this means there are no input arguments and we normalize this to `null` to make it easier for the
+            // component to test for non-existence.
+            if (
+              resource.__workflow_input_schema_json &&
+              typeof resource.__workflow_input_schema_json.properties === 'object' &&
+              Object.keys(resource.__workflow_input_schema_json.properties).length === 0
+            ) {
+              resource.__workflow_input_schema_json = null;
+            }
           } catch (parseError) {
-            Logger.warn(
-              { resource },
-              'Unable to parse scripts `workflow_input_schema` property into JSON object'
-            );
-            resource.__workflow_input_schema_json = {};
+            // Set to null to make it easier for component to test for non-existence
+            resource.__workflow_input_schema_json = null;
           }
         }
       });
     }
-
+    
     return removeInvalidScripts(
       scriptContentResponse.body.resources,
       options.enabledFalconScripts
@@ -344,7 +352,6 @@ const deleteRtrSession = async (sessionId, options) => {
   try {
     await authenticatedRequest(requestOptions, options);
   } catch (error) {
-
     Logger.error(error, 'Error when deleting session');
     throw error;
   }

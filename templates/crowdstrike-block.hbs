@@ -929,6 +929,7 @@
                     </button>
                   </div>
                   {{#if script.__viewDetails}}
+                    <div class="p-title">Details</div>
                     <div class="mt-1">
                       <span class="p-key">Platform:</span>
                       <span class="p-value">{{script.platform}}</span>
@@ -941,6 +942,27 @@
                       <div class="p-key">Use Case</div>
                       <div class="p-value p-block">{{script.use_case}}</div>
                     </div>
+                    {{#if script.__workflow_input_schema_json.properties}}
+                      <div class="p-title">Input Arguments</div>
+                      <div>
+                        {{#each-in script.__workflow_input_schema_json.properties as | key value |}}
+                          <div class="mb-2">
+                            <div class="p-sub-title">
+                              {{key}}
+                              {{#each script.__workflow_input_schema_json.required as | requiredKey |}}
+                                {{#if (eq requiredKey key)}}
+                                    <span class="p-footnote ml-1">*required</span>
+                                {{/if}}
+                              {{/each}}
+                            </div>
+                            <div>
+                              <span class="p-key">Type:</span>
+                              <span class="p-value">{{value.type}}</span>  
+                            </div>
+                          </div>
+                        {{/each-in}}  
+                      </div>
+                    {{/if}}
                   {{/if}}
                 </div>
               {{/each}}
