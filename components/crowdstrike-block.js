@@ -1,5 +1,6 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
+  state: Ember.computed.alias('block._state'),
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
@@ -9,15 +10,25 @@ polarity.export = PolarityComponent.extend({
   containOrUncontainIsRunning: {},
   containmentStatus: '',
   isRunning: false,
+  uniqueIfPrefix: '',
   modalDevice: {},
   init() {
     this.initActiveTab();
+
     // refresh the device status to ensure the containment options are always fresh
     // and not being served from the cache
     if (this.get('details.hosts.devices')) {
       this.get('details.hosts.devices').forEach((device, index) => {
         this.doGetAndUpdateDeviceState(device, index);
       });
+    }
+
+    if (!this.get('block._state')) {
+      this.set('block._state', {});
+      this.set('state.rtr', {});
+      this.set('state.rtr.consoleMessages', Ember.A());
+      this.set('state.rtr.connectionStatus', 'Disconnected');
+      this.set('state.rtr.isConnected', false);
     }
 
     let array = new Uint32Array(5);
@@ -39,6 +50,246 @@ polarity.export = PolarityComponent.extend({
   actions: {
     changeTab: function (tabName) {
       this.set('activeTab', tabName);
+    },
+    changeScriptTab: function (tabName) {
+      if (this.get('activeScriptTab') === tabName) {
+        this.set('activeScriptTab', '');
+      } else {
+        this.set('activeScriptTab', tabName);
+      }
+    },
+    viewFalconScriptDetails: function (falconScriptIndex) {
+      if (this.get('state.rtr.falconScripts')) {
+        this.toggleProperty(`state.rtr.falconScripts.${falconScriptIndex}.__viewDetails`);
+      }
+    },
+    viewCustomScriptDetails: function (customScriptIndex) {
+      if (this.get('state.rtr.customScripts')) {
+        this.toggleProperty(`state.rtr.customScripts.${customScriptIndex}.__viewDetails`);
+      }
+    },
+    // Triggered when the user selects a device in the device drop down of the RTR tab
+    deviceSelected: function () {
+      const selectedDeviceId = this.get('state.rtr.selectedDeviceId');
+      const selectedDevice = this.get('details.hosts.devices').find(
+        (device) => device.device_id === selectedDeviceId
+      );
+      this.set('state.rtr.selectedDevice', selectedDevice);
+    },
+    // Triggered when the user selects a FalconScript to populate into the command input
+    populateFalconScript: function (falconScriptIndex) {
+      const script = this.get(`state.rtr.falconScripts.${falconScriptIndex}`);
+      this.set('state.rtr.selectedFalconScriptId', falconScriptIndex);
+      this.set('state.rtr.selectedCustomScriptId', '');
+      this.set(
+        'state.rtr.command',
+        `falconscript -Name="${script.name}" -JsonInput=\`\`\`''\`\`\``
+      );
+    },
+    // Triggered when the user selects a CustomScript to populate into the command input
+    populateCustomScript: function (customScriptIndex) {
+      const script = this.get(`state.rtr.customScripts.${customScriptIndex}`);
+      this.set('state.rtr.selectedCustomScriptId', customScriptIndex);
+      this.set('state.rtr.selectedFalconScriptId', '');
+      this.set(
+        'state.rtr.command',
+        `runscript -CloudFile="${script.name}"  -CommandLine=""`
+      );
+    },
+    connectToDevice(deviceId, platform) {
+      this.set('state.rtr.isConnecting', true);
+      this.get('state.rtr.consoleMessages').clear();
+      const payload = {
+        action: 'GET_RTR_SESSION',
+        deviceId,
+        platform
+      };
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          console.info('Connect to Device', result);
+          this.set('state.rtr.sessionId', result.sessionId);
+          this.set('state.rtr.pwd', result.pwd);
+          this.set('state.rtr.falconScripts', result.falconScripts);
+          this.set('state.rtr.customScripts', result.customScripts);
+          this.set('state.rtr.connectionStatus', 'Connected');
+          this.set('state.rtr.isConnected', true);
+          this.set('state.rtr.showConsolePwd', true);
+        })
+        .catch((err) => {
+          console.error(err);
+          this.set('state.rtr.connectionStatus', 'Disconnected');
+          this.set('state.rtr.isConnected', false);
+        })
+        .finally(() => {
+          this.set('state.rtr.isConnecting', false);
+        });
+    },
+    copyMessageValue: function (elementId, messageIndex) {
+      Ember.run.scheduleOnce('afterRender', this, this.copyElementToClipboard, elementId);
+
+      Ember.run.scheduleOnce('destroy', this, this.restoreCopyState, messageIndex);
+    },
+    disconnectFromDevice(sessionId) {
+      if (!sessionId) {
+        console.warn('No session id provided when calling `disconnectFromDevice` action');
+        return;
+      }
+
+      this.set('state.rtr.isDisconnecting', true);
+      const payload = {
+        action: 'DELETE_RTR_SESSION',
+        sessionId
+      };
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          this.set('state.rtr.sessionId', undefined);
+          this.set('state.rtr.connectionStatus', 'Disconnected');
+          this.set('state.rtr.isConnected', false);
+          this.set('state.rtr.showConsolePwd', false);
+          this.addConsoleMessage(
+            'system',
+            `Disconnected from host ${this.get('state.rtr.selectedDevice.hostname')}`
+          );
+        })
+        .catch((err) => {
+          console.error(err);
+          this.set('state.rtr.connectionStatus', 'Disconnected');
+          this.set('state.rtr.isConnected', false);
+        })
+        .finally(() => {
+          this.set('state.rtr.isDisconnecting', false);
+        });
+    },
+    runScript: async function (sessionId, deviceId, commandString) {
+      if (this.get('state.rtr.isRunningCommand')) {
+        // a command is already running
+        return;
+      }
+
+      if (!sessionId) {
+        console.warn('No session id provided when calling `runScript` action');
+        return;
+      }
+
+      if (!deviceId) {
+        console.warn('No device id available when calling `runScript` action');
+      }
+
+      if (!commandString) {
+        console.warn('No command string provided when calling `runScript` action');
+      }
+
+      this.scrollToEndOfConsole();
+
+      commandString = commandString.trim();
+
+      if (commandString === 'clear') {
+        this.get('state.rtr.consoleMessages').clear();
+        this.set('state.rtr.command', '');
+        return;
+      }
+
+      this.set('state.rtr.isRunningCommand', true);
+      this.set('state.rtr.commandStatus', 'Sending command');
+
+      this.set('state.rtr.showConsolePwd', false);
+      this.set('state.rtr.command', '');
+      this.addConsoleMessage('command', `${this.get('state.rtr.pwd')} ${commandString}`);
+
+      try {
+        let baseCommand = commandString;
+
+        if (commandString.startsWith('runscript')) {
+          baseCommand = 'runscript';
+        } else if (commandString.startsWith('falconscript')) {
+          baseCommand = 'falconscript';
+        }
+
+        const getCloudRequestIdResult = await this.getCloudRequestId(
+          sessionId,
+          deviceId,
+          baseCommand,
+          commandString
+        );
+
+        if (getCloudRequestIdResult.sessionExpired) {
+          this.addConsoleMessage(
+            'error',
+            'Your session has expired.  You must connect to the host again.'
+          );
+          this.set('state.rtr.isRunningCommand', false);
+          this.set('state.rtr.isConnected', false);
+          this.set('state.rtr.showConsolePwd', false);
+          this.addConsoleMessage(
+            'system',
+            `Disconnected from host ${this.get('state.rtr.selectedDevice.hostname')}`
+          );
+          return;
+        } else if (getCloudRequestIdResult.unsupportedScriptOrCommand) {
+          this.addConsoleMessage(
+            'error',
+            'An invalid or unsupported command or script was provided. Scripts and commands are case sensitive. Contact your Polarity admin if you believe this is a valid command or script.'
+          );
+          this.set('state.rtr.isRunningCommand', false);
+          return;
+        }
+
+        this.set(
+          'state.rtr.commandStatus',
+          `Waiting for result: ${getCloudRequestIdResult.cloudRequestId}`
+        );
+
+        let result = await this.getRtrResult(getCloudRequestIdResult.cloudRequestId);
+
+        if (result.sessionExpired) {
+          this.addConsoleMessage(
+            'error',
+            'Your session has expired.  You must connect to the host again.'
+          );
+          this.set('state.rtr.isRunningCommand', false);
+          this.set('state.rtr.isConnected', false);
+          this.set('state.rtr.showConsolePwd', false);
+          this.addConsoleMessage(
+            'system',
+            `Disconnected from host ${this.get('state.rtr.selectedDevice.hostname')}`
+          );
+          return;
+        }
+
+        let resultType = 'commandResult';
+        if (baseCommand === 'falconscript' || baseCommand === 'runscript') {
+          resultType = 'scriptResult';
+        }
+        let parsedResult;
+        let resultText = result.stdout;
+        if (result.stderr) {
+          resultText = result.stderr;
+          resultType = 'error';
+        }
+        try {
+          // Some commands return results as JSON.  We try to parse the result as JSON and if that
+          // fails we treat the result as a string.
+          parsedResult = JSON.parse(resultText);
+          if (Array.isArray(parsedResult.result)) {
+            // Most falcon scripts return a `result` array which we check for here
+            this.addConsoleMessage(resultType, parsedResult.result);
+          } else {
+            // This is our backup where we can't determine the format of the returned data but we know its JSON
+            this.addConsoleMessage(resultType, JSON.stringify(parsedResult, null, 2));
+          }
+        } catch (parseError) {
+          // Finally, we couldn't parse the result as JSON so we just treat it as a string
+          this.addConsoleMessage(resultType, resultText);
+        }
+        this.set('state.rtr.showConsolePwd', true);
+      } catch (error) {
+        let errorMessage = error.message ? error.message : JSON.stringify(error, null, 2);
+        this.addConsoleMessage('error', errorMessage);
+        this.set('state.rtr.showConsolePwd', true);
+      } finally {
+        this.set('state.rtr.isRunningCommand', false);
+        this.set('state.rtr.commandStatus', '');
+      }
     },
     retryLookup: function () {
       this.set('running', true);
@@ -108,6 +359,26 @@ polarity.export = PolarityComponent.extend({
     getAndUpdateDeviceState: function (device, index) {
       this.doGetAndUpdateDeviceState(device, index);
     }
+  },
+  copyElementToClipboard(element) {
+    window.getSelection().removeAllRanges();
+    let range = document.createRange();
+
+    range.selectNode(
+      typeof element === 'string' ? document.getElementById(element) : element
+    );
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+  },
+  restoreCopyState(messageIndex) {
+    this.set(`state.rtr.consoleMessages.${messageIndex}.showCopyMessage`, true);
+
+    setTimeout(() => {
+      if (!this.isDestroyed) {
+        this.set(`state.rtr.consoleMessages.${messageIndex}.showCopyMessage`, false);
+      }
+    }, 2000);
   },
   setMessages: function (index, prefix, message) {
     if (!this.isDestroyed) {
@@ -198,5 +469,136 @@ polarity.export = PolarityComponent.extend({
           this.get('block').notifyPropertyChange('data');
         }, 5000);
       });
+  },
+  getCloudRequestId: function (sessionId, deviceId, baseCommand, commandString) {
+    return new Ember.RSVP.Promise((resolve, reject) => {
+      if (!sessionId) {
+        return reject('No session id provided when calling `getCloudRequestId` action');
+      }
+
+      if (!deviceId) {
+        return reject('No device id available when calling `getCloudRequestId` action');
+      }
+
+      if (!commandString) {
+        return reject(
+          'No command string provided when calling `getCloudRequestId` action'
+        );
+      }
+
+      this.set('state.rtr.isRunningCommand', true);
+
+      const payload = {
+        action: 'RUN_SCRIPT',
+        sessionId,
+        deviceId,
+        baseCommand,
+        commandString
+      };
+
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          console.info(`Result from getCloudRequestId`, result);
+          resolve(result);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  getRtrResult: async function (
+    cloudRequestId,
+    stdout = '',
+    stderr = '',
+    sequenceId = 0
+  ) {
+    const result = await this.pollRtrResult(cloudRequestId, sequenceId);
+
+    stdout += result.stdout;
+    stderr += result.stderr;
+
+    if (result.sessionExpired) {
+      return {
+        sessionExpired: true
+      };
+    }
+
+    if (result.complete) {
+      return {
+        stdout,
+        stderr
+      };
+    }
+
+    // wait 2 seconds, then repeat our request
+    await this.sleep(2000);
+    return await this.getRtrResult(cloudRequestId, stdout, stderr, result.sequenceId);
+  },
+  pollRtrResult: async function (cloudRequestId, sequenceId) {
+    if (!cloudRequestId) {
+      throw new Error('No cloud request id provided when calling `pollRtrResult` action');
+    }
+
+    const payload = {
+      action: 'GET_RTR_RESULT',
+      sequenceId,
+      cloudRequestId
+    };
+
+    const result = await this.sendIntegrationMessage(payload);
+
+    return result;
+  },
+  sleep: async function (ms) {
+    return new Promise((res) => Ember.run.later(res, ms));
+  },
+  /**
+   *
+   * @param type
+   *  system -- for system messages (status, etc.)
+   *  error -- for any error messages
+   *  command -- any command that is issued by the user (e.g., a falconscript, ls, cd etc.)
+   *  commandResult -- the result a command (e.g., ls, cd).  Commands always return formatted (pre) strings
+   *  scriptResult -- the result from a script (falconscript)
+   * @param value
+   * String or Array content to be displayed
+   * Array of objects
+   * The following formats are supported which are formats returned by tested
+   * Falcon Scripts
+   * ```
+   * [
+   *   {
+   *     key1: 'value1',
+   *     key2: 'value2'
+   *   }
+   * ]
+   * ```
+   * or
+   * ```
+   *   {
+   *       key1: [
+   *           {
+   *               subKey1: 'value1'
+   *               subKey2: 'value2'
+   *           },
+   *           {
+   *               subKey3: 'value3'
+   *           }
+   *       ]
+   *   }
+   */
+  addConsoleMessage(type, value) {
+    const payload = {
+      type,
+      value,
+      isCollapsed: true
+    };
+    this.get('state.rtr.consoleMessages').unshiftObject(payload);
+  },
+  scrollToEndOfConsole() {
+    const objDiv = document.getElementById(
+      `crowdstrike-console-${this.get('uniqueIdPrefix')}`
+    );
+    objDiv.scrollTop = objDiv.scrollHeight;
   }
 });

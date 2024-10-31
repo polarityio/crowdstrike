@@ -36,6 +36,7 @@ const HTTP_CODE_API_LIMIT_REACHED_429 = 429;
 const HTTP_CODE_SUCCESS_200 = 200;
 const HTTP_CODE_SUCCESS_201 = 201;
 const HTTP_CODE_SUCCESS_202 = 202;
+const HTTP_CODE_SUCCESS_204 = 204;
 
 const MAX_AUTH_RETRIES = 1;
 
@@ -62,7 +63,8 @@ async function authenticatedRequest(requestOptions, options, requestRetryCount =
     if (
       statusCode === HTTP_CODE_SUCCESS_200 ||
       statusCode === HTTP_CODE_SUCCESS_201 ||
-      statusCode === HTTP_CODE_SUCCESS_202
+      statusCode === HTTP_CODE_SUCCESS_202 ||
+      statusCode === HTTP_CODE_SUCCESS_204
     ) {
       return response;
     }
