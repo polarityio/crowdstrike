@@ -294,7 +294,7 @@ const didRtrOptionsChange = (options) => {
 };
 
 const maybeCacheRealTimeResponseScripts = async (options) => {
-  if (didRtrOptionsChange(options)) {
+  if (options.enableRealTimeResponse && didRtrOptionsChange(options)) {
     cachedFalconScripts = await getFalconScripts(options);
     cachedCustomScripts = await getCustomScripts(options);
   }
