@@ -126,6 +126,14 @@ const onMessage = async (payload, options, callback) => {
   switch (payload.action) {
     case 'GET_RTR_SESSION':
       try {
+        if (!options.enableRealTimeResponse) {
+          callback({
+            detail: 'Real Time Response is disabled',
+            status: 401
+          });
+          return;
+        }
+
         const { deviceId, platform } = payload;
         const { sessionId, pwd } = await getRtrSession(deviceId, options);
 
@@ -148,13 +156,23 @@ const onMessage = async (payload, options, callback) => {
           customScripts
         });
       } catch (error) {
-        const err = parseErrorToReadableJSON(error);
-        Logger.error(err, 'onMessage GET_RTR_SESSION Error');
-        callback(err);
+        Logger.error({ error }, 'onMessage GET_RTR_SESSION Error');
+        if(error.meta && Array.isArray(error.meta.errors) && error.meta.errors.length > 0){
+          error.detail = `${error.meta.errors[0].message} (Code: ${error.meta.errors[0].code})`;
+        }
+        callback(error);
       }
       break;
     case 'DELETE_RTR_SESSION':
       try {
+        if (!options.enableRealTimeResponse) {
+          callback({
+            detail: 'Real Time Response is disabled',
+            status: 401
+          });
+          return;
+        }
+
         const { sessionId } = payload;
         await deleteRtrSession(sessionId, options);
         callback(null, {
@@ -163,14 +181,24 @@ const onMessage = async (payload, options, callback) => {
       } catch (error) {
         // specifically look for a session timeout error
         if (!handleExpiredRtrSession(error, callback)) {
-          const err = parseErrorToReadableJSON(error);
-          Logger.error(err, 'onMessage DELETE_RTR_SESSION Error');
-          callback(err);
+          Logger.error({ error }, 'onMessage DELETE_RTR_SESSION Error');
+          if(error.meta && Array.isArray(error.meta.errors) && error.meta.errors.length > 0){
+            error.detail = `${error.meta.errors[0].message} (Code: ${error.meta.errors[0].code})`;
+          }
+          callback(error);
         }
       }
       break;
     case 'RUN_SCRIPT':
       try {
+        if (!options.enableRealTimeResponse) {
+          callback({
+            detail: 'Real Time Response is disabled',
+            status: 401
+          });
+          return;
+        }
+
         const { sessionId, deviceId, baseCommand, commandString } = payload;
 
         if (!isEnabledScriptOrCommand(commandString, options)) {
@@ -197,14 +225,24 @@ const onMessage = async (payload, options, callback) => {
       } catch (error) {
         // specifically look for a session timeout error
         if (!handleExpiredRtrSession(error, callback)) {
-          const err = parseErrorToReadableJSON(error);
-          Logger.error(err, 'onMessage RUN_SCRIPT Error');
-          callback(err);
+          Logger.error({ error }, 'onMessage RUN_SCRIPT Error');
+          if(error.meta && Array.isArray(error.meta.errors) && error.meta.errors.length > 0){
+            error.detail = `${error.meta.errors[0].message} (Code: ${error.meta.errors[0].code})`;
+          }
+          callback(error);
         }
       }
       break;
     case 'GET_RTR_RESULT':
       try {
+        if (!options.enableRealTimeResponse) {
+          callback({
+            detail: 'Real Time Response is disabled',
+            status: 401
+          });
+          return;
+        }
+
         const { cloudRequestId, sequenceId } = payload;
         const {
           stdout,
@@ -225,14 +263,24 @@ const onMessage = async (payload, options, callback) => {
       } catch (error) {
         // specifically look for a session timeout error
         if (!handleExpiredRtrSession(error, callback)) {
-          const err = parseErrorToReadableJSON(error);
-          Logger.error(err, 'onMessage GET_RTR_RESULT Error');
-          callback(err);
+          Logger.error({ error }, 'onMessage GET_RTR_RESULT Error');
+          if(error.meta && Array.isArray(error.meta.errors) && error.meta.errors.length > 0){
+            error.detail = `${error.meta.errors[0].message} (Code: ${error.meta.errors[0].code})`;
+          }
+          callback(error);
         }
       }
       break;
     case 'containOrUncontain':
       try {
+        if (!options.allowContainment) {
+          callback({
+            detail: 'Host containment is disabled',
+            status: 401
+          });
+          return;
+        }
+
         const containedHost = await containHost(data, options);
         callback(null, containedHost);
       } catch (containError) {

@@ -119,6 +119,11 @@ polarity.export = PolarityComponent.extend({
           console.error(err);
           this.set('state.rtr.connectionStatus', 'Disconnected');
           this.set('state.rtr.isConnected', false);
+          let errorMsg = err.detail;
+          if (!errorMsg) {
+            errorMsg = JSON.stringify(err, null, 2);
+          }
+          this.addConsoleMessage('error', errorMsg);
         })
         .finally(() => {
           this.set('state.rtr.isConnecting', false);

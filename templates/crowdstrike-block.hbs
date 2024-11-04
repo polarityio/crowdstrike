@@ -69,14 +69,16 @@
             Host Management
           </a>
         </li>
-        <li class="nav-item">
-          <a
-            {{action "changeTab" "rtr"}}
-                  class="nav-link {{if (or (eq activeTab 'rtr') (not activeTab)) 'active'}}"
-          >
-            Real Time Response
-          </a>
-        </li>
+        {{#if block.userOptions.enableRealTimeResponse}}
+          <li class="nav-item">
+            <a
+              {{action "changeTab" "rtr"}}
+                    class="nav-link {{if (or (eq activeTab 'rtr') (not activeTab)) 'active'}}"
+            >
+              Real Time Response
+            </a>
+          </li>
+        {{/if}}
       {{/if}}
     </ul>
   {{/unless}}
