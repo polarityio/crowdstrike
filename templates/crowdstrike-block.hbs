@@ -594,7 +594,7 @@
         >
           <option selected value="">-- Select a Host --</option>
           {{#each details.hosts.devices as |device|}}
-            <option value="{{device.device_id}}">{{device.hostname}}</option>
+            <option value="{{device.device_id}}" selected="{{if (eq device.device_id state.rtr.selectedDeviceId) "true"}}">{{device.hostname}}</option>
           {{/each}}
         </select>
         {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
@@ -684,7 +684,7 @@
             <div class="info-bar-pill">
               <span class="info-bar-key">Domain</span>
               <span class="info-bar-value">
-                {{#if state.rtr.selectedDevice}}
+                {{#if (and state.rtr.selectedDevice state.rtr.selectedDevice.machine_domain)}}
                   {{state.rtr.selectedDevice.machine_domain}}
                 {{else}}
                   --

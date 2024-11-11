@@ -50,6 +50,13 @@ polarity.export = PolarityComponent.extend({
   actions: {
     changeTab: function (tabName) {
       this.set('activeTab', tabName);
+      
+      // If there is only one device, select it in the drop down automatically
+      if(tabName === 'rtr' && this.get('details.hosts.devices.length') === 1){
+        const selectedDevice = this.get('details.hosts.devices.0')
+        this.set('state.rtr.selectedDevice', selectedDevice);
+        this.set('state.rtr.selectedDeviceId', selectedDevice.device_id);
+      }
     },
     changeScriptTab: function (tabName) {
       if (this.get('activeScriptTab') === tabName) {
