@@ -604,8 +604,8 @@
       </div>
 
       <div class="info-bar device-information">
-        <div class="info-bar-row even-width">
-          <div class="info-bar-pill">
+        <div class="info-bar-row">
+          <div class="info-bar-pill two-wide">
             <span class="info-bar-key">Hostname</span>
             <span class="info-bar-value">
               {{#if state.rtr.selectedDevice}}
@@ -615,7 +615,7 @@
               {{/if}}
             </span>
           </div>
-          <div class="info-bar-pill">
+          <div class="info-bar-pill two-wide">
             <span class="info-bar-key d-flex align-items-center justify-content-between">
               Platform
               <div {{action (toggle "rtr.viewDeviceDetails" state)}}>
@@ -637,7 +637,7 @@
         </div>
         {{#if state.rtr.viewDeviceDetails}}
           <div class="info-bar-row even-width">
-            <div class="info-bar-pill">
+            <div class="info-bar-pill two-wide">
               <span class="info-bar-key">Host Type</span>
               <span class="info-bar-value">
                 {{#if state.rtr.selectedDevice}}
@@ -647,7 +647,7 @@
                 {{/if}}
               </span>
             </div>
-            <div class="info-bar-pill">
+            <div class="info-bar-pill two-wide">
               <span class="info-bar-key">OS Version</span>
               <span class="info-bar-value">
                 {{#if state.rtr.selectedDevice}}
@@ -659,7 +659,7 @@
             </div>
           </div>
           <div class="info-bar-row even-width">
-            <div class="info-bar-pill">
+            <div class="info-bar-pill two-wide">
               <span class="info-bar-key">First Seen</span>
               <span class="info-bar-value">
                 {{#if state.rtr.selectedDevice}}
@@ -669,7 +669,7 @@
                 {{/if}}
               </span>
             </div>
-            <div class="info-bar-pill">
+            <div class="info-bar-pill two-wide">
               <span class="info-bar-key">Last Seen</span>
               <span class="info-bar-value">
                 {{#if state.rtr.selectedDevice}}
@@ -681,7 +681,7 @@
             </div>
           </div>
           <div class="info-bar-row even-width">
-            <div class="info-bar-pill">
+            <div class="info-bar-pill two-wide">
               <span class="info-bar-key">Domain</span>
               <span class="info-bar-value">
                 {{#if (and state.rtr.selectedDevice state.rtr.selectedDevice.machine_domain)}}
@@ -691,7 +691,7 @@
                 {{/if}}
               </span>
             </div>
-            <div class="info-bar-pill">
+            <div class="info-bar-pill two-wide">
               <span class="info-bar-key">Local IP</span>
               <span class="info-bar-value">
                 {{#if state.rtr.selectedDevice}}
@@ -703,7 +703,7 @@
             </div>
           </div>
           <div class="info-bar-row even-width">
-            <div class="info-bar-pill">
+            <div class="info-bar-pill two-wide">
               <span class="info-bar-key">Manufacturer</span>
               <span class="info-bar-value">
                 {{#if state.rtr.selectedDevice}}
@@ -713,7 +713,7 @@
                 {{/if}}
               </span>
             </div>
-            <div class="info-bar-pill">
+            <div class="info-bar-pill two-wide">
               <span class="info-bar-key">Model</span>
               <span class="info-bar-value">
                 {{#if state.rtr.selectedDevice}}
@@ -729,7 +729,7 @@
 
       <div class="info-bar session-information mt-2">
         <div class="info-bar-row even-width">
-          <div class="info-bar-pill">
+          <div class="info-bar-pill auto-width">
             <span class="info-bar-key">Connection Status</span>
             <span class="info-bar-value d-flex align-items-center justify-content-start">
               {{#if state.rtr.isConnected}}
@@ -743,7 +743,7 @@
               {{/if}}
             </span>
           </div>
-          <div class="info-bar-pill">
+          <div class="info-bar-pill auto-width">
             <span class="info-bar-value">
               <div>
                 {{#if state.rtr.isConnected}}
