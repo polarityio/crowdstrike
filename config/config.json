@@ -3,12 +3,22 @@
   "name": "CrowdStrike",
   "acronym": "CSTK",
   "description": "Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).",
-  "entityTypes": [
+  "supportsAdditionalCustomTypes": true,
+  "dataTypes": [
     "MD5",
     "SHA256",
     "IPv4",
-    "domain"
+    "domain",
+    {
+      "name": "Executable File Name",
+      "description": "File Names that end in exe, dll, dmg, doc, pdf, csv, or sh",
+      "editable": true,
+      "enabled": true,
+      "key": "exeFile",
+      "regex": "[\\w-]{2,}\\.(?:exe|dll|dmg|doc|pdf|csv|sh)"
+    }
   ],
+  "entityTypes": ["MD5", "SHA256", "IPv4", "domain"],
   "customTypes": [
     {
       "key": "exeFile",
@@ -17,9 +27,7 @@
   ],
   "onDemandOnly": true,
   "defaultColor": "light-purple",
-  "styles": [
-    "./styles/crowdstrike.less"
-  ],
+  "styles": ["./styles/crowdstrike.less"],
   "block": {
     "component": {
       "file": "./components/crowdstrike-block.js"
@@ -27,13 +35,6 @@
     "template": {
       "file": "./templates/crowdstrike-block.hbs"
     }
-  },
-  "request": {
-    "cert": "",
-    "key": "",
-    "passphrase": "",
-    "ca": "",
-    "proxy": ""
   },
   "logging": {
     "level": "info"
