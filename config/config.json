@@ -3,13 +3,13 @@
   "name": "CrowdStrike",
   "acronym": "CSTK",
   "description": "Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).",
-  "supportsAdditionalCustomTypes": true,
   "dataTypes": [
     "MD5",
     "SHA256",
     "IPv4",
     "domain",
     {
+      "type": "custom",
       "name": "Executable File Name",
       "description": "File Names that end in exe, dll, dmg, doc, pdf, csv, or sh",
       "editable": true,
