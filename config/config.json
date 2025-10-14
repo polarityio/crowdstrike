@@ -28,23 +28,20 @@
       "regex": "\\b[a-zA-Z_0-9\\-]{4,64}\\b"
     }
   ],
-  "entityTypes": [
-    "MD5",
-    "SHA256",
-    "IPv4",
-    "domain"
-  ],
+  "entityTypes": ["MD5", "SHA256", "IPv4", "domain"],
   "customTypes": [
     {
       "key": "exeFile",
       "regex": "[\\w-]{2,}\\.(?:exe|dll|dmg|doc|pdf|csv|sh)"
+    },
+    {
+      "key": "hostname",
+      "regex": "\\b[a-zA-Z_0-9\\-]{4,64}\\b"
     }
   ],
   "onDemandOnly": true,
   "defaultColor": "light-purple",
-  "styles": [
-    "./styles/crowdstrike.less"
-  ],
+  "styles": ["./styles/crowdstrike.less"],
   "block": {
     "component": {
       "file": "./components/crowdstrike-block.js"
@@ -54,7 +51,7 @@
     }
   },
   "logging": {
-    "level": "info"
+    "level": "trace"
   },
   "options": [
     {
