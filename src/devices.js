@@ -7,8 +7,7 @@ const { getLogger } = require('./logger');
 const getDeviceById = async (deviceIds, options) => {
   const Logger = getLogger();
   try {
-    if (!size(deviceIds)) return { devices: null, statusCode: 200 }; //handles the case of no data being found
-
+    if (!size(deviceIds)) return { devices: null, statusCode: 200 };
     const requestOptions = {
       method: 'GET',
       uri: `${options.url}/devices/entities/devices/v2`,
@@ -17,10 +16,10 @@ const getDeviceById = async (deviceIds, options) => {
       },
       json: true
     };
-    Logger.trace({ requestOptions }, 'request options');
+    Logger.trace({ requestOptions }, 'getDeviceById Request Options');
 
     const response = await authenticatedRequest(requestOptions, options);
-    Logger.trace({ response }, 'response in getDeviceById');
+    Logger.trace({ response }, 'getDeviceById Response');
 
     const requestSuccessfulWithContent =
       get('statusCode', response) === 200 || get('body.resources.length', response) > 0;
