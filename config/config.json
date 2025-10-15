@@ -9,6 +9,7 @@
     "SHA256",
     "IPv4",
     "domain",
+    "cve",
     {
       "type": "custom",
       "name": "Executable File Name",
@@ -28,7 +29,7 @@
       "regex": "\\b[a-zA-Z_0-9\\-]{4,64}\\b"
     }
   ],
-  "entityTypes": ["MD5", "SHA256", "IPv4", "domain"],
+  "entityTypes": ["MD5", "SHA256", "IPv4", "domain", "cve"],
   "customTypes": [
     {
       "key": "exeFile",
