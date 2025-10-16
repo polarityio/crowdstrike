@@ -32,3 +32,5 @@ test-runner.js
 .remote-sync.json
 .polarity.conf
 
+# Others
+legacy_wrapper.js

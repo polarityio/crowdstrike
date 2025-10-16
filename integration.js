@@ -45,6 +45,7 @@ const doLookup = async (entities, options, callback) => {
     );
     Logger.trace({ lookupResults }, 'DoLookup Response');
     logToken(options);
+
     callback(null, lookupResults);
   } catch (error) {
     const err = parseErrorToReadableJSON(error);
@@ -157,7 +158,11 @@ const onMessage = async (payload, options, callback) => {
         });
       } catch (error) {
         Logger.error({ error }, 'onMessage GET_RTR_SESSION Error');
-        if(error.meta && Array.isArray(error.meta.errors) && error.meta.errors.length > 0){
+        if (
+          error.meta &&
+          Array.isArray(error.meta.errors) &&
+          error.meta.errors.length > 0
+        ) {
           error.detail = `${error.meta.errors[0].message} (Code: ${error.meta.errors[0].code})`;
         }
         callback(error);
@@ -182,7 +187,11 @@ const onMessage = async (payload, options, callback) => {
         // specifically look for a session timeout error
         if (!handleExpiredRtrSession(error, callback)) {
           Logger.error({ error }, 'onMessage DELETE_RTR_SESSION Error');
-          if(error.meta && Array.isArray(error.meta.errors) && error.meta.errors.length > 0){
+          if (
+            error.meta &&
+            Array.isArray(error.meta.errors) &&
+            error.meta.errors.length > 0
+          ) {
             error.detail = `${error.meta.errors[0].message} (Code: ${error.meta.errors[0].code})`;
           }
           callback(error);
@@ -226,7 +235,11 @@ const onMessage = async (payload, options, callback) => {
         // specifically look for a session timeout error
         if (!handleExpiredRtrSession(error, callback)) {
           Logger.error({ error }, 'onMessage RUN_SCRIPT Error');
-          if(error.meta && Array.isArray(error.meta.errors) && error.meta.errors.length > 0){
+          if (
+            error.meta &&
+            Array.isArray(error.meta.errors) &&
+            error.meta.errors.length > 0
+          ) {
             error.detail = `${error.meta.errors[0].message} (Code: ${error.meta.errors[0].code})`;
           }
           callback(error);
@@ -264,7 +277,11 @@ const onMessage = async (payload, options, callback) => {
         // specifically look for a session timeout error
         if (!handleExpiredRtrSession(error, callback)) {
           Logger.error({ error }, 'onMessage GET_RTR_RESULT Error');
-          if(error.meta && Array.isArray(error.meta.errors) && error.meta.errors.length > 0){
+          if (
+            error.meta &&
+            Array.isArray(error.meta.errors) &&
+            error.meta.errors.length > 0
+          ) {
             error.detail = `${error.meta.errors[0].message} (Code: ${error.meta.errors[0].code})`;
           }
           callback(error);
