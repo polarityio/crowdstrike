@@ -76,7 +76,7 @@ const getDeviceIds = async (entity, options) => {
 
     const requestOptions = {
       method: 'GET',
-      uri: `${options.url}/devices/entities/devices/v2`,
+      uri: `${options.url}/devices/queries/devices/v1`,
       qs: {
         filter: requestFilter
       },
