@@ -3,7 +3,6 @@
   "name": "CrowdStrike",
   "acronym": "CSTK",
   "description": "Displays information from relevant Crowdstrike Falcon detections based on searching behavioral indicators (process hashes, filenames) and device information (IPv4 address).",
-  "supportsAdditionalCustomTypes": false,
   "dataTypes": [
     "MD5",
     "SHA256",
