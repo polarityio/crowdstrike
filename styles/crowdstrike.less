@@ -1,4 +1,4 @@
-@red: #FF4559;
+@red: #ff4559;
 @green: #7bc942;
 @dark-green: #63a830;
 @border-color: rgb(222, 222, 222);
@@ -7,6 +7,7 @@
 @success-color: #5cb85c;
 @warning-color: #ff8f00;
 @console-result-bg: #ececec;
+@p-blue-grey: #607d8b;
 
 pre {
   overflow-y: scroll;
@@ -44,7 +45,6 @@ h1 {
   display: flex;
   align-items: center;
 }
-
 
 .tag {
   background-color: #dedede;
@@ -164,7 +164,9 @@ button {
 }
 
 .p-title {
-  font-weight: 500;
+  font-size: 12px;
+  color: @p-blue-grey;
+  font-weight: 700;
 }
 
 h2.p-title {
@@ -304,7 +306,6 @@ h3.p-title {
       }
 
       &.command-result {
-
       }
 
       &.script-result {
@@ -464,7 +465,8 @@ h3.p-title {
       }
     }
 
-    textarea, select {
+    textarea,
+    select {
       margin: 0px 10px 10px 10px;
       border: none;
       outline: none;
@@ -493,11 +495,13 @@ h3.p-title {
     }
   }
 
-  textarea::placeholder, input::placeholder {
+  textarea::placeholder,
+  input::placeholder {
     color: #dfdfdf;
   }
 
-  textarea:focus::placeholder, input:focus::placeholder {
+  textarea:focus::placeholder,
+  input:focus::placeholder {
     color: transparent;
   }
 
@@ -569,7 +573,33 @@ h3.p-title {
     top: 10px;
   }
 
-  input:disabled, select:disabled, textarea:disabled, &.text-area-container.disabled {
+  input:disabled,
+  select:disabled,
+  textarea:disabled,
+  &.text-area-container.disabled {
     background-color: #f6f6f3 !important;
   }
+}
+
+.description-summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.description-summary.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: none;
+  overflow: visible;
+  word-break: break-word;
+}
+
+.details-container {
+  margin-bottom: 10px;
 }

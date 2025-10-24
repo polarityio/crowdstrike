@@ -3,6 +3,72 @@
     No results were found.
   </div>
 {{/if}}
+
+{{! Vulnerabilities }}
+{{#if vulnerabilities.length}}
+  <h1 class="p-title my-0">{{firstVulnerability.cve.id}}</h1>
+  <div class="details-container">
+    <span class="p-key">Description: </span>
+    <div
+      class="p-value p-block description-summary
+        {{if firstVulnerability.__descriptionIsExpanded 'expanded'}}"
+      id="description-content-{{uniqueIdPrefix}}"
+      data-description
+    >
+      {{firstVulnerability.cve.description}}
+    </div>
+    {{#if firstVulnerability.__showDescriptionToggle}}
+      <div class="mt-1">
+        <span
+          class="p-action"
+          {{action "toggle" "__descriptionIsExpanded" firstVulnerability}}
+        >
+          {{if firstVulnerability.__descriptionIsExpanded "View Less" "View More"}}
+          {{fa-icon
+            icon=(if
+              firstVulnerability.__descriptionIsExpanded "chevron-up" "chevron-down"
+            )
+          }}
+        </span>
+      </div>
+    {{/if}}
+  </div>
+  <div class="details-container">
+    <div>
+      <span class="p-key">Exploitability Score: </span>
+      <span class="p-value">{{firstVulnerability.cve.exploitability_score}}</span>
+    </div>
+    <div>
+      <span class="p-key">Impact Score: </span>
+      <span class="p-value">{{firstVulnerability.cve.impact_score}}</span>
+    </div>
+    <div>
+      <span class="p-key">Base Score: </span>
+      <span class="p-value">{{firstVulnerability.cve.base_score}}</span>
+    </div>
+    <div>
+      <span class="p-key">Severity: </span>
+      <span class="p-value">{{firstVulnerability.cve.severity}}</span>
+    </div>
+    <div>
+      <span class="p-key">Vector: </span>
+      <span class="p-value">{{firstVulnerability.cve.vector}}</span>
+    </div>
+    <div>
+      <span class="p-key">Published date: </span>
+      <span class="p-value">{{moment-format
+          firstVulnerability.cve.published_date
+          "ll"
+          timeZone=timezone
+        }}</span>
+    </div>
+    <div>
+      <span class="p-key">Number of affected hosts: </span>
+      <span class="p-value">{{details.hosts.devices.length}}</span>
+    </div>
+
+  </div>
+{{/if}}
 {{#if details.errorMessage}}
   <div class="mt-2">
     <div class="alert alert-danger">
@@ -73,7 +139,7 @@
           <li class="nav-item">
             <a
               {{action "changeTab" "rtr"}}
-                    class="nav-link {{if (or (eq activeTab 'rtr') (not activeTab)) 'active'}}"
+              class="nav-link {{if (or (eq activeTab 'rtr') (not activeTab)) 'active'}}"
             >
               Real Time Response
             </a>
@@ -92,6 +158,7 @@
         results.
       </div>
     {{/if}}
+
     {{#each details.events.detections as |detection detectionIndex|}}
       {{#if (gt detectionIndex 0)}}
         <hr />
@@ -156,7 +223,7 @@
           <span class="p-value">{{capitalize detection.status}}</span>
         </div>
       {{/if}}
-      
+
       {{! Detection Information }}
       {{#if detection.device}}
         <h2 class="p-title">{{fa-icon "laptop" fixedWidth=true}}
@@ -387,6 +454,11 @@
   {{! hosts tab }}
   {{#if (eq activeTab "hosts")}}
     {{#if details.hosts}}
+      <div class="p-title mt-1">
+        Hosts affected by
+        {{firstVulnerability.cve.id}}
+      </div>
+
       <div class="mt-2">
         Displaying
         {{details.hosts.devices.length}}
@@ -580,21 +652,30 @@
       </div>
     {{/if}}
   {{/if}}
-  
+
   {{#if (eq activeTab "rtr")}}
     <div class="rtr">
       <div class="input-container mt-1 mb-2">
         <label class="small ifta-label">
-            Hosts
+          Hosts
         </label>
         <select
           class="ifta-field m-0"
-          {{on "change" (pipe-action (pick "target.value" (set this "state.rtr.selectedDeviceId"))(action "deviceSelected"))}}
+          {{on
+            "change"
+            (pipe-action
+              (pick "target.value" (set this "state.rtr.selectedDeviceId"))
+              (action "deviceSelected")
+            )
+          }}
           disabled={{or state.rtr.isConnected state.rtr.isConnecting}}
         >
           <option selected value="">-- Select a Host --</option>
           {{#each details.hosts.devices as |device|}}
-            <option value="{{device.device_id}}" selected="{{if (eq device.device_id state.rtr.selectedDeviceId) "true"}}">{{device.hostname}}</option>
+            <option
+              value="{{device.device_id}}"
+              selected="{{if (eq device.device_id state.rtr.selectedDeviceId) 'true'}}"
+            >{{device.hostname}}</option>
           {{/each}}
         </select>
         {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
@@ -619,11 +700,11 @@
             <span class="info-bar-key d-flex align-items-center justify-content-between">
               Platform
               <div {{action (toggle "rtr.viewDeviceDetails" state)}}>
-              {{#if state.rtr.viewDeviceDetails}}
-                {{fa-icon icon="chevron-up" fixedWidth=true}}
-              {{else}}
-                {{fa-icon icon="chevron-down" fixedWidth=true}}
-              {{/if}}
+                {{#if state.rtr.viewDeviceDetails}}
+                  {{fa-icon icon="chevron-up" fixedWidth=true}}
+                {{else}}
+                  {{fa-icon icon="chevron-down" fixedWidth=true}}
+                {{/if}}
               </div>
             </span>
             <span class="info-bar-value">
@@ -684,7 +765,9 @@
             <div class="info-bar-pill two-wide">
               <span class="info-bar-key">Domain</span>
               <span class="info-bar-value">
-                {{#if (and state.rtr.selectedDevice state.rtr.selectedDevice.machine_domain)}}
+                {{#if
+                  (and state.rtr.selectedDevice state.rtr.selectedDevice.machine_domain)
+                }}
                   {{state.rtr.selectedDevice.machine_domain}}
                 {{else}}
                   --
@@ -749,8 +832,8 @@
                 {{#if state.rtr.isConnected}}
                   <button
                     {{action "disconnectFromDevice" state.rtr.sessionId}}
-                        class="p-btn btn btn-secondary mt-1 connect-button"
-                        disabled={{not state.rtr.selectedDevice}}
+                    class="p-btn btn btn-secondary mt-1 connect-button"
+                    disabled={{not state.rtr.selectedDevice}}
                   >
                     {{#if (or state.rtr.isConnecting state.rtr.isDisconnecting)}}
                       {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
@@ -760,9 +843,13 @@
                   </button>
                 {{else}}
                   <button
-                    {{action "connectToDevice" state.rtr.selectedDeviceId state.rtr.selectedDevice.platform_name}}
-                          class="p-btn btn btn-secondary mt-1 connect-button"
-                          disabled={{not state.rtr.selectedDevice}}
+                    {{action
+                      "connectToDevice"
+                      state.rtr.selectedDeviceId
+                      state.rtr.selectedDevice.platform_name
+                    }}
+                    class="p-btn btn btn-secondary mt-1 connect-button"
+                    disabled={{not state.rtr.selectedDevice}}
                   >
                     {{#if (or state.rtr.isConnecting state.rtr.isDisconnecting)}}
                       {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
@@ -779,65 +866,91 @@
           </div>
         </div>
       </div>
-      
-      <div class="console mt-2 d-flex flex-column-reverse" id={{concat "crowdstrike-console-" uniqueIdPrefix}}>
+
+      <div
+        class="console mt-2 d-flex flex-column-reverse"
+        id={{concat "crowdstrike-console-" uniqueIdPrefix}}
+      >
         {{#if state.rtr.showConsolePwd}}
           <div class="console-message command">{{state.rtr.pwd}}</div>
         {{/if}}
         {{#if state.rtr.isRunningCommand}}
           <div class="console-message system p-footnote">
-            {{fa-icon icon="spinner-third" spin=true fixedWidth=true}} {{state.rtr.commandStatus}}
+            {{fa-icon icon="spinner-third" spin=true fixedWidth=true}}
+            {{state.rtr.commandStatus}}
           </div>
         {{/if}}
-        {{#each state.rtr.consoleMessages as | message messageIndex|}}
-          <div class="console-message-container" id={{concat "crowdstrike-message-container-" uniqueIdPrefix "-" messageIndex}}>
-            {{#if (or (eq message.type "commandResult")(eq message.type "scriptResult"))}}
-              <div class="d-flex align-items-center justify-content-end copy-btn-container {{if (eq message.type "commandResult") "command-result"}}">
-                <button class="btn copy-btn p-action" 
-                  {{action "copyMessageValue" (concat "crowdstrike-message-container-" uniqueIdPrefix "-" messageIndex) messageIndex}}
-                  title="Copy to clipboard"                        
+        {{#each state.rtr.consoleMessages as |message messageIndex|}}
+          <div
+            class="console-message-container"
+            id={{concat "crowdstrike-message-container-" uniqueIdPrefix "-" messageIndex}}
+          >
+            {{#if
+              (or (eq message.type "commandResult") (eq message.type "scriptResult"))
+            }}
+              <div
+                class="d-flex align-items-center justify-content-end copy-btn-container
+                  {{if (eq message.type 'commandResult') 'command-result'}}"
+              >
+                <button
+                  class="btn copy-btn p-action"
+                  {{action
+                    "copyMessageValue"
+                    (concat
+                      "crowdstrike-message-container-" uniqueIdPrefix "-" messageIndex
+                    )
+                    messageIndex
+                  }}
+                  title="Copy to clipboard"
                 >
                   {{fa-icon icon="clipboard" fixedWidth=true}}
                 </button>
-                <div class="copy-success-message {{if message.showCopyMessage "visible" "hidden"}}">
+                <div
+                  class="copy-success-message
+                    {{if message.showCopyMessage 'visible' 'hidden'}}"
+                >
                   {{fa-icon icon="check" fixedWidth=true class="copy-success-icon"}}
                   Copied output to clipboard.
                 </div>
               </div>
             {{/if}}
-            {{#if (and (eq message.type "scriptResult")(is-array message.value))}}
-              <div class="console-message script-result {{if message.isCollapsed "collapsed" "expanded"}}">
+            {{#if (and (eq message.type "scriptResult") (is-array message.value))}}
+              <div
+                class="console-message script-result
+                  {{if message.isCollapsed 'collapsed' 'expanded'}}"
+              >
                 <div class="mb-2">
-                  Results: {{message.value.length}}
+                  Results:
+                  {{message.value.length}}
                 </div>
-                {{#each message.value as | dataResult |}}
+                {{#each message.value as |dataResult|}}
                   <div class="mb-2">
-                    {{#each-in dataResult as | key value |}}
+                    {{#each-in dataResult as |key value|}}
                       <div>
                         {{#if (is-array value)}}
                           <div class="p-key">{{key}}</div>
                           <div class="p-key">------------</div>
-                          {{#each value as | nestedValue |}}
-                            {{#each-in nestedValue as | subKey subValue|}}
+                          {{#each value as |nestedValue|}}
+                            {{#each-in nestedValue as |subKey subValue|}}
                               <div>
                                 <span class="p-key">{{subKey}}:</span>
                                 <span class="p-value">{{subValue}}</span>
                               </div>
                             {{/each-in}}
                             <div class="mb-3"></div>
-                          {{/each}} 
+                          {{/each}}
                         {{else}}
                           <span class="p-key">{{key}}:</span>
                           <span class="p-value">{{value}}</span>
-                        {{/if}}                        
+                        {{/if}}
                       </div>
                     {{/each-in}}
                   </div>
                 {{/each}}
                 <button
                   {{action (toggle "isCollapsed" message)}}
-                        class="p-btn btn btn-secondary mt-1 expand-button"
-                        disabled={{not state.rtr.selectedDevice}}
+                  class="p-btn btn btn-secondary mt-1 expand-button"
+                  disabled={{not state.rtr.selectedDevice}}
                 >
                   {{#if message.isCollapsed}}
                     Expand
@@ -853,211 +966,261 @@
               <div class="console-message command-result pre">{{message.value}}</div>
             {{else if (eq message.type "system")}}
               <div class="console-message system">
-                /> {{message.value}}
-              </div>  
+                />
+                {{message.value}}
+              </div>
             {{else if (eq message.type "command")}}
               <div class="console-message command">{{message.value}}</div>
             {{else if (eq message.type "error")}}
               <div class="console-message error pre">{{message.value}}</div>
             {{/if}}
-          </div>  
+          </div>
         {{/each}}
       </div>
-      
+
       <div class="input-container mt-2 d-flex align-items-center justify-content-between">
         {{input
           class="ifta-field no-label with-button"
           value=state.rtr.command
-          placeholder="Enter command"          
-          enter=(action "runScript" state.rtr.sessionId state.rtr.selectedDeviceId state.rtr.command)
+          placeholder="Enter command"
+          enter=(action
+            "runScript" state.rtr.sessionId state.rtr.selectedDeviceId state.rtr.command
+          )
         }}
         <div>
-          <button 
-            {{action "runScript" state.rtr.sessionId state.rtr.selectedDeviceId state.rtr.command}} 
-            type="button" 
-            class="p-btn btn btn-sm btn-secondary run-button" 
-            disabled={{or state.rtr.isRunningCommand (not state.rtr.isConnected) (eq state.rtr.command.length 0)}}
+          <button
+            {{action
+              "runScript"
+              state.rtr.sessionId
+              state.rtr.selectedDeviceId
+              state.rtr.command
+            }}
+            type="button"
+            class="p-btn btn btn-sm btn-secondary run-button"
+            disabled={{or
+              state.rtr.isRunningCommand
+              (not state.rtr.isConnected)
+              (eq state.rtr.command.length 0)
+            }}
           >
             {{#if state.rtr.isRunningCommand}}
               {{fa-icon icon="spinner-third" spin=true}}
             {{else}}
-              Run  
-            {{/if}}            
+              Run
+            {{/if}}
           </button>
           {{#unless state.rtr.isConnected}}
             {{bs-tooltip title="Select and connect to a host"}}
           {{/unless}}
         </div>
-      </div>      
-      
+      </div>
+
       <div class="accordion mt-2">
         {{#if (and (gt state.rtr.falconScripts.length 0) state.rtr.isConnected)}}
           <div class="card">
-          <div {{action "changeScriptTab" "falconScripts"}} class="card-header d-flex align-items-center justify-content-between">
-            <div>
-              Falcon Scripts
-            </div>
-            <div class="d-flex align-items-center justify-content-between">
-              <div class="mr-2">
-                {{state.rtr.falconScripts.length}}
+            <div
+              {{action "changeScriptTab" "falconScripts"}}
+              class="card-header d-flex align-items-center justify-content-between"
+            >
+              <div>
+                Falcon Scripts
               </div>
-              {{#if (eq activeScriptTab 'falconScripts')}}
-                {{fa-icon icon="chevron-up" fixedWidth=true}}
-              {{else}}
-                {{fa-icon icon="chevron-down" fixedWidth=true}}
-              {{/if}}
-            </div>
-          </div>
-          <div class="collapse {{if (eq activeScriptTab 'falconScripts') 'show'}}">
-            <div class="card-body">
-              {{#each state.rtr.falconScripts as | script falconScriptIndex|}}
-                <div class="script-container">
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div class="script-name" {{action "populateFalconScript" falconScriptIndex}}>
-                      {{#if (eq falconScriptIndex state.rtr.selectedFalconScriptId)}}
-                        {{fa-icon icon="check" fixedWidth=true}}
-                      {{else}}
-                        {{fa-icon icon="arrow-down" fixedWidth=true class="fa-rotate-45"}}  
-                      {{/if}}                       
-                      {{script.name}}
-                      {{bs-tooltip title="Populate command line with script"}}
-                    </div>
-                    <button {{action "viewFalconScriptDetails" falconScriptIndex}} class="btn icon-btn p-action">
-                      {{#if script.__viewDetails}}
-                        {{fa-icon icon="caret-up" fixedWidth=true}}
-                      {{else}}
-                        {{fa-icon icon="caret-down" fixedWidth=true}}
-                      {{/if}}                      
-                    </button>
-                  </div>
-                  {{#if script.__viewDetails}}
-                    <div class="p-title">Details</div>
-                    <div class="mt-1">
-                      <span class="p-key">Platform:</span>
-                      <span class="p-value">{{script.platform}}</span>
-                    </div>
-                    <div class="mt-1">
-                      <div class="p-key">Description</div>
-                      <div class="p-value p-block">{{script.description}}</div>
-                    </div>
-                    <div class="mt-1">
-                      <div class="p-key">Use Case</div>
-                      <div class="p-value p-block">{{script.use_case}}</div>
-                    </div>
-                    {{#if script.__workflow_input_schema_json.properties}}
-                      <div class="p-title">Input Arguments</div>
-                      <div>
-                        {{#each-in script.__workflow_input_schema_json.properties as | key value |}}
-                          <div class="mb-2">
-                            <div class="p-sub-title">
-                              {{key}}
-                              {{#each script.__workflow_input_schema_json.required as | requiredKey |}}
-                                {{#if (eq requiredKey key)}}
-                                    <span class="p-footnote ml-1">*required</span>
-                                {{/if}}
-                              {{/each}}
-                            </div>
-                            <div>
-                              <span class="p-key">Type:</span>
-                              <span class="p-value">{{value.type}}</span>  
-                            </div>
-                          </div>
-                        {{/each-in}}  
-                      </div>
-                    {{/if}}
-                  {{/if}}
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="mr-2">
+                  {{state.rtr.falconScripts.length}}
                 </div>
-              {{/each}}
-            </div>
-          </div>
-        </div>
-        {{/if}}
-        
-        {{#if (and (gt state.rtr.customScripts.length 0) state.rtr.isConnected)}}
-          <div class="card">
-          <div {{action "changeScriptTab" "customScripts"}} class="card-header d-flex align-items-center justify-content-between">
-            <div>
-              Custom Scripts
-            </div>
-            <div class="d-flex align-items-center justify-content-between">
-              <div class="mr-2">
-                {{state.rtr.customScripts.length}}
+                {{#if (eq activeScriptTab "falconScripts")}}
+                  {{fa-icon icon="chevron-up" fixedWidth=true}}
+                {{else}}
+                  {{fa-icon icon="chevron-down" fixedWidth=true}}
+                {{/if}}
               </div>
-              {{#if (eq activeScriptTab 'customScripts')}}
-                {{fa-icon icon="chevron-up" fixedWidth=true}}
-              {{else}}
-                {{fa-icon icon="chevron-down" fixedWidth=true}}
-              {{/if}}
             </div>
-          </div>
-          <div class="collapse {{if (eq activeScriptTab 'customScripts') 'show'}}">
-            <div class="card-body">
-              {{#each state.rtr.customScripts as | script customScriptIndex|}}
-                <div class="script-container">
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div class="script-name" {{action "populateCustomScript" customScriptIndex}}>
-                      {{#if (eq customScriptIndex state.rtr.selectedCustomScriptId)}}
-                        {{fa-icon icon="check" fixedWidth=true}}
-                      {{else}}
-                        {{fa-icon icon="arrow-down" fixedWidth=true class="fa-rotate-45"}}
-                      {{/if}}
-                      {{script.name}}
-                      {{bs-tooltip title="Populate command line with script"}}
+            <div class="collapse {{if (eq activeScriptTab 'falconScripts') 'show'}}">
+              <div class="card-body">
+                {{#each state.rtr.falconScripts as |script falconScriptIndex|}}
+                  <div class="script-container">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <div
+                        class="script-name"
+                        {{action "populateFalconScript" falconScriptIndex}}
+                      >
+                        {{#if (eq falconScriptIndex state.rtr.selectedFalconScriptId)}}
+                          {{fa-icon icon="check" fixedWidth=true}}
+                        {{else}}
+                          {{fa-icon
+                            icon="arrow-down"
+                            fixedWidth=true
+                            class="fa-rotate-45"
+                          }}
+                        {{/if}}
+                        {{script.name}}
+                        {{bs-tooltip title="Populate command line with script"}}
+                      </div>
+                      <button
+                        {{action "viewFalconScriptDetails" falconScriptIndex}}
+                        class="btn icon-btn p-action"
+                      >
+                        {{#if script.__viewDetails}}
+                          {{fa-icon icon="caret-up" fixedWidth=true}}
+                        {{else}}
+                          {{fa-icon icon="caret-down" fixedWidth=true}}
+                        {{/if}}
+                      </button>
                     </div>
-                    <button {{action "viewCustomScriptDetails" customScriptIndex}} class="btn icon-btn p-action">
-                      {{#if script.__viewDetails}}
-                        {{fa-icon icon="caret-up" fixedWidth=true}}
-                      {{else}}
-                        {{fa-icon icon="caret-down" fixedWidth=true}}
-                      {{/if}}
-                    </button>
-                  </div>
-                  {{#if script.__viewDetails}}
-                    {{#if script.platform}}
+                    {{#if script.__viewDetails}}
+                      <div class="p-title">Details</div>
                       <div class="mt-1">
                         <span class="p-key">Platform:</span>
                         <span class="p-value">{{script.platform}}</span>
                       </div>
-                    {{/if}}
-                    {{#if script.description}}
                       <div class="mt-1">
                         <div class="p-key">Description</div>
                         <div class="p-value p-block">{{script.description}}</div>
                       </div>
-                    {{/if}}
-                    {{#if script.user_case}}
                       <div class="mt-1">
                         <div class="p-key">Use Case</div>
                         <div class="p-value p-block">{{script.use_case}}</div>
                       </div>
-                    {{/if}}
-                    {{#if script.__workflow_input_schema_json.properties}}
-                      <div class="p-title">Input Arguments</div>
-                      <div>
-                        {{#each-in script.__workflow_input_schema_json.properties as | key value |}}
-                          <div class="mb-2">
-                            <div class="p-sub-title">
-                              {{key}}
-                              {{#each script.__workflow_input_schema_json.required as | requiredKey |}}
-                                {{#if (eq requiredKey key)}}
-                                  <span class="p-footnote ml-1">*required</span>
-                                {{/if}}
-                              {{/each}}
+                      {{#if script.__workflow_input_schema_json.properties}}
+                        <div class="p-title">Input Arguments</div>
+                        <div>
+                          {{#each-in
+                            script.__workflow_input_schema_json.properties
+                            as |key value|
+                          }}
+                            <div class="mb-2">
+                              <div class="p-sub-title">
+                                {{key}}
+                                {{#each
+                                  script.__workflow_input_schema_json.required
+                                  as |requiredKey|
+                                }}
+                                  {{#if (eq requiredKey key)}}
+                                    <span class="p-footnote ml-1">*required</span>
+                                  {{/if}}
+                                {{/each}}
+                              </div>
+                              <div>
+                                <span class="p-key">Type:</span>
+                                <span class="p-value">{{value.type}}</span>
+                              </div>
                             </div>
-                            <div>
-                              <span class="p-key">Type:</span>
-                              <span class="p-value">{{value.type}}</span>
-                            </div>
-                          </div>
-                        {{/each-in}}
-                      </div>
+                          {{/each-in}}
+                        </div>
+                      {{/if}}
                     {{/if}}
-                  {{/if}}
-                </div>
-              {{/each}}
+                  </div>
+                {{/each}}
+              </div>
             </div>
           </div>
-        </div>
+        {{/if}}
+
+        {{#if (and (gt state.rtr.customScripts.length 0) state.rtr.isConnected)}}
+          <div class="card">
+            <div
+              {{action "changeScriptTab" "customScripts"}}
+              class="card-header d-flex align-items-center justify-content-between"
+            >
+              <div>
+                Custom Scripts
+              </div>
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="mr-2">
+                  {{state.rtr.customScripts.length}}
+                </div>
+                {{#if (eq activeScriptTab "customScripts")}}
+                  {{fa-icon icon="chevron-up" fixedWidth=true}}
+                {{else}}
+                  {{fa-icon icon="chevron-down" fixedWidth=true}}
+                {{/if}}
+              </div>
+            </div>
+            <div class="collapse {{if (eq activeScriptTab 'customScripts') 'show'}}">
+              <div class="card-body">
+                {{#each state.rtr.customScripts as |script customScriptIndex|}}
+                  <div class="script-container">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <div
+                        class="script-name"
+                        {{action "populateCustomScript" customScriptIndex}}
+                      >
+                        {{#if (eq customScriptIndex state.rtr.selectedCustomScriptId)}}
+                          {{fa-icon icon="check" fixedWidth=true}}
+                        {{else}}
+                          {{fa-icon
+                            icon="arrow-down"
+                            fixedWidth=true
+                            class="fa-rotate-45"
+                          }}
+                        {{/if}}
+                        {{script.name}}
+                        {{bs-tooltip title="Populate command line with script"}}
+                      </div>
+                      <button
+                        {{action "viewCustomScriptDetails" customScriptIndex}}
+                        class="btn icon-btn p-action"
+                      >
+                        {{#if script.__viewDetails}}
+                          {{fa-icon icon="caret-up" fixedWidth=true}}
+                        {{else}}
+                          {{fa-icon icon="caret-down" fixedWidth=true}}
+                        {{/if}}
+                      </button>
+                    </div>
+                    {{#if script.__viewDetails}}
+                      {{#if script.platform}}
+                        <div class="mt-1">
+                          <span class="p-key">Platform:</span>
+                          <span class="p-value">{{script.platform}}</span>
+                        </div>
+                      {{/if}}
+                      {{#if script.description}}
+                        <div class="mt-1">
+                          <div class="p-key">Description</div>
+                          <div class="p-value p-block">{{script.description}}</div>
+                        </div>
+                      {{/if}}
+                      {{#if script.user_case}}
+                        <div class="mt-1">
+                          <div class="p-key">Use Case</div>
+                          <div class="p-value p-block">{{script.use_case}}</div>
+                        </div>
+                      {{/if}}
+                      {{#if script.__workflow_input_schema_json.properties}}
+                        <div class="p-title">Input Arguments</div>
+                        <div>
+                          {{#each-in
+                            script.__workflow_input_schema_json.properties
+                            as |key value|
+                          }}
+                            <div class="mb-2">
+                              <div class="p-sub-title">
+                                {{key}}
+                                {{#each
+                                  script.__workflow_input_schema_json.required
+                                  as |requiredKey|
+                                }}
+                                  {{#if (eq requiredKey key)}}
+                                    <span class="p-footnote ml-1">*required</span>
+                                  {{/if}}
+                                {{/each}}
+                              </div>
+                              <div>
+                                <span class="p-key">Type:</span>
+                                <span class="p-value">{{value.type}}</span>
+                              </div>
+                            </div>
+                          {{/each-in}}
+                        </div>
+                      {{/if}}
+                    {{/if}}
+                  </div>
+                {{/each}}
+              </div>
+            </div>
+          </div>
         {{/if}}
       </div>
     </div>

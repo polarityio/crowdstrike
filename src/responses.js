@@ -119,6 +119,8 @@ const getSummary = (apiData) => {
 
   const iocSize = getPathSize('iocs.indicators');
   if (iocSize) tags.push(`IOCs: ${iocSize}`);
+  const vulnerabilitiesSize = getPathSize('vulnerabilities.resources');
+  if (vulnerabilitiesSize) tags.push(`Vulnerabilities: ${vulnerabilitiesSize}`);
 
   return tags;
 };
