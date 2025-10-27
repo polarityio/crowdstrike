@@ -22,9 +22,10 @@ Before using the Polarity CrowdStrike Integration you will need to create a Clie
 | Alerts           | Read        | Required to search alerts                                                                                                                      |
 | Detections       | Read        | Required to search detections                                                                                                                  |
 | Hosts            | Read, Write | Read access is required to search hosts by IP Address. Write permission is required if the "Allow Containment Status Change" option is checked |
-| IOC Manager APIs | Read        | Required if the "Search CrowdStrike IOCs" option is enabled                                                                                    | 
+| IOC Manager APIs | Read        | Required if the "Search CrowdStrike IOCs" option is enabled                                                                                    |
+| Vulnerabilities | Read | Required to be able to search for CVEs                                                                                                         |
 | Real time response (admin) | Write | Required to fetch RTR Script Information                                                                                                       |
- | Real time response | Read | Required to execute RTR scripts                                                                                                        
+| Real time response | Read | Required to execute RTR scripts                                                                                                                
 
 6. Click `Add`. Record the Client ID and Client Secret (Client secret will only be shown once for security purpose, so make sure to store it in a secure place).
 
