@@ -4,17 +4,10 @@ const { RequestError } = require('./responses');
 const authenticatedRequest = require('./authenticatedRequest');
 const { getLogger } = require('./logger');
 
-const getDevices = async (entity, options) => {
+const getDeviceById = async (deviceIds, options) => {
   const Logger = getLogger();
   try {
-    // this endpoint doesn't support domain lookups
-    if (entity.isDomain) {
-      return { devices: null, statusCode: 200 };
-    }
-
-    const deviceIds = await getDeviceIds(entity, options);
-    if (!size(deviceIds)) return { devices: null, statusCode: 200 }; //handles the case of no data being found for an entity
-
+    if (!size(deviceIds)) return { devices: null, statusCode: 200 };
     const requestOptions = {
       method: 'GET',
       uri: `${options.url}/devices/entities/devices/v2`,
@@ -23,10 +16,10 @@ const getDevices = async (entity, options) => {
       },
       json: true
     };
-    Logger.trace({ requestOptions }, 'request options');
+    Logger.trace({ requestOptions }, 'getDeviceById Request Options');
 
     const response = await authenticatedRequest(requestOptions, options);
-    Logger.trace({ response }, 'response in getDevices');
+    Logger.trace({ response }, 'getDeviceById Response');
 
     const requestSuccessfulWithContent =
       get('statusCode', response) === 200 || get('body.resources.length', response) > 0;
@@ -55,7 +48,7 @@ const getDevices = async (entity, options) => {
       return { devices: null, statusCode: response.statusCode };
     }
   } catch (error) {
-    error.source = 'getDevices';
+    error.source = 'getDeviceById';
     throw error;
   }
 };
@@ -146,6 +139,7 @@ const getAndUpdateDeviceState = async (deviceId, options) => {
 };
 
 module.exports = {
-  getDevices,
+  getDeviceById,
+  getDeviceIds,
   getAndUpdateDeviceState
 };

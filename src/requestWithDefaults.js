@@ -4,10 +4,8 @@
 
 const fs = require('fs');
 const request = require('postman-request');
-const config = require('../config/config');
 const _ = require('lodash');
 const { RequestError } = require('./responses');
-const _configFieldIsValid = (field) => typeof field === 'string' && field.length > 0;
 const { getLogger } = require('./logger');
 
 const checkForStatusError = (response, requestOptions) => {
@@ -25,18 +23,7 @@ const checkForStatusError = (response, requestOptions) => {
 
 class RequestWithDefaults {
   constructor() {
-    const {
-      request: { ca, cert, key, passphrase, rejectUnauthorized, proxy }
-    } = config;
-
-    const defaults = {
-      ...(_configFieldIsValid(ca) && { ca: fs.readFileSync(ca) }),
-      ...(_configFieldIsValid(cert) && { cert: fs.readFileSync(cert) }),
-      ...(_configFieldIsValid(key) && { key: fs.readFileSync(key) }),
-      ...(_configFieldIsValid(passphrase) && { passphrase }),
-      ...(_configFieldIsValid(proxy) && { proxy }),
-      ...(typeof rejectUnauthorized === 'boolean' && { rejectUnauthorized })
-    };
+    const defaults = {};
 
     this._defaultsRequest = request.defaults(defaults);
   }

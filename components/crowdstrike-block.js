@@ -1,5 +1,7 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
+  vulnerabilities: Ember.computed.alias('details.vulnerabilities.vulnerabilities'),
+  firstVulnerability: Ember.computed.reads('vulnerabilities.0'),
   state: Ember.computed.alias('block._state'),
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -35,6 +37,24 @@ polarity.export = PolarityComponent.extend({
     this.set('uniqueIdPrefix', window.crypto.getRandomValues(array).join(''));
 
     this._super(...arguments);
+    Ember.run.scheduleOnce('afterRender', this, this.checkDescriptionOverflow);
+  },
+  checkDescriptionOverflow() {
+    const firstVulnerability = this.get('firstVulnerability');
+    const uniqueId = this.get('uniqueIdPrefix');
+
+    if (firstVulnerability) {
+      setTimeout(() => {
+        const el = document.getElementById(`description-content-${uniqueId}`);
+        if (el) {
+          const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 20;
+          const maxHeight = 4 * lineHeight;
+          const isOverflowing = el.scrollHeight > maxHeight;
+          if (this.isDestroyed) return;
+          this.set('firstVulnerability.__showDescriptionToggle', isOverflowing);
+        }
+      }, 100);
+    }
   },
   initActiveTab() {
     this.set(
@@ -48,12 +68,16 @@ polarity.export = PolarityComponent.extend({
     );
   },
   actions: {
+    toggle(property, target) {
+      const obj = target || this;
+      Ember.set(obj, property, !Ember.get(obj, property));
+    },
     changeTab: function (tabName) {
       this.set('activeTab', tabName);
-      
+
       // If there is only one device, select it in the drop down automatically
-      if(tabName === 'rtr' && this.get('details.hosts.devices.length') === 1){
-        const selectedDevice = this.get('details.hosts.devices.0')
+      if (tabName === 'rtr' && this.get('details.hosts.devices.length') === 1) {
+        const selectedDevice = this.get('details.hosts.devices.0');
         this.set('state.rtr.selectedDevice', selectedDevice);
         this.set('state.rtr.selectedDeviceId', selectedDevice.device_id);
       }
