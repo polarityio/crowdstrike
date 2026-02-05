@@ -1,0 +1,167 @@
+{
+  "events": {
+    "detections": [
+      {
+        "detection_id": "ldt:a1b2c3d4e5f6:123456789",
+        "description": "Suspicious PowerShell execution detected attempting to download and execute malicious content",
+        "severity": 4,
+        "severity_name": "High",
+        "status": "new",
+        "tactic": "Execution",
+        "technique": "PowerShell",
+        "timestamp": "2024-01-15T14:23:45.123Z",
+        "context_timestamp": "2024-01-15T14:23:30.000Z",
+        "max_confidence": 80,
+        "assigned_to_uid": null,
+        "behaviors": [
+          {
+            "behavior_id": "12345",
+            "sha256": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+            "filename": "powershell.exe"
+          }
+        ]
+      },
+      {
+        "detection_id": "ldt:f6e5d4c3b2a1:987654321",
+        "description": "Lateral movement detected via WMI command execution",
+        "severity": 3,
+        "severity_name": "Medium",
+        "status": "in_progress",
+        "tactic": "Lateral Movement",
+        "technique": "Windows Management Instrumentation",
+        "timestamp": "2024-01-15T10:15:22.456Z",
+        "context_timestamp": "2024-01-15T10:15:10.000Z",
+        "max_confidence": 70,
+        "assigned_to_uid": "user123"
+      }
+    ],
+    "detectionTotalResults": 2,
+    "contentKeyName": "detections",
+    "statusCode": 200
+  },
+  "hosts": {
+    "devices": [
+      {
+        "device_id": "a1b2c3d4e5f6789012345678",
+        "hostname": "WORKSTATION-001",
+        "local_ip": "192.168.1.100",
+        "external_ip": "203.0.113.45",
+        "os_version": "Windows 10",
+        "platform_name": "Windows",
+        "status": "normal",
+        "last_seen": "2024-01-15T15:00:00.000Z",
+        "first_seen": "2023-06-10T08:30:00.000Z",
+        "agent_version": "7.10.12345",
+        "mac_address": "00-11-22-33-44-55",
+        "system_manufacturer": "Dell Inc.",
+        "__url": "https://falcon.crowdstrike.com/investigate/events/en-US/app/eam2/investigate__computer?aid_tok=a1b2c3d4e5f6789012345678&computer=*&customer_tok=*"
+      },
+      {
+        "device_id": "f6e5d4c3b2a1987654321098",
+        "hostname": "SERVER-DB-01",
+        "local_ip": "10.0.2.50",
+        "external_ip": "203.0.113.46",
+        "os_version": "Windows Server 2019",
+        "platform_name": "Windows",
+        "status": "contained",
+        "last_seen": "2024-01-15T14:55:00.000Z",
+        "first_seen": "2023-03-15T10:00:00.000Z",
+        "agent_version": "7.10.12345"
+      }
+    ],
+    "deviceTotalResults": 2,
+    "contentKeyName": "devices",
+    "statusCode": 200
+  },
+  "iocs": {
+    "indicators": [
+      {
+        "id": "abc123def456ghi789jkl012",
+        "type": "sha256",
+        "value": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+        "description": "Known ransomware binary associated with BlackCat/ALPHV campaign",
+        "severity": "critical",
+        "expired": false,
+        "created_on": "2024-01-10T12:00:00.000Z",
+        "modified_on": "2024-01-14T09:30:00.000Z",
+        "tags": ["ransomware", "blackcat", "alphv"],
+        "source": "CrowdStrike Intelligence",
+        "action": "detect",
+        "__url": "https://falcon.crowdstrike.com/iocs/indicators/abc123def456ghi789jkl012"
+      },
+      {
+        "id": "xyz789abc123def456ghi012",
+        "type": "domain",
+        "value": "malicious-c2.example.com",
+        "description": "Command and control server for Cobalt Strike beacons",
+        "severity": "high",
+        "expired": false,
+        "created_on": "2024-01-12T08:15:00.000Z",
+        "modified_on": "2024-01-12T08:15:00.000Z",
+        "tags": ["c2", "cobalt-strike"],
+        "source": "Customer IOC",
+        "action": "prevent"
+      }
+    ],
+    "indicatorsTotalResults": 2,
+    "contentKeyName": "indicators",
+    "statusCode": 200
+  },
+  "vulnerabilities": {
+    "vulnerabilities": [
+      {
+        "id": "vuln_12345_abc",
+        "aid": "a1b2c3d4e5f6789012345678",
+        "cve": {
+          "id": "CVE-2023-12345",
+          "description": "Remote code execution vulnerability in Microsoft Windows Print Spooler service allows authenticated attackers to execute arbitrary code with SYSTEM privileges",
+          "base_score": 8.8,
+          "severity": "HIGH",
+          "exploitability_score": 2.8,
+          "impact_score": 5.9,
+          "published_date": "2023-11-14T00:00:00.000Z",
+          "exprt_rating": "HIGH"
+        },
+        "status": "open",
+        "remediation": {
+          "ids": ["rem_001"],
+          "entities": [
+            {
+              "action": "Apply security update KB5032189",
+              "reference": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2023-12345"
+            }
+          ]
+        },
+        "host_info": {
+          "hostname": "WORKSTATION-001",
+          "os_version": "Windows 10 21H2"
+        }
+      },
+      {
+        "id": "vuln_67890_def",
+        "aid": "f6e5d4c3b2a1987654321098",
+        "cve": {
+          "id": "CVE-2023-67890",
+          "description": "SQL injection vulnerability in third-party database management software",
+          "base_score": 7.5,
+          "severity": "HIGH",
+          "exploitability_score": 3.9,
+          "impact_score": 3.6,
+          "published_date": "2023-10-05T00:00:00.000Z"
+        },
+        "status": "open",
+        "host_info": {
+          "hostname": "SERVER-DB-01"
+        }
+      }
+    ],
+    "statusCode": 200
+  },
+  "falconScripts": [],
+  "customScripts": [],
+  "_internal_metadata": {
+    "query_timestamp": "2024-01-15T15:30:00.000Z",
+    "api_version": "v2",
+    "request_id": "req_abc123def456"
+  }
+}

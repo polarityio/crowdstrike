@@ -1,0 +1,26 @@
+{
+  "root": {
+    "path": "",
+    "on_null": "return_empty"
+  },
+  "pipeline": [
+    {"op": "copy", "from": "events.detections[].description", "to": "reduced_results.detection_descriptions"},
+    {"op": "copy", "from": "events.detections[].severity_name", "to": "reduced_results.detection_severity_names"},
+    {"op": "copy", "from": "events.detections[].tactic", "to": "reduced_results.detection_tactics"},
+    {"op": "copy", "from": "hosts.devices[].hostname", "to": "reduced_results.device_hostnames"},
+    {"op": "copy", "from": "vulnerabilities.vulnerabilities[].cve.id", "to": "reduced_results.vulnerability_cve_ids"},
+    {"op": "copy", "from": "vulnerabilities.vulnerabilities[].cve.description", "to": "reduced_results.vulnerability_cve_descriptions"},
+    {"op": "copy", "from": "vulnerabilities.vulnerabilities[].cve.exploitability_score", "to": "reduced_results.vulnerability_exploitability_scores"},
+    {"op": "copy", "from": "events.detectionTotalResults", "to": "reduced_results.detection_total_count"},
+    {"op": "copy", "from": "events.detections[].timestamp", "to": "reduced_results.detection_timestamps"},
+    {"op": "copy", "from": "events.detections[].context_timestamp", "to": "reduced_results.detection_context_timestamps"},
+    {"op": "copy", "from": "events.detections[].technique", "to": "reduced_results.detection_techniques"},
+    {"op": "copy", "from": "iocs.indicators[].description", "to": "reduced_results.indicator_descriptions"},
+    {"op": "copy", "from": "iocs.indicators[].expired", "to": "reduced_results.indicator_expired_flags"},
+    {"op": "copy", "from": "iocs.indicators[].severity", "to": "reduced_results.indicator_severities"},
+    {"op": "prune", "strategy": "empty_values", "target": "reduced_results"}
+  ],
+  "output": {
+    "result": "$working.reduced_results"
+  }
+}

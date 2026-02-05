@@ -28,7 +28,13 @@
       "regex": "\\b[a-zA-Z_0-9\\-]{4,64}\\b"
     }
   ],
-  "entityTypes": ["MD5", "SHA256", "IPv4", "domain", "cve"],
+  "entityTypes": [
+    "MD5",
+    "SHA256",
+    "IPv4",
+    "domain",
+    "cve"
+  ],
   "customTypes": [
     {
       "key": "exeFile",
@@ -41,7 +47,9 @@
   ],
   "onDemandOnly": true,
   "defaultColor": "light-purple",
-  "styles": ["./styles/crowdstrike.less"],
+  "styles": [
+    "./styles/crowdstrike.less"
+  ],
   "block": {
     "component": {
       "file": "./components/crowdstrike-block.js"
@@ -242,5 +250,10 @@
       "userCanEdit": false,
       "adminOnly": true
     }
-  ]
+  ],
+  "reducer": {
+    "details": {
+      "file": "./reducers/details.json"
+    }
+  }
 }
